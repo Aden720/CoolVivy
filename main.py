@@ -199,12 +199,12 @@ def getSoundCloudParts(embed):
 
 
 def getDescriptionParts(embed):
-    if 'spotify.com' in embed.url:
-        return getSpotifyParts(embed)
+    if 'soundcloud.com' in embed.url:
+        return getSoundCloudParts(embed)
     elif 'youtube.com' in embed.url:
         return getYouTubeParts(embed)
-    elif 'soundcloud.com' in embed.url:
-        return getSoundCloudParts(embed)
+    elif 'spotify.com' in embed.url:
+        return getSpotifyParts(embed)
     else:  #Bandcamp
         returnLines = {}
         if embed.description:
@@ -218,6 +218,26 @@ def setAuthorLink(embedMessage, embed):
             name='SoundCloud',
             url='https://soundcloud.com/',
             icon_url='https://soundcloud.com/pwa-round-icon-192x192.png')
+    elif 'youtube.com' in embed.url:
+        embedMessage.set_author(
+            name='YouTube',
+            url='https://www.youtube.com/',
+            icon_url=
+            'https://www.youtube.com/s/desktop/0c61234c/img/favicon_144x144.png'
+        )
+    elif 'spotify.com' in embed.url:
+        embedMessage.set_author(
+            name='Spotify',
+            url='https://open.spotify.com/',
+            icon_url=
+            'https://open.spotifycdn.com/cdn/images/icons/Spotify_256.17e41e58.png'
+        )
+    else:
+        embedMessage.set_author(
+            name='Bandcamp',
+            url='https://bandcamp.com/',
+            icon_url='https://s4.bcbits.com/img/favicon/favicon-32x32.png'
+        )
 
 
 try:
