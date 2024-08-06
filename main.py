@@ -14,6 +14,7 @@ client = discord.Client(intents=intents)
 
 user1 = str(os.getenv("USER1"))
 user2 = str(os.getenv("USER2"))
+testInstance = os.getenv("TEST_INSTANCE")
 
 
 @client.event
@@ -23,7 +24,8 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    if message.author == client.user:
+    if message.author == client.user or (testInstance
+                                         and str(message.author.id) != user2):
         return
 
     if client.user and (str(client.user.id) in message.content):
@@ -48,7 +50,15 @@ async def on_message(message):
                 embedVar = discord.Embed(
                     title=fieldParts.get('title', embed.title),
                     description=fieldParts.get('description'),
-                    color=0x00dcff)
+                    color=0x00dcff,
+                    url=embed.url)
+
+                #add platform link if applicable
+                setAuthorLink(embedVar, embed)
+
+                #thumbnail
+                if embed.thumbnail:
+                    embedVar.set_thumbnail(url=embed.thumbnail.url)
 
                 #populate embed fields
                 for key, value in fieldParts.items():
@@ -200,6 +210,14 @@ def getDescriptionParts(embed):
         if embed.description:
             returnLines['description'] = cleanLinks(embed.description)
         return returnLines
+
+
+def setAuthorLink(embedMessage, embed):
+    if 'soundcloud.com' in embed.url:
+        embedMessage.set_author(
+            name='SoundCloud',
+            url='https://soundcloud.com/',
+            icon_url='https://soundcloud.com/pwa-round-icon-192x192.png')
 
 
 try:
