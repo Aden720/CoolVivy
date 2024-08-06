@@ -1,4 +1,4 @@
-# Python Discord Bot
+# CoolVivy Discord Bot - Music sharing
 
 This is a starting point for making your own Discord bot using Python and the [discordpy](https://discordpy.readthedocs.io/) library.
 Read [their getting-started guides](https://discordpy.readthedocs.io/en/stable/#getting-started) to get the most out of this template.
