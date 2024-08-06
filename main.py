@@ -293,6 +293,9 @@ def getSoundCloudParts(embed):
             soundcloudParts['Uploaded on'] = formatTimeToDisplay(
                 track.created_at, '%Y-%m-%dT%H:%M:%SZ')
 
+        #Likes
+        soundcloudParts['Likes'] = f':orange_heart: {track.likes_count}'
+
         #Tags
         tags = split_tags(track.tag_list)
         if len(tags) > 0:
@@ -300,21 +303,29 @@ def getSoundCloudParts(embed):
             soundcloudParts['Tags'] = ', '.join(formatted_tags)
 
         #Description
-        if track.description:
-            soundcloudParts['Description'] = cleanLinks(track.description)
+        # if track.description:
+        #     soundcloudParts['Description'] = cleanLinks(track.description)
 
     elif isinstance(track, Playlist):
         soundcloudParts['title'] = f'{track.title}'
         soundcloudParts['description'] = 'Playlist'
 
-        #Tracks
-        soundcloudParts['Tracks'] = f'`{track.track_count}`'
+        #Genre
+        if track.genre:
+            soundcloudParts['Genre'] = f'`{track.genre}`'
 
         #Likes
         soundcloudParts['Likes'] = f':orange_heart: {track.likes_count}'
 
+        #Tracks
+        soundcloudParts['Tracks'] = f'`{track.track_count}`'
+
+        #Duration
+        soundcloudParts['Duration'] = formatMillisecondsToDurationString(
+            track.duration)
+
         #Created by
-        soundcloudParts['Created by'] = f'`{track.user["username"]}`'
+        # soundcloudParts['Created by'] = f'`{track.user["username"]}`'
 
         #Tags
         tags = split_tags(track.tag_list)
@@ -323,8 +334,8 @@ def getSoundCloudParts(embed):
             soundcloudParts['Tags'] = ', '.join(formatted_tags)
 
         #Description
-        if track.description:
-            soundcloudParts['Description'] = cleanLinks(track.description)
+        # if track.description:
+        #     soundcloudParts['Description'] = cleanLinks(track.description)
     else:
         soundcloudParts['Metadata'] = 'No data available.'
         if embed.description:
