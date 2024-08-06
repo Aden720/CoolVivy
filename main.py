@@ -54,15 +54,22 @@ async def on_message(message):
                     url=embed.url)
 
                 #add platform link if applicable
-                setAuthorLink(embedVar, embed)
+                setAuthorLink(embedVar, embed,
+                              fieldParts.get('isYouTubeMusic', False))
 
                 #thumbnail
-                if embed.thumbnail:
+                thumbnailUrl = fieldParts.get('thumbnailUrl')
+                if thumbnailUrl:
+                    embedVar.set_thumbnail(url=thumbnailUrl)
+                elif embed.thumbnail:
                     embedVar.set_thumbnail(url=embed.thumbnail.url)
 
                 #populate embed fields
                 for key, value in fieldParts.items():
-                    if key not in ['description', 'title']:
+                    if key not in [
+                            'description', 'title', 'thumbnailUrl',
+                            'isYouTubeMusic'
+                    ]:
                         inline = key not in ['Tags', 'Description']
                         embedVar.add_field(name=key,
                                            value=value,
@@ -86,6 +93,14 @@ def formatTimeToDisplay(timestamp, timeFormat):
     return datetimeObject.strftime("%d %B %Y")
 
 
+def formatTimeToTimestamp(time):
+    # Split the timestamp into the date-time part and the timezone part
+    dateString, timezoneString = time.split('T')
+    timeString, timezoneOffset = timezoneString.split(
+        '-') if '-' in timezoneString else timezoneString.split('+')
+    return dateString + 'T' + timeString
+
+
 def split_tags(tag_string):
     # Regular expression to match tags with or without spaces
     pattern = r'"[^"]*"|\S+'
@@ -94,6 +109,14 @@ def split_tags(tag_string):
     # Remove quotes from tags that were enclosed in quotes
     tags = [tag.strip('"') for tag in matches]
     return tags
+
+
+def formatMillisecondsToDurationString(milliseconds):
+    (hours, seconds) = divmod(milliseconds / 1000, 3600)
+    (minutes, seconds) = divmod(seconds, 60)
+    timestamp = (f'{hours:02.0f}:' if hours > 0 else
+                 '') + f'{minutes:02.0f}:{math.floor(seconds):02.0f}'
+    return f'`{timestamp}`'
 
 
 def getAuthor(embed):
@@ -127,13 +150,118 @@ def getSpotifyParts(embed):
 
 def getYouTubeParts(embed):
     youtubeParts = {}
-    if embed.description:
-        description = re.search('.+?\n\n(.+?)\n.*Released on: (.*?)\n',
-                                embed.description, re.S)
-        if description:
-            youtubeParts['Description'] = description.group(1)
+    ytmusic = YTMusic()
+    videoId = re.search(r'watch\?v=([^&]*)', embed.url) or re.search(
+        'shorts/([^&]*)', embed.url)
+    description = embed.description
+    track = None
+    if videoId is not None:
+        videoId = videoId.group(1)
+        track = ytmusic.get_song(videoId)
+
+        #Title
+        videoTitle = track['videoDetails']['title']
+        if videoTitle:
+            youtubeParts['title'] = videoTitle
+
+        #Duration
+        videoDuration = track['videoDetails']['lengthSeconds']
+        if videoDuration:
+            youtubeParts['Duration'] = formatMillisecondsToDurationString(
+                int(videoDuration) * 1000)
+
+        #Description
+        # videoDescription = track['microformat']['microformatDataRenderer'][
+        #     'description']
+        # if videoDescription:
+        #     description = track['microformat']['microformatDataRenderer'][
+        #         'description']
+
+        #Square Thumbnail
+        youtubeParts['thumbnailUrl'] = track['videoDetails']['thumbnail'][
+            'thumbnails'][-1]['url']
+
+        #Check if it's a Youtube Music track or is a track type
+        #MUSIC_VIDEO_TYPE_ATV
+        #MUSIC_VIDEO_TYPE_OMV
+        #MUSIC_VIDEO_TYPE_UGC
+        #MUSIC_VIDEO_TYPE_OFFICIAL_SOURCE_MUSIC
+        videoType = track['videoDetails'].get('musicVideoType')
+        if videoType and videoType in [
+                'MUSIC_VIDEO_TYPE_ATV', 'MUSIC_VIDEO_TYPE_OMV'
+        ]:
+            youtubeParts['isYouTubeMusic'] = True
+    else:
+        playlistId = re.search(r'playlist\?list=([^&]*)', embed.url)
+        if playlistId is not None:
+            playlistId = playlistId.group(1)
+            playlistId = ytmusic.get_album_browse_id(playlistId)
+            if playlistId:
+                track = ytmusic.get_album(playlistId)
+                if track:
+                    #Title
+                    albumTitle = track['title']
+                    if albumTitle:
+                        youtubeParts['title'] = albumTitle
+
+                    #Type
+                    albumType = track['type']
+                    if albumType:
+                        youtubeParts['Type'] = albumType
+
+                    #Tracks
+                    albumTrackCount = track['trackCount']
+                    if albumTrackCount:
+                        youtubeParts['Tracks'] = (
+                            f'{albumTrackCount} song'
+                            f'{"s" if albumTrackCount > 1 else ""}')
+
+                    #Duration
+                    albumDuration = track['duration_seconds']
+                    if albumDuration:
+                        youtubeParts[
+                            'Duration'] = formatMillisecondsToDurationString(
+                                int(albumDuration) * 1000)
+
+                    #Released
+                    albumReleaseDate = track['year']
+                    if albumReleaseDate:
+                        youtubeParts['Released'] = formatTimeToDisplay(
+                            albumReleaseDate, '%Y')
+
+                    #Description
+                    albumDescription = track['description']
+                    if albumDescription:
+                        description = track['description']
+
+                    #Square Thumbnail
+                    youtubeParts['thumbnailUrl'] = track['thumbnails'][-1][
+                        'url']
+
+                    youtubeParts['isYouTubeMusic'] = True
+
+    if description:
+        descriptionMatch = re.search('.+?\n\n(.+?)\n.*Released on: (.*?)\n',
+                                     description, re.S)
+        if descriptionMatch:
+            otherArtists = descriptionMatch.group(1).split(' · ')
+            if len(otherArtists) > 2:
+                otherArtists = otherArtists[2:]
+                youtubeParts['Other Artists'] = ', '.join(otherArtists)
+                #Reorder the fields
+                temp = youtubeParts.pop('Duration')
+                youtubeParts['Duration'] = temp
+
             youtubeParts['Released on'] = formatTimeToDisplay(
-                description.group(2), '%Y-%m-%d')
+                descriptionMatch.group(2), '%Y-%m-%d')
+
+    if not (youtubeParts.get('Released on')
+            or youtubeParts.get('Released')) and track is not None:
+        timestamp = formatTimeToTimestamp(
+            track['microformat']['microformatDataRenderer']['uploadDate'])
+        youtubeParts['Uploaded on'] = formatTimeToDisplay(
+            timestamp, '%Y-%m-%dT%H:%M:%S')
+
     return youtubeParts
 
 
@@ -148,11 +276,8 @@ def getSoundCloudParts(embed):
             soundcloudParts['Genre'] = f'`{track.genre}`'
 
         #Duration
-        (hours, seconds) = divmod(track.duration / 1000, 3600)
-        (minutes, seconds) = divmod(seconds, 60)
-        formatted = (f'{hours:02.0f}:' if hours > 0 else
-                     '') + f'{minutes:02.0f}:{math.floor(seconds):02.0f}'
-        soundcloudParts['Duration'] = f'`{formatted}`'
+        soundcloudParts['Duration'] = formatMillisecondsToDurationString(
+            track.duration)
 
         #Release date
         if track.created_at:
@@ -212,19 +337,27 @@ def getDescriptionParts(embed):
         return returnLines
 
 
-def setAuthorLink(embedMessage, embed):
+def setAuthorLink(embedMessage, embed, isYoutubeMusic):
     if 'soundcloud.com' in embed.url:
         embedMessage.set_author(
             name='SoundCloud',
             url='https://soundcloud.com/',
             icon_url='https://soundcloud.com/pwa-round-icon-192x192.png')
     elif 'youtube.com' in embed.url:
-        embedMessage.set_author(
-            name='YouTube',
-            url='https://www.youtube.com/',
-            icon_url=
-            'https://www.youtube.com/s/desktop/0c61234c/img/favicon_144x144.png'
-        )
+        if isYoutubeMusic:
+            embedMessage.set_author(
+                name='YouTube Music',
+                url='https://music.youtube.com/',
+                icon_url=
+                'https://www.gstatic.com/youtube/media/ytm/images/applauncher/music_icon_144x144.png'
+            )
+        else:
+            embedMessage.set_author(
+                name='YouTube',
+                url='https://www.youtube.com/',
+                icon_url=
+                'https://www.youtube.com/s/desktop/0c61234c/img/favicon_144x144.png'
+            )
     elif 'spotify.com' in embed.url:
         embedMessage.set_author(
             name='Spotify',
@@ -236,8 +369,7 @@ def setAuthorLink(embedMessage, embed):
         embedMessage.set_author(
             name='Bandcamp',
             url='https://bandcamp.com/',
-            icon_url='https://s4.bcbits.com/img/favicon/favicon-32x32.png'
-        )
+            icon_url='https://s4.bcbits.com/img/favicon/favicon-32x32.png')
 
 
 try:
