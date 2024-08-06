@@ -208,7 +208,10 @@ def getYouTubeParts(embed):
                     albumArtists = track['artists']
                     youtubeParts[
                         f'Artist{"s" if len(albumArtists) > 1 else ""}'] = ', '.join(
-                            [artist['name'] for artist in albumArtists])
+                            [
+                                f'[{artist["name"]}](https://music.youtube.com/channel/{artist["id"]})'
+                                for artist in albumArtists
+                            ])
 
                     #Type
                     albumType = track['type']
