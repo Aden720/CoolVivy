@@ -1,6 +1,56 @@
 {
   "files": {
+    "bandcamp.py": [
+      {
+        "id": "179bf642-979c-45e8-b5ff-6a16d6d8ddec",
+        "line": 28,
+        "version": 150,
+        "index": 746
+      },
+      {
+        "id": "58735c40-b8b3-4424-bfae-7edb5e3d7040",
+        "line": 29,
+        "version": 150,
+        "index": 787
+      },
+      {
+        "id": "92a67326-6ba3-4181-8fcf-400e6efe22a9",
+        "line": 37,
+        "version": 178,
+        "index": 828
+      },
+      {
+        "id": "d16c8354-7d81-4d68-8982-fa0247cb82de",
+        "line": 68,
+        "version": 119,
+        "index": 2198
+      }
+    ],
     "main.py": [
+      {
+        "id": "817d3745-a60c-417c-aa9c-ddae989b38d4",
+        "line": 40,
+        "version": 8310,
+        "index": 1091
+      },
+      {
+        "id": "31a07d3c-1b95-4c4a-af23-5bd20ff440ec",
+        "line": 41,
+        "version": 8518,
+        "index": 1135
+      },
+      {
+        "id": "00dd307e-5a9f-442c-ba73-afbe502d8870",
+        "line": 42,
+        "version": 8309,
+        "index": 1117
+      },
+      {
+        "id": "2ee46356-8c19-44e3-9c98-46bcec7536c0",
+        "line": 43,
+        "version": 8309,
+        "index": 1209
+      },
       {
         "id": "69291573-ea95-4bdc-a3ad-27a7f6f4fb22",
         "line": 82,
