@@ -305,6 +305,15 @@ def getSoundCloudParts(embed):
             formatted_tags = [f'`{tag}`' for tag in tags]
             soundcloudParts['Tags'] = ', '.join(formatted_tags)
 
+        #Buy Link
+        if track.purchase_url:
+            buyLinkName = track.purchase_title or 'Buy/Stream'
+            isDownload = any(word in buyLinkName.lower()
+                             for word in ['download', 'free', 'dl'])
+            soundcloudParts['Buy/Download Link'] = (
+                f'{":arrow_down: " if isDownload else ""}'
+                f'[{buyLinkName}]({track.purchase_url})')
+
         #Description
         # if track.description:
         #     soundcloudParts['Description'] = cleanLinks(track.description)
