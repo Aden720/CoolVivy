@@ -79,9 +79,11 @@ async def on_message(message):
                 await message.channel.send(embed=embedVar)
 
                 #react to message
-                emoji_id = os.getenv("EMOJI_ID")
-                emoji = client.get_emoji(int(emoji_id)) if emoji_id else '🔗'
-                await message.add_reaction(emoji)
+                if len(message.reactions) > 0:
+                    emoji_id = os.getenv("EMOJI_ID")
+                    emoji = client.get_emoji(
+                        int(emoji_id)) if emoji_id else '🔗'
+                    await message.add_reaction(emoji)
 
 
 def cleanLinks(description):
@@ -311,7 +313,7 @@ def getSoundCloudParts(embed):
             isDownload = any(word in buyLinkName.lower()
                              for word in ['download', 'free', 'dl'])
             soundcloudParts['Buy/Download Link'] = (
-                f'{":arrow_down: " if isDownload else ":link:"}'
+                f'{":arrow_down:" if isDownload else ":link:"} '
                 f'[{buyLinkName}]({track.purchase_url})')
 
         #Description
