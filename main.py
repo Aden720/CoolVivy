@@ -311,7 +311,7 @@ def getSoundCloudParts(embed):
             isDownload = any(word in buyLinkName.lower()
                              for word in ['download', 'free', 'dl'])
             soundcloudParts['Buy/Download Link'] = (
-                f'{":arrow_down: " if isDownload else ""}'
+                f'{":arrow_down: " if isDownload else ":link:"}'
                 f'[{buyLinkName}]({track.purchase_url})')
 
         #Description
