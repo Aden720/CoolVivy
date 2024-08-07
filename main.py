@@ -296,6 +296,9 @@ def getSoundCloudParts(embed):
         #Likes
         soundcloudParts['Likes'] = f':orange_heart: {track.likes_count}'
 
+        #Plays
+        soundcloudParts['Plays'] = f':notes: {track.playback_count:,}'
+
         #Tags
         tags = split_tags(track.tag_list)
         if len(tags) > 0:
