@@ -6,6 +6,7 @@ import asyncio
 from ytmusicapi import YTMusic
 from sclib import SoundcloudAPI, Track, Playlist
 from datetime import datetime
+from bandcamp import BandcampScraper
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -357,6 +358,37 @@ def getSoundCloudParts(embed):
     return soundcloudParts
 
 
+def getBandcampParts(embed):
+    bandcampParts = {}
+    channelUrl = re.sub(r'(https?://[a-zA-Z0-9\-]*\.bandcamp\.com).*', r'\1',
+                        embed.url)
+    if embed.title:
+        embed.title, artist = embed.title.split(', by ')
+        bandcampParts['Artist'] = artist
+        if artist != 'Various Artists':
+            embed.title = f'{artist} - {embed.title}'
+
+    if embed.description:
+        if embed.description.startswith('from the album'):
+            bandcampParts['Album'] = embed.description.split(
+                'from the album ')[-1]
+        elif embed.description.startswith('track by'):
+            bandcampParts['description'] = 'Single'
+        else:
+            bandcampParts['description'] = embed.description
+
+    if embed.provider:
+        if embed.provider.name != bandcampParts.get('Artist'):
+            bandcampParts['Channel'] = (
+                f'[{embed.provider.name}]'
+                f'({embed.provider.url or channelUrl})')
+        else:
+            bandcampParts[
+                'Artist'] = f'[{bandcampParts["Artist"]}]({channelUrl})'
+
+    return bandcampParts
+
+
 def getDescriptionParts(embed):
     if 'soundcloud.com' in embed.url:
         return getSoundCloudParts(embed)
@@ -365,10 +397,7 @@ def getDescriptionParts(embed):
     elif 'spotify.com' in embed.url:
         return getSpotifyParts(embed)
     else:  #Bandcamp
-        returnLines = {}
-        if embed.description:
-            returnLines['description'] = cleanLinks(embed.description)
-        return returnLines
+        return getBandcampParts(embed)
 
 
 def setAuthorLink(embedMessage, embed, isYoutubeMusic):
