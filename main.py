@@ -78,6 +78,10 @@ async def on_message(message):
                 #send embed
                 await message.channel.send(embed=embedVar)
 
+                #remove embed from original message
+                if fieldParts.get('embedPlatformType') == 'bandcamp':
+                    await message.edit(suppress=True)
+
                 #react to message
                 if len(message.reactions) > 0:
                     emoji_id = os.getenv("EMOJI_ID")
