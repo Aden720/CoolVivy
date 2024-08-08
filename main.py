@@ -55,8 +55,7 @@ async def on_message(message):
                     url=embed.url)
 
                 #add platform link if applicable
-                setAuthorLink(embedVar, embed,
-                              fieldParts.get('isYouTubeMusic', False))
+                setAuthorLink(embedVar, fieldParts.get('embedPlatformType'))
 
                 #thumbnail
                 thumbnailUrl = fieldParts.get('thumbnailUrl')
@@ -69,7 +68,7 @@ async def on_message(message):
                 for key, value in fieldParts.items():
                     if key not in [
                             'description', 'title', 'thumbnailUrl',
-                            'isYouTubeMusic'
+                            'embedPlatformType'
                     ]:
                         inline = key not in ['Tags', 'Description']
                         embedVar.add_field(name=key,
@@ -135,7 +134,7 @@ def getAuthor(embed):
 
 
 def getSpotifyParts(embed):
-    spotifyParts = {}
+    spotifyParts = {'embedPlatformType': 'spotify'}
     attributes = ['Artist', 'Type', 'Released']
     parts = embed.description.split(' · ')
     parts[0], parts[1] = parts[1], parts[0]
@@ -193,7 +192,9 @@ def getYouTubeParts(embed):
         if videoType and videoType in [
                 'MUSIC_VIDEO_TYPE_ATV', 'MUSIC_VIDEO_TYPE_OMV'
         ]:
-            youtubeParts['isYouTubeMusic'] = True
+            youtubeParts['embedPlatformType'] = 'youtubemusic'
+        else:
+            youtubeParts['embedPlatformType'] = 'youtube'
     else:
         playlistId = re.search(r'playlist\?list=([^&]*)', embed.url)
         if playlistId is not None:
@@ -278,7 +279,7 @@ def getYouTubeParts(embed):
 
 
 def getSoundCloudParts(embed):
-    soundcloudParts = {}
+    soundcloudParts = {'embedPlatformType': 'soundcloud'}
     api = SoundcloudAPI()
     track = api.resolve(embed.url)
 
@@ -359,7 +360,7 @@ def getSoundCloudParts(embed):
 
 
 def getBandcampParts(embed):
-    bandcampParts = {}
+    bandcampParts = {'embedPlatformType': 'bandcamp'}
     channelUrl = re.sub(r'(https?://[a-zA-Z0-9\-]*\.bandcamp\.com).*', r'\1',
                         embed.url)
     if embed.title:
@@ -400,28 +401,27 @@ def getDescriptionParts(embed):
         return getBandcampParts(embed)
 
 
-def setAuthorLink(embedMessage, embed, isYoutubeMusic):
-    if 'soundcloud.com' in embed.url:
+def setAuthorLink(embedMessage, embedType):
+    if embedType == 'soundcloud':
         embedMessage.set_author(
             name='SoundCloud',
             url='https://soundcloud.com/',
             icon_url='https://soundcloud.com/pwa-round-icon-192x192.png')
-    elif 'youtube.com' in embed.url:
-        if isYoutubeMusic:
-            embedMessage.set_author(
-                name='YouTube Music',
-                url='https://music.youtube.com/',
-                icon_url=
-                'https://www.gstatic.com/youtube/media/ytm/images/applauncher/music_icon_144x144.png'
-            )
-        else:
-            embedMessage.set_author(
-                name='YouTube',
-                url='https://www.youtube.com/',
-                icon_url=
-                'https://www.youtube.com/s/desktop/0c61234c/img/favicon_144x144.png'
-            )
-    elif 'spotify.com' in embed.url:
+    elif embedType == 'youtube':
+        embedMessage.set_author(
+            name='YouTube',
+            url='https://www.youtube.com/',
+            icon_url=
+            'https://www.youtube.com/s/desktop/0c61234c/img/favicon_144x144.png'
+        )
+    elif embedType == 'youtubemusic':
+        embedMessage.set_author(
+            name='YouTube Music',
+            url='https://music.youtube.com/',
+            icon_url=
+            'https://www.gstatic.com/youtube/media/ytm/images/applauncher/music_icon_144x144.png'
+        )
+    elif embedType == 'spotify':
         embedMessage.set_author(
             name='Spotify',
             url='https://open.spotify.com/',
