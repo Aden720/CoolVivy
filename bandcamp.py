@@ -1,6 +1,7 @@
-from urllib import request
+import re
+import os
+import json
 import requests
-
 from bs4 import BeautifulSoup
 
 
@@ -24,44 +25,64 @@ class Album:
 
 class BandcampScraper:
 
-    def __init__(self):
-        self.session = requests.Session()
-        self.headers = {
-            'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0'
-        }
-        self.session.headers.update(self.headers)
+    def __init__(self, url):
+        track_url_pattern = re.compile(
+            r'https://(?:\w+\.)?bandcamp\.com/track/[\w-]+')
+        album_url_pattern = re.compile(
+            r'https://(?:\w+\.)?bandcamp\.com/album/[\w-]+')
+        data = self._fetch_data(url)
+        if data is None:
+            raise Exception("No data found")
 
-    def fetch_track(self, url):
-        response = self.session.get(url)
-        if response.status_code == 403:
-            raise Exception(
-                "Access forbidden. You might need to set proper headers.")
+        if re.match(track_url_pattern, url):
+            self.track = self._parse_track(data)
+            self.isTrack = True
+            self.isAlbum = False
+            #return Track(data)
+        elif re.match(album_url_pattern, url):
+            self.album = self._parse_album(data)
+            self.isTrack = False
+            self.isAlbum = True
+            #return Album(data)
 
-        soup = BeautifulSoup(response.content, 'html.parser')
-        script_tag = soup.find('script', {'type': 'application/ld+json'})
-        # title = soup.find('meta', property='og:title')['content']
-        # artist = soup.find('meta', property='og:site_name')['content']
-        # duration = soup.find('span', class_='time').text
-        # year = soup.find('meta', itemprop='datePublished')['content'][:4]
-        # return Track(title, artist, duration, year)
+    @staticmethod
+    def _parse_track(data):
+        return Track(data.get('title'), data.get('artist'),
+                     data.get('duration'), data.get('year'))
 
-    def fetch_album(self, url):
-        response = self.session.get(url)
-        if response.status_code == 403:
-            raise Exception(
-                "Access forbidden. You might need to set proper headers.")
+    @staticmethod
+    def _parse_album(data):
+        return Album(data.get('title'), data.get('artist'),
+                     data.get('duration'), data.get('year'))
 
-        soup = BeautifulSoup(response.content, 'html.parser')
-
-        # Parse album metadata here (similar to fetch_track)
-
-        tracks = []
-        track_elements = soup.find_all('div', class_='track_list_item')
-        for track_elem in track_elements:
-            track_url = track_elem.find('a')['href']
-            # Complete track URL assuming relative path
-            full_track_url = f'https://{band}.bandcamp.com{track_url}'
-            track = self.fetch_track(full_track_url)
-            tracks.append(track)
-        return Album(title, artist, release_date, tracks)
+    def _fetch_data(self, url):
+        try:
+            endpoint = os.getenv('ENDPOINT')
+            if endpoint is None:
+                raise Exception(
+                    'Please set your endpoint in the Secrets pane.')
+            response = requests.post(endpoint,
+                                     data={
+                                         'action': 'psvAjaxAction',
+                                         'url': url,
+                                     })
+            if response.status_code != 200:
+                return None
+            else:
+                soup = BeautifulSoup(response.content, 'html.parser')
+                script_tag = soup.find('script',
+                                       {'type': 'application/ld+json'})
+                if script_tag is None:
+                    return None
+                else:
+                    songData = json.loads(script_tag.text)
+                    return songData
+        except requests.exceptions.RequestException as e:
+            print(f"Network error occurred: {e}")
+            return None
+        except json.JSONDecodeError as e:
+            print(f"JSON decoding error: {e}")
+            return None
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            return None
