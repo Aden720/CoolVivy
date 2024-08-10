@@ -1,12 +1,12 @@
 import os
 import re
-import math
 import discord
 import asyncio
 from ytmusicapi import YTMusic
 from sclib import SoundcloudAPI, Track, Playlist
 from datetime import datetime
 from bandcamp import getBandcampParts
+from utils import formatMillisecondsToDurationString
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -117,14 +117,6 @@ def split_tags(tag_string):
     # Remove quotes from tags that were enclosed in quotes
     tags = [tag.strip('"') for tag in matches]
     return tags
-
-
-def formatMillisecondsToDurationString(milliseconds):
-    (hours, seconds) = divmod(milliseconds / 1000, 3600)
-    (minutes, seconds) = divmod(seconds, 60)
-    timestamp = (f'{hours:02.0f}:' if hours > 0 else
-                 '') + f'{minutes:02.0f}:{math.floor(seconds):02.0f}'
-    return f'`{timestamp}`'
 
 
 def getSpotifyParts(embed):
