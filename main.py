@@ -46,6 +46,8 @@ async def on_message(message):
             ]):
                 #get all embed fields
                 fieldParts = getDescriptionParts(embed)
+                if not fieldParts:
+                    return  #if we don't have any data, we cannot create an embed message
 
                 #create a new embed
                 embedVar = discord.Embed(

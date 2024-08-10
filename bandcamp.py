@@ -3,41 +3,72 @@ import os
 import json
 import requests
 from bs4 import BeautifulSoup
+from dotmap import DotMap
 
 endpoint = os.getenv('ENDPOINT')
 if endpoint is None:
     raise Exception('Please set your endpoint in the Secrets pane.')
 
+track_url_pattern = re.compile(
+    r'https://[A-Za-z0-9_-]+\.bandcamp\.com/track/[A-Za-z0-9_-]+')
+album_url_pattern = re.compile(
+    r'https://[A-Za-z0-9_-]+\.bandcamp\.com/album/[A-Za-z0-9_-]+')
+discography_page_pattern = re.compile(
+    r'https://[A-Za-z0-9_-]+\.bandcamp\.com/music')
+types = DotMap(album='a', track='t')
+
 
 class Track:
 
-    def __init__(self, title, artist, duration, year):
-        self.title = title
-        self.artist = artist
-        self.duration = duration
-        self.year = year
+    #map to track fields
+    def __init__(self, pageData, trackData):
+        self.title = pageData['name']
+        self.artist = pageData['byArtist']['name']
+        self.tags = pageData['keywords']
+
+        #extra data from API
+        if trackData:
+            self.free_download = trackData['free_download']
+            if len(trackData['tags']) > 0:
+                self.tags = trackData['tags']
+            self.currency = trackData['currency']
+            self.price = trackData['price']
+            self.is_purchasable = trackData['is_purchasable']
+            self.duration = trackData['tracks'][0]['duration']
+            self.release_date = trackData['release_date']
+
+    def mapToParts(self):
+        return {}
 
 
 class Album:
 
-    def __init__(self, title, artist, release_date, tracks):
-        self.title = title
-        self.artist = artist
-        self.release_date = release_date
-        self.tracks = tracks
+    #map to album fields
+    def __init__(self, pageData, albumData):
+        self.title = pageData['name']
+        self.artist = pageData['byArtist']['name']
+        self.num_tracks = pageData['numTracks']
+        self.tracks = pageData['track']['itemListElement']
+        self.release_date = pageData['datePublished']
+        self.tags = pageData['keywords']
+
+        #extra data from API
+        if albumData:
+            self.release_date = albumData
+            self.tracks = albumData['tracks']
+            self.release_date = albumData['release_date']
+            if len(albumData['tags']) > 0:
+                self.tags = albumData['tags']
+
+    def mapToParts(self):
+        parts = {}
+        parts['title'] = self.title
+        return parts
 
 
 class BandcampScraper:
-    track_url_pattern = re.compile(
-        r'https://(?:\w+\.)?bandcamp\.com/track/[\w-]+')
-    album_url_pattern = re.compile(
-        r'https://(?:\w+\.)?bandcamp\.com/album/[\w-]+')
 
     def __init__(self, url):
-        track_url_pattern = re.compile(
-            r'https://(?:\w+\.)?bandcamp\.com/track/[\w-]+')
-        album_url_pattern = re.compile(
-            r'https://(?:\w+\.)?bandcamp\.com/album/[\w-]+')
         data = self._fetch_data(url)
         if data is None:
             raise Exception("No data found")
@@ -54,20 +85,26 @@ class BandcampScraper:
             #return Album(data)
 
     @staticmethod
-    def _parse_track(data):
-        properties = data.get('additionalProperty')
-        artistId = next(item['value'] for item in properties
-                        if item['name'] == 'art_id')
-        trackId = next(item['value'] for item in properties
-                       if item['name'] == 'track_id')
-        track = callAPI(artistId, trackId)
-        return Track(data.get('title'), data.get('artist'),
-                     data.get('duration'), data.get('year'))
+    def _parse_track(pageData):
+        properties = {
+            item['name']: item['value']
+            for item in pageData['additionalProperty']
+        }
+        artistId = properties.get('art_id')
+        trackId = properties.get('track_id')
+        trackData = callAPI(artistId, trackId, types.track)
+        return Track(pageData, trackData)
 
     @staticmethod
-    def _parse_album(data):
-        return Album(data.get('title'), data.get('artist'),
-                     data.get('duration'), data.get('year'))
+    def _parse_album(pageData):
+        properties = {
+            item['name']: item['value']
+            for item in pageData['albumRelease'][0]['additionalProperty']
+        }
+        artistId = properties.get('art_id')
+        albumId = properties.get('item_id')
+        albumData = callAPI(artistId, albumId, types.album)
+        return Album(pageData, albumData)
 
     def _fetch_data(self, url):
         try:
@@ -99,44 +136,36 @@ class BandcampScraper:
             print(f"An unexpected error occurred: {e}")
             return None
 
+
 def getBandcampParts(embed):
     bandcampParts = {'embedPlatformType': 'bandcamp'}
 
-    discography_page_pattern = re.compile(
-        r'https://(?:\w+\.)?bandcamp\.com/music')
     if re.match(discography_page_pattern, embed.url):
+        bandcampParts['title'] = embed.provider.name
         bandcampParts['description'] = 'Discography'
         return bandcampParts
-    # try:
-    #     scraper = BandcampScraper(embed.url)
-    #     if scraper.isTrack:
-    #         track = scraper.track
-    #         return {
-    #             'title': track.title,
-    #             'artist': track.artist,
-    #             'duration': track.duration,
-    #             'year': track.year
-    #         }
-    #     elif scraper.isAlbum:
-    #         album = scraper.album
-    #         return {
-    #             'title': album.title,
-    #             'artist': album.artist,
-    #             'release_date': album.release_date,
-    #             'tracks': album.tracks
-    #         }
-    # except Exception as e:
-    #     print(f"An error occurred: {e}")
 
-    if True:
+    #fetches the data from the bandcamp url
+    try:
+        raise Exception('bypass until mapping is complete')
+        scraper = BandcampScraper(embed.url)
+        if scraper.isTrack:
+            track = scraper.track
+            bandcampParts.update(track.mapToParts())
+        elif scraper.isAlbum:
+            album = scraper.album
+            bandcampParts.update(album.mapToParts())
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
+        #get details from embed instead
         channelUrl = re.sub(r'(https?://[a-zA-Z0-9\-]*\.bandcamp\.com).*',
                             r'\1', embed.url)
         if embed.title:
-            embed.title, artist = embed.title.split(', by ')
+            bandcampParts['title'], artist = embed.title.split(', by ')
             bandcampParts['Artist'] = artist
             if artist != 'Various Artists':
-                embed.title = f'{artist} - {embed.title}'
+                bandcampParts['title'] = f'{artist} - {bandcampParts["title"]}'
 
         if embed.description:
             if embed.description.startswith('from the album'):
@@ -159,8 +188,19 @@ def getBandcampParts(embed):
         return bandcampParts
 
 
-def callAPI(artistId, trackId):
-    response = requests.get(
-        url="https://bandcamp.com/api/mobile/25/tralbum_details?band_id=" +
-        str(3074126532) + "&tralbum_id=" + str(1525250518) + "&tralbum_type=t")
-    result = response.json()
+def callAPI(artistId, itemId, type):
+    try:
+        response = requests.get(url=(
+            f'https://bandcamp.com/api/mobile/25/tralbum_details'
+            f'?band_id={artistId}&tralbum_id={itemId}&tralbum_type={type}'))
+        result = response.json()
+        return result
+    except requests.exceptions.RequestException as e:
+        print(f"Network error occurred: {e}")
+        return None
+    except json.JSONDecodeError as e:
+        print(f"JSON decoding error: {e}")
+        return None
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return None
