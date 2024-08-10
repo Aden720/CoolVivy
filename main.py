@@ -45,7 +45,7 @@ async def on_message(message):
                     'bandcamp.com'
             ]):
                 #get all embed fields
-                fieldParts = {**getAuthor(embed), **getDescriptionParts(embed)}
+                fieldParts = getDescriptionParts(embed)
 
                 #create a new embed
                 embedVar = discord.Embed(
@@ -125,18 +125,6 @@ def formatMillisecondsToDurationString(milliseconds):
     return f'`{timestamp}`'
 
 
-def getAuthor(embed):
-    if embed.author is not None:
-        author = re.search("name='(.*?)'", str(embed.author))
-        if author is not None:
-            artistOrChannel, subs = re.subn('- Topic', '', author.group(1))
-            return {
-                ('Channel' if subs == 0 else 'Artist'):
-                f'[{artistOrChannel}]({embed.author.url})'
-            }
-    return {}
-
-
 def getSpotifyParts(embed):
     spotifyParts = {'embedPlatformType': 'spotify'}
     attributes = ['Artist', 'Type', 'Released']
@@ -152,6 +140,15 @@ def getSpotifyParts(embed):
             returnString += f' - {parts[3]}'
         spotifyParts[f'{attribute}'] = returnString
     return spotifyParts
+
+
+#Check if it's a Youtube Music track based on track type
+def isYoutubeMusic(type):
+    #MUSIC_VIDEO_TYPE_ATV
+    #MUSIC_VIDEO_TYPE_OMV
+    #MUSIC_VIDEO_TYPE_UGC
+    #MUSIC_VIDEO_TYPE_OFFICIAL_SOURCE_MUSIC
+    return type and type in ['MUSIC_VIDEO_TYPE_ATV', 'MUSIC_VIDEO_TYPE_OMV']
 
 
 def getYouTubeParts(embed):
@@ -170,6 +167,20 @@ def getYouTubeParts(embed):
         if videoTitle:
             youtubeParts['title'] = videoTitle
 
+        #Artist/Channel
+        videoType = track['videoDetails'].get('musicVideoType')
+        author = track['videoDetails']['author']
+        channelId = track['videoDetails']['channelId']
+        isYoutubeMusicTrack = isYoutubeMusic(videoType)
+        if isYoutubeMusicTrack:
+            youtubeParts['embedPlatformType'] = 'youtubemusic'
+            youtubeParts[
+                'Artist'] = f'[{author}](https://music.youtube.com/channel/{channelId})'
+        else:
+            youtubeParts['embedPlatformType'] = 'youtube'
+            youtubeParts[
+                'Channel'] = f'[{author}](https://www.youtube.com/channel/{channelId})'
+
         #Duration
         videoDuration = track['videoDetails']['lengthSeconds']
         if videoDuration:
@@ -187,18 +198,6 @@ def getYouTubeParts(embed):
         youtubeParts['thumbnailUrl'] = track['videoDetails']['thumbnail'][
             'thumbnails'][-1]['url']
 
-        #Check if it's a Youtube Music track or is a track type
-        #MUSIC_VIDEO_TYPE_ATV
-        #MUSIC_VIDEO_TYPE_OMV
-        #MUSIC_VIDEO_TYPE_UGC
-        #MUSIC_VIDEO_TYPE_OFFICIAL_SOURCE_MUSIC
-        videoType = track['videoDetails'].get('musicVideoType')
-        if videoType and videoType in [
-                'MUSIC_VIDEO_TYPE_ATV', 'MUSIC_VIDEO_TYPE_OMV'
-        ]:
-            youtubeParts['embedPlatformType'] = 'youtubemusic'
-        else:
-            youtubeParts['embedPlatformType'] = 'youtube'
     else:
         playlistId = re.search(r'playlist\?list=([^&]*)', embed.url)
         if playlistId is not None:
@@ -207,6 +206,8 @@ def getYouTubeParts(embed):
             if playlistId:
                 track = ytmusic.get_album(playlistId)
                 if track:
+                    #youtube music playlist
+                    youtubeParts['embedPlatformType'] = 'youtubemusic'
                     #Title
                     albumTitle = track['title']
                     if albumTitle:
@@ -254,8 +255,9 @@ def getYouTubeParts(embed):
                     #Square Thumbnail
                     youtubeParts['thumbnailUrl'] = track['thumbnails'][-1][
                         'url']
-
-                    youtubeParts['isYouTubeMusic'] = True
+                else:
+                    #non-youtube music playlist
+                    youtubeParts['embedPlatformType'] = 'youtube'
 
     if description:
         descriptionMatch = re.search('.+?\n\n(.+?)\n.*Released on: (.*?)\n',
