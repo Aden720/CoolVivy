@@ -4,6 +4,10 @@ import json
 import requests
 from bs4 import BeautifulSoup
 
+endpoint = os.getenv('ENDPOINT')
+if endpoint is None:
+    raise Exception(
+        'Please set your endpoint in the Secrets pane.')
 
 class Track:
 
@@ -57,10 +61,6 @@ class BandcampScraper:
 
     def _fetch_data(self, url):
         try:
-            endpoint = os.getenv('ENDPOINT')
-            if endpoint is None:
-                raise Exception(
-                    'Please set your endpoint in the Secrets pane.')
             response = requests.post(endpoint,
                                      data={
                                          'action': 'psvAjaxAction',
