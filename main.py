@@ -367,6 +367,8 @@ def getDescriptionParts(embed):
     elif 'spotify.com' in embed.url:
         return getSpotifyParts(embed)
     else:  #Bandcamp
+        if re.match('https?://bandcamp.com.+', embed.url):
+            return None
         return getBandcampParts(embed)
 
 
