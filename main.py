@@ -303,12 +303,6 @@ def getSoundCloudParts(embed):
         #Plays
         soundcloudParts['Plays'] = f':notes: {track.playback_count:,}'
 
-        #Tags
-        tags = split_tags(track.tag_list)
-        if len(tags) > 0:
-            formatted_tags = [f'`{tag}`' for tag in tags]
-            soundcloudParts['Tags'] = ', '.join(formatted_tags)
-
         #Buy Link
         if track.purchase_url:
             buyLinkName = track.purchase_title or 'Buy/Stream'
@@ -317,6 +311,17 @@ def getSoundCloudParts(embed):
             soundcloudParts['Buy/Download Link'] = (
                 f'{":arrow_down:" if isDownload else ":link:"} '
                 f'[{buyLinkName}]({track.purchase_url})')
+
+        #Channel
+        if track.user:
+            soundcloudParts['Channel'] = (f'[{track.user["username"]}]'
+                                          f'({track.user["permalink_url"]})')
+
+        #Tags
+        tags = split_tags(track.tag_list)
+        if len(tags) > 0:
+            formatted_tags = [f'`{tag}`' for tag in tags]
+            soundcloudParts['Tags'] = ', '.join(formatted_tags)
 
         #Description
         # if track.description:
