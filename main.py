@@ -173,7 +173,7 @@ def getYouTubeParts(embed):
         else:
             youtubeParts['embedPlatformType'] = 'youtube'
             youtubeParts[
-                'Channel'] = f'[{author}](https://www.youtube.com/channel/{channelId})'
+                'Channel'] = f'[{embed.author.name}]({embed.author.url})'
 
         #Duration
         videoDuration = track['videoDetails']['lengthSeconds']

@@ -5,6 +5,8 @@ import requests
 from bs4 import BeautifulSoup
 from dotmap import DotMap
 
+from utils import formatMillisecondsToDurationString
+
 endpoint = os.getenv('ENDPOINT')
 if endpoint is None:
     raise Exception('Please set your endpoint in the Secrets pane.')
@@ -51,6 +53,10 @@ class Album:
         self.tracks = pageData['track']['itemListElement']
         self.release_date = pageData['datePublished']
         self.tags = pageData['keywords']
+        self.publisher = {
+            'name': pageData['publisher']['name'],
+            'url': pageData['publisher']['@id']
+        }
 
         #extra data from API
         if albumData:
@@ -63,6 +69,30 @@ class Album:
     def mapToParts(self):
         parts = {}
         parts['title'] = self.title
+        trackStrings = []
+        artists = {self.artist}
+        totalDuration = 0
+        for track in self.tracks:
+            durationMs = track["duration"] * 1000
+            totalDuration += durationMs
+            trackStrings.append(
+                f'{track["track_num"]}. {track["band_name"]} - {track["title"]}'
+                f' `{formatMillisecondsToDurationString(durationMs)}`')
+            artists.add(track['band_name'])
+
+        if len(artists) > 1 or self.artist == 'Various Artists':
+            parts['title'] = self.title
+            parts['Artist'] = 'Various Artists'
+        else:
+            parts['title'] = f'{self.artist} - {self.title}'
+            parts['Artist'] = self.artist
+
+        if self.publisher['name'] != parts['Artist']:
+            parts['Channel'] = (f'[{self.publisher["name"]}]'
+                                f'({self.publisher["url"]})')
+        else:
+            parts['Artist'] = f'[{self.artist}]({self.publisher["url"]})'
+
         return parts
 
 
@@ -147,7 +177,7 @@ def getBandcampParts(embed):
 
     #fetches the data from the bandcamp url
     try:
-        raise Exception('bypass until mapping is complete')
+        raise Exception('bypassing until mapping is complete')
         scraper = BandcampScraper(embed.url)
         if scraper.isTrack:
             track = scraper.track
@@ -185,7 +215,7 @@ def getBandcampParts(embed):
                 bandcampParts[
                     'Artist'] = f'[{bandcampParts["Artist"]}]({channelUrl})'
 
-        return bandcampParts
+    return bandcampParts
 
 
 def callAPI(artistId, itemId, type):
