@@ -30,6 +30,12 @@ else:
 @bot.event
 async def on_ready():
     print(f'We have logged in as {bot.user}')
+    # Sync commands to make sure they are registered
+    try:
+        synced = await bot.tree.sync()
+        print(f'Synced {len(synced)} command(s)')
+    except Exception as e:
+        print(f'Failed to sync commands: {e}')
 
 
 @bot.event
@@ -47,57 +53,69 @@ async def on_message(message):
             await message.channel.send(f'Ask <@{user2}> for help.')
     elif str(message.guild.id) in server_whitelist:
         await asyncio.sleep(3)
-        newMessage = await message.channel.fetch_message(message.id)
-        for embed in newMessage.embeds:
-            if any(word in embed.url for word in [
-                    'soundcloud.com', 'youtube.com', 'spotify.com',
-                    'bandcamp.com'
-            ]):
-                #get all embed fields
-                fieldParts = getDescriptionParts(embed)
-                if not fieldParts:
-                    return  #if we don't have any data, we cannot create an embed message
+        try:
+            await fetchEmbed(message, False)
+        except Exception as e:
+            print(f'Error: {e}')
 
-                #create a new embed
-                embedVar = discord.Embed(
-                    title=fieldParts.get('title', embed.title),
-                    description=fieldParts.get('description'),
-                    color=0x00dcff,
-                    url=embed.url)
 
-                #add platform link if applicable
-                setAuthorLink(embedVar, fieldParts.get('embedPlatformType'))
+async def fetchEmbed(message, isInteraction):
+    newMessage = await message.channel.fetch_message(message.id)
+    for embed in newMessage.embeds:
+        if any(
+                word in embed.url for word in
+            ['soundcloud.com', 'youtube.com', 'spotify.com', 'bandcamp.com']):
+            #get all embed fields
+            fieldParts = getDescriptionParts(embed)
+            if not fieldParts:
+                raise Exception('No data found')
 
-                #thumbnail
-                thumbnailUrl = fieldParts.get('thumbnailUrl')
-                if thumbnailUrl:
-                    embedVar.set_thumbnail(url=thumbnailUrl)
-                elif embed.thumbnail:
-                    embedVar.set_thumbnail(url=embed.thumbnail.url)
+            #create a new embed
+            embedVar = discord.Embed(title=fieldParts.get(
+                'title', embed.title),
+                                     description=fieldParts.get('description'),
+                                     color=0x00dcff,
+                                     url=embed.url)
 
-                #populate embed fields
-                for key, value in fieldParts.items():
-                    if key not in [
-                            'description', 'title', 'thumbnailUrl',
-                            'embedPlatformType'
-                    ]:
-                        inline = key not in ['Tags', 'Description']
-                        embedVar.add_field(name=key,
-                                           value=value,
-                                           inline=inline)
+            #add platform link if applicable
+            setAuthorLink(embedVar, fieldParts.get('embedPlatformType'))
 
-                #send embed
+            #thumbnail
+            thumbnailUrl = fieldParts.get('thumbnailUrl')
+            if thumbnailUrl:
+                embedVar.set_thumbnail(url=thumbnailUrl)
+            elif embed.thumbnail:
+                embedVar.set_thumbnail(url=embed.thumbnail.url)
+
+            #populate embed fields
+            for key, value in fieldParts.items():
+                if key not in [
+                        'description', 'title', 'thumbnailUrl',
+                        'embedPlatformType'
+                ]:
+                    inline = key not in ['Tags', 'Description']
+                    embedVar.add_field(name=key, value=value, inline=inline)
+
+            #remove embed from original message
+            if not isInteraction and fieldParts.get(
+                    'embedPlatformType') == 'bandcamp':
+                await message.edit(suppress=True)
+
+            #react to message
+            if isInteraction:
+                emoji_id = os.getenv("EMOJI_ID")
+                emoji = bot.get_emoji(int(emoji_id)) if emoji_id else '🔗'
+                await message.add_reaction(emoji)
+
+            #send embed
+            if isInteraction:
+                return embedVar
+            else:
                 await message.channel.send(embed=embedVar)
-
-                #remove embed from original message
-                if fieldParts.get('embedPlatformType') == 'bandcamp':
-                    await message.edit(suppress=True)
-
-                #react to message
-                if len(message.reactions) > 0:
-                    emoji_id = os.getenv("EMOJI_ID")
-                    emoji = bot.get_emoji(int(emoji_id)) if emoji_id else '🔗'
-                    await message.add_reaction(emoji)
+        else:
+            raise Exception(
+                "This doesn't seem to be a supported URL.\nCurrently only "
+                "Bandcamp, SoundCloud, Spotify and YouTube are supported.")
 
 
 def cleanLinks(description):
@@ -417,6 +435,26 @@ def setAuthorLink(embedMessage, embedType):
             name='Bandcamp',
             url='https://bandcamp.com/',
             icon_url='https://s4.bcbits.com/img/favicon/favicon-32x32.png')
+
+
+# Define a context menu for getting embed metadata
+@bot.tree.context_menu(name='get track metadata')
+async def fetch_embed_message(interaction: discord.Interaction,
+                              message: discord.Message):
+    if (testInstance == 'True' and str(interaction.user.id) != user2) or (
+            testInstance == 'False' and str(interaction.user.id) == user2):
+        return
+    await interaction.response.send_message(
+        content=f'Fetching details for {message.jump_url}', ephemeral=True)
+    try:
+        trackEmbed = await fetchEmbed(message, True)
+        if trackEmbed:
+            await interaction.followup.send(
+                content=f'{interaction.user.mention} here are the details for '
+                f'{message.jump_url}',
+                embed=trackEmbed)
+    except Exception as e:
+        await interaction.followup.send(content=str(e), ephemeral=True)
 
 
 try:
