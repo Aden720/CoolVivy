@@ -1,6 +1,8 @@
 import os
 import re
 import discord
+from discord.ext import commands
+from discord import app_commands
 import asyncio
 from ytmusicapi import YTMusic
 from sclib import SoundcloudAPI, Track, Playlist
@@ -11,25 +13,26 @@ from utils import formatMillisecondsToDurationString
 intents = discord.Intents.default()
 intents.message_content = True
 
-client = discord.Client(intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 user1 = str(os.getenv("USER1"))
 user2 = str(os.getenv("USER2"))
 testInstance = os.getenv("TEST_INSTANCE")
+servers = os.getenv("SERVERS")
 
 
-@client.event
+@bot.event
 async def on_ready():
-    print('We have logged in as {0.user}'.format(client))
+    print(f'We have logged in as {bot.user}')
 
 
-@client.event
+@bot.event
 async def on_message(message):
-    if message.author == client.user or (testInstance == "True"
-                                         and str(message.author.id) != user2):
+    if message.author == bot.user or (testInstance == "True"
+                                      and str(message.author.id) != user2):
         return
 
-    if client.user and (str(client.user.id) in message.content):
+    if bot.user and (str(bot.user.id) in message.content):
         if 'hello' in message.content.lower():
             await message.channel.send('Hello!')
         elif str(message.author.id) == user1:
@@ -87,8 +90,7 @@ async def on_message(message):
                 #react to message
                 if len(message.reactions) > 0:
                     emoji_id = os.getenv("EMOJI_ID")
-                    emoji = client.get_emoji(
-                        int(emoji_id)) if emoji_id else '🔗'
+                    emoji = bot.get_emoji(int(emoji_id)) if emoji_id else '🔗'
                     await message.add_reaction(emoji)
 
 
@@ -415,7 +417,7 @@ try:
     token = os.getenv("TOKEN") or ""
     if token == "":
         raise Exception("Please add your token to the Secrets pane.")
-    client.run(token)
+    bot.run(token)
 except discord.HTTPException as e:
     if e.status == 429:
         print(
