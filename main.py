@@ -1,6 +1,7 @@
 import os
 import re
 import discord
+import json
 from discord.ext import commands
 from discord import app_commands
 import asyncio
@@ -19,6 +20,11 @@ user1 = str(os.getenv("USER1"))
 user2 = str(os.getenv("USER2"))
 testInstance = os.getenv("TEST_INSTANCE")
 servers = os.getenv("SERVERS")
+if servers:
+    server_whitelist = json.loads(servers)
+else:
+    server_whitelist = []
+    print("MY_ARRAY is not set in the environment variables.")
 
 
 @bot.event
@@ -32,14 +38,14 @@ async def on_message(message):
                                       and str(message.author.id) != user2):
         return
 
-    if bot.user and (str(bot.user.id) in message.content):
+    elif bot.user and (str(bot.user.id) in message.content):
         if 'hello' in message.content.lower():
             await message.channel.send('Hello!')
         elif str(message.author.id) == user1:
             await message.channel.send('Figure it out yourself.')
         else:
             await message.channel.send(f'Ask <@{user2}> for help.')
-    else:
+    elif str(message.guild.id) in server_whitelist:
         await asyncio.sleep(3)
         newMessage = await message.channel.fetch_message(message.id)
         for embed in newMessage.embeds:
