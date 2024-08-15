@@ -310,7 +310,8 @@ def getSoundCloudParts(embed):
     track = api.resolve(embed.url)
 
     if isinstance(track, Track):
-        soundcloudParts['title'] = f'{track.artist} - {track.title}'
+        soundcloudParts['title'] = (track.title if track.artist in track.title
+                                    else f'{track.artist} - {track.title}')
         if track.genre:
             soundcloudParts['Genre'] = f'`{track.genre}`'
 
