@@ -1,5 +1,6 @@
 import re
 
+import requests
 from sclib import Playlist, SoundcloudAPI, Track
 
 from general_utils import (
@@ -23,7 +24,12 @@ def getSoundcloudParts(embed):
     soundcloudParts = {'embedPlatformType': 'soundcloud'}
     api = SoundcloudAPI()
 
-    track = api.resolve(embed.url)
+    url = embed.url
+    if embed.url.startswith('https://on.soundcloud.com'):
+        response = requests.get(url)
+        if response.status_code == 200:
+            url = response.history[0].headers['location']
+    track = api.resolve(url)
 
     if isinstance(track, Track):
         soundcloudParts['title'] = (track.title if track.artist in track.title
