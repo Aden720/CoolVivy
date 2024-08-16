@@ -1,11 +1,12 @@
-import re
-import os
 import json
+import os
+import re
+
 import requests
 from bs4 import BeautifulSoup
 from dotmap import DotMap
 
-from utils import formatMillisecondsToDurationString
+from general_utils import formatMillisecondsToDurationString
 
 endpoint = os.getenv('ENDPOINT')
 if endpoint is None:
