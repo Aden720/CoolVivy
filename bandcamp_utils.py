@@ -26,7 +26,10 @@ class Track:
     #map to track fields
     def __init__(self, pageData, trackData):
         self.title = pageData['name']
-        self.artist = pageData['byArtist']['name']
+        self.artist = {
+            'name': pageData['byArtist']['name'],
+            'url': pageData['byArtist'].get('@id')
+        }
         self.tags = pageData['keywords']
 
         #extra data from API
@@ -41,7 +44,9 @@ class Track:
             self.release_date = trackData['release_date']
 
     def mapToParts(self):
-        return {}
+        parts = {}
+        parts['title'] = self.title
+        return parts
 
 
 class Album:
@@ -56,7 +61,7 @@ class Album:
         self.tags = pageData['keywords']
         self.publisher = {
             'name': pageData['publisher']['name'],
-            'url': pageData['publisher']['@id']
+            'url': pageData['publisher'].get('@id')
         }
 
         #extra data from API
@@ -77,7 +82,9 @@ class Album:
             durationMs = track["duration"] * 1000
             totalDuration += durationMs
             trackStrings.append(
-                f'{track["track_num"]}. {track["band_name"]} - {track["title"]}'
+                f'{track["track_num"]}. [{track["band_name"]} - {track["title"]}]'
+                #map the url from page
+                #f'({track[url?]})'
                 f' `{formatMillisecondsToDurationString(durationMs)}`')
             artists.add(track['band_name'])
 
@@ -196,7 +203,9 @@ def getBandcampParts(embed):
             bandcampParts['title'], artist = embed.title.split(', by ')
             bandcampParts['Artist'] = artist
             if artist != 'Various Artists':
-                bandcampParts['title'] = f'{artist} - {bandcampParts["title"]}'
+                bandcampParts['title'] = (
+                    bandcampParts["title"] if artist in bandcampParts["title"]
+                    else f'{artist} - {bandcampParts["title"]}')
 
         if embed.description:
             if embed.description.startswith('from the album'):
