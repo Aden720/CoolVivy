@@ -194,6 +194,7 @@ def getBandcampParts(embed):
             album = scraper.album
             bandcampParts.update(album.mapToParts())
     except Exception as e:
+        #fallback method from embed
         print(f"An error occurred: {e}")
 
         #get details from embed instead
@@ -202,10 +203,21 @@ def getBandcampParts(embed):
         if embed.title:
             bandcampParts['title'], artist = embed.title.split(', by ')
             bandcampParts['Artist'] = artist
-            if artist != 'Various Artists':
-                bandcampParts['title'] = (
-                    bandcampParts["title"] if artist in bandcampParts["title"]
-                    else f'{artist} - {bandcampParts["title"]}')
+            if artist != 'Various Artists' and artist not in bandcampParts[
+                    "title"]:
+                title_artist_pattern = re.compile(r'^.+\s-\s.+$')
+                #channel name may not always be artist
+                if not title_artist_pattern.match(embed.title):
+                    bandcampParts[
+                        'title'] = f'{artist} - {bandcampParts["title"]}'
+                artistString = bandcampParts['title'].split(' - ')[0]
+                artist_parts_comma = artistString.split(', ')
+                artist_parts_ampersand = artistString.split(' & ')
+                if len(artist_parts_comma) > 1 or len(artist_parts_ampersand) > 1:
+                    bandcampParts['Artists'] = artistString
+                    bandcampParts.pop('Artist', None)
+                else:
+                    bandcampParts['Artist'] = artistString
 
         if embed.description:
             if embed.description.startswith('from the album'):
@@ -214,6 +226,7 @@ def getBandcampParts(embed):
             elif embed.description.startswith('track by'):
                 bandcampParts['description'] = 'Single'
             else:
+                bandcampParts['title'] = bandcampParts['title'].split(' - ')[-1]
                 bandcampParts['description'] = embed.description
 
         if embed.provider:
