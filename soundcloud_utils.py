@@ -35,7 +35,9 @@ def getSoundcloudParts(embed):
         if track.artist in track.title:
             soundcloudParts['title'] = track.title
         else:
-            artist = track.publisher_metadata.get('artist', track.artist)
+            artist = track.publisher_metadata.get(
+                'artist',
+                track.artist) if track.publisher_metadata else track.artist
             soundcloudParts['title'] = f'{artist} - {track.title}'
 
         if track.genre:
