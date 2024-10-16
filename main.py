@@ -131,16 +131,22 @@ def getSpotifyParts(embed):
     spotifyParts = {'embedPlatformType': 'spotify'}
     attributes = ['Artist', 'Type', 'Released']
     parts = embed.description.split(' · ')
-    parts[0], parts[1] = parts[1], parts[0]
+    if parts[1] == 'Single' or parts[1] == 'Album':
+        attributes = ['Artist', 'Type', 'Released']
+        if len(parts) > 3 and parts[1] != 'Single':
+            parts[1] = f'{parts[1]} - {parts[3]}' #Type - Track num
+            parts.pop(3)
+    elif parts[0] == 'Playlist':
+        attributes = ['Artist', 'Type', 'Saves :green_heart:']
+        parts[0], parts[1] = parts[1], parts[0]
+        if len(parts) > 3:
+            parts[1] = f'{parts[1]} - {parts[2]}' #Playlist - num items
+            parts.pop(2)
+    else:
+        attributes = ['Artist', 'title', 'Type', 'Released']
+        
     for index, attribute in enumerate(attributes):
-        returnString = parts[index]
-        if index == 1 and len(parts) > 3:
-            type = parts[1]
-            if type == 'Playlist':
-                parts[2], parts[3] = parts[3], parts[2]
-                attributes[2] = 'Saves'
-            returnString += f' - {parts[3]}'
-        spotifyParts[f'{attribute}'] = returnString
+        spotifyParts[f'{attribute}'] = parts[index]
     return spotifyParts
 
 
