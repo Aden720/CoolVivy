@@ -13,7 +13,15 @@ def formatMillisecondsToDurationString(milliseconds):
 
 def formatTimeToDisplay(timestamp, timeFormat):
              datetimeObject = datetime.strptime(timestamp, timeFormat)
-             return datetimeObject.strftime("%d %B %Y")
+             return datetimeObject.strftime("%-d %B %Y")
+
+
+def formatTimeToTimestamp(time):
+             # Split the timestamp into the date-time part and the timezone part
+             dateString, timezoneString = time.split('T')
+             timeString, timezoneOffset = timezoneString.split(
+                 '-') if '-' in timezoneString else timezoneString.split('+')
+             return dateString + 'T' + timeString
 
 
 def cleanLinks(description):

@@ -9,7 +9,11 @@ from discord.ext import commands
 from ytmusicapi import YTMusic
 
 from bandcamp_utils import getBandcampParts
-from general_utils import formatMillisecondsToDurationString, formatTimeToDisplay
+from general_utils import (
+    formatMillisecondsToDurationString,
+    formatTimeToDisplay,
+    formatTimeToTimestamp,
+)
 from soundcloud_utils import getSoundcloudParts
 from spotify_utils import getSpotifyParts
 
@@ -119,13 +123,6 @@ async def fetchEmbed(message, isInteraction):
                 "This doesn't seem to be a supported URL.\nCurrently only "
                 "Bandcamp, SoundCloud, Spotify and YouTube are supported.")
 
-
-def formatTimeToTimestamp(time):
-    # Split the timestamp into the date-time part and the timezone part
-    dateString, timezoneString = time.split('T')
-    timeString, timezoneOffset = timezoneString.split(
-        '-') if '-' in timezoneString else timezoneString.split('+')
-    return dateString + 'T' + timeString
 
 #Check if it's a Youtube Music track based on track type
 def isYoutubeMusic(type):
