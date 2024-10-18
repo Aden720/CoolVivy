@@ -20,9 +20,7 @@ discography_page_pattern = re.compile(
     r'https://[A-Za-z0-9_-]+\.bandcamp\.com/music')
 types = DotMap(album='a', track='t')
 
-
 class Track:
-
     #map to track fields
     def __init__(self, pageData, trackData):
         self.title = pageData['name']
