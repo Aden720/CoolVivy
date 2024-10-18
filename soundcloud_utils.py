@@ -20,16 +20,22 @@ def split_tags(tag_string):
     return tags
 
 
+def fetchTrack(track_url):
+    api = SoundcloudAPI()
+    if track_url.startswith('https://on.soundcloud.com'):
+        response = requests.get(track_url)
+        if response.status_code == 200:
+            track_url = response.history[0].headers['location']
+        else:
+            raise Exception('Unable to fetch Soundcloud Mobile URL')
+    track = api.resolve(track_url)
+    return track
+
+
 def getSoundcloudParts(embed):
     soundcloudParts = {'embedPlatformType': 'soundcloud'}
-    api = SoundcloudAPI()
 
-    url = embed.url
-    if embed.url.startswith('https://on.soundcloud.com'):
-        response = requests.get(url)
-        if response.status_code == 200:
-            url = response.history[0].headers['location']
-    track = api.resolve(url)
+    track = fetchTrack(embed.url)
 
     if isinstance(track, Track):
         if track.artist in track.title:
