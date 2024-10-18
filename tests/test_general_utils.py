@@ -52,6 +52,40 @@ class TestGeneralUtils(unittest.TestCase):
         self.assertEqual(formatTimeToTimestamp('2015-10-09T06:30:22+0:00'),
                          '2015-10-09T06:30:22')
 
+    def test_cleanLinks_single(self):
+        self.assertEqual(
+            cleanLinks('https://www.youtube.com/watch?v=dQw4w9WgXcQ'),
+            '<https://www.youtube.com/watch?v=dQw4w9WgXcQ>')
+        self.assertEqual(
+            cleanLinks(
+                'check out this soundcloud track https://soundcloud.com/hexagon/steve-hartz-like-home'
+            ),
+            'check out this soundcloud track <https://soundcloud.com/hexagon/steve-hartz-like-home>'
+        )
+        self.assertEqual(
+            cleanLinks(
+                'check out https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj on spotify'
+            ),
+            'check out <https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj> on spotify'
+        )
+
+    def test_cleanLinks_multiple(self):
+        self.assertEqual(
+            cleanLinks('''
+                https://www.youtube.com/watch?v=dQw4w9WgXcQ
+                https://soundcloud.com/hexagon/steve-hartz-like-home
+                check out https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj on spotify
+                instagram: https://www.instagram.com/p/Cj2J8k0n1fC/
+                '''
+            ),
+                '''
+                <https://www.youtube.com/watch?v=dQw4w9WgXcQ>
+                <https://soundcloud.com/hexagon/steve-hartz-like-home>
+                check out <https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj> on spotify
+                instagram: <https://www.instagram.com/p/Cj2J8k0n1fC/>
+                '''
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
