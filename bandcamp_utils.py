@@ -20,6 +20,7 @@ discography_page_pattern = re.compile(
     r'https://[A-Za-z0-9_-]+\.bandcamp\.com/music')
 types = DotMap(album='a', track='t')
 
+
 class Track:
     #map to track fields
     def __init__(self, pageData, trackData):
@@ -211,7 +212,8 @@ def getBandcampParts(embed):
                 artistString = bandcampParts['title'].split(' - ')[0]
                 artist_parts_comma = artistString.split(', ')
                 artist_parts_ampersand = artistString.split(' & ')
-                if len(artist_parts_comma) > 1 or len(artist_parts_ampersand) > 1:
+                if len(artist_parts_comma) > 1 or len(
+                        artist_parts_ampersand) > 1:
                     bandcampParts['Artists'] = artistString
                     bandcampParts.pop('Artist', None)
                 else:
@@ -224,7 +226,8 @@ def getBandcampParts(embed):
             elif embed.description.startswith('track by'):
                 bandcampParts['description'] = 'Single'
             else:
-                bandcampParts['title'] = bandcampParts['title'].split(' - ')[-1]
+                bandcampParts['title'] = bandcampParts['title'].split(
+                    ' - ')[-1]
                 bandcampParts['description'] = embed.description
 
         if embed.provider:
