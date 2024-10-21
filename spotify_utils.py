@@ -42,7 +42,7 @@ def getSpotifyParts(embed):
                 parts[1] = f'{parts[1]} - {parts[2]}'  #Playlist - num items
                 parts.pop(2)
         else:
-            attributes = ['Artist', 'title', 'Type', 'Released']
+            attributes = ['Artist', 'Album', 'Type', 'Released']
 
         for index, attribute in enumerate(attributes):
             spotifyParts[f'{attribute}'] = parts[index]
