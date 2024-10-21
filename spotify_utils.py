@@ -30,7 +30,7 @@ def getSpotifyParts(embed):
         #fallback method from embed
         attributes = ['Artist', 'Type', 'Released']
         parts = embed.description.split(' · ')
-        if parts[1] == 'Single' or parts[1] == 'Album':
+        if parts[1] == 'Single' or parts[1] == 'Album' or parts[1] == 'EP':
             attributes = ['Artist', 'Type', 'Released']
             if len(parts) > 3 and parts[1] != 'Single':
                 parts[1] = f'{parts[1]} - {parts[3]}'  #Type - Track num
