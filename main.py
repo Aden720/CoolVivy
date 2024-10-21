@@ -156,7 +156,7 @@ async def fetchEmbed(message, isInteraction):
             raise Exception(
                 "This doesn't seem to be a supported URL.\nCurrently only "
                 "Bandcamp, SoundCloud, Spotify and YouTube are supported.")
-    if canUseWebhook:
+    if canUseWebhook and len(embeds) > 0:
         footer_embed = discord.Embed(color=0x00dcff)
         footer_embed.set_footer(text='Powered by CoolVivy',
                                 icon_url=message.channel.guild.me.avatar.url)
