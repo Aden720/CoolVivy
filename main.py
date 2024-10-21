@@ -85,7 +85,7 @@ async def fetchWebhook(message):
                 break
 
     if webhook is None:
-        webhook = await message.channel.create_webhook(name='CoolVivy embed')
+        webhook = await channel.create_webhook(name='CoolVivy embed')
 
     return webhook
 
