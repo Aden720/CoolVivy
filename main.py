@@ -48,6 +48,7 @@ async def on_ready():
 async def on_message(message):
     if message.author == bot.user or (testInstance == "True"
                                       and str(message.author.id) != user2):
+        # or (testInstance == 'False' and str(message.author.id) == user2):
         return
     elif bot.user and (str(bot.user.id) in message.content):
         if 'hello' in message.content.lower():
@@ -158,8 +159,9 @@ async def fetchEmbed(message, isInteraction):
                 "Bandcamp, SoundCloud, Spotify and YouTube are supported.")
     if canUseWebhook and len(embeds) > 0:
         footer_embed = discord.Embed(color=0x00dcff)
-        footer_embed.set_footer(text='Powered by CoolVivy',
-                                icon_url=message.channel.guild.me.avatar.url)
+        footer_embed.set_footer(
+            text=f'Powered by CoolVivy {message.author.id}',
+            icon_url=message.channel.guild.me.avatar.url)
         embeds.append(footer_embed)
         if hasattr(message.channel, 'parent'):
             await webhook.send(content=message.content,
@@ -384,6 +386,44 @@ async def fetch_embed_message(interaction: discord.Interaction,
                 embed=trackEmbed)
     except Exception as e:
         await interaction.followup.send(content=str(e), ephemeral=True)
+
+
+#Allow user to delete a message related to them or the bot, for cleanup
+@bot.tree.context_menu(name='delete message')
+async def delete_bot_message(interaction: discord.Interaction,
+                             message: discord.Message):
+    # if (testInstance == 'True' and str(interaction.user.id) != user2):  # or (
+    #     #testInstance == 'False' and str(interaction.user.id) == user2):
+    #     return
+    try:
+        canDelete = False
+        if (bot.user and message.author.id == bot.user.id) or \
+           (message.author.id == interaction.user.id):
+            canDelete = True
+        elif message.author.bot is True and len(message.embeds) > 0:
+            embed = message.embeds[-1]
+            if embed.footer is not None:
+                # Regex to match 'Powered by Vivy 126532652625'
+                powered_by_vivy_regex = re.compile(
+                    r"Powered by CoolVivy (\d+)")
+                match = powered_by_vivy_regex.search(str(embed.footer.text))
+                # check the user id matches
+                if match and match.group(1) == str(interaction.user.id):
+                    canDelete = True
+        if canDelete:
+            await message.delete()
+            # await interaction.response.send_message(content='Attempting to delete...',
+            #     ephemeral=True)
+            await interaction.response.send_message(content='Message deleted',
+                                                    ephemeral=True)
+        else:
+            await interaction.response.send_message(
+                content=
+                '''This message is not from me or a reformatted message from you.
+                I can only delete messages from me or posted by you.''',
+                ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(content=str(e), ephemeral=True)
 
 
 try:
