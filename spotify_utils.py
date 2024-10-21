@@ -8,7 +8,8 @@ spotifyClientSecret = os.getenv("SPOTIFY_CLIENT_SECRET")
 
 
 def getSpotifyParts(embed):
-    spotifyParts = {'embedPlatformType': 'spotify'}
+    spotifyParts = {'embedPlatformType': 'spotify', 'embedColour': 0x1db954}
+
     try:
         raise Exception('bypassing until mapping is complete')
         #fetches the data from the spotify url

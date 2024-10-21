@@ -49,7 +49,6 @@ async def on_message(message):
     if message.author == bot.user or (testInstance == "True"
                                       and str(message.author.id) != user2):
         return
-
     elif bot.user and (str(bot.user.id) in message.content):
         if 'hello' in message.content.lower():
             await message.channel.send('Hello!')
@@ -65,8 +64,38 @@ async def on_message(message):
             print(f'Error: {e}')
 
 
+async def fetchWebhook(message):
+    # Check if the bot has the correct permissions to manage webhooks
+    canSend = message.channel.permissions_for(message.guild.me).manage_webhooks
+    if not canSend:
+        await message.author.send(
+            "I do not have permission to manage webhooks!\n"
+            "Ask the server owners to give me the permission to manage webhooks"
+            " so I can send less cluttered messages to the channel.")
+        return None
+    # Create a webhook
+    webhook = None
+    webhooks = await message.channel.webhooks()
+    if len(webhooks) > 0:
+        for hook in webhooks:
+            if hook.token is not None:
+                webhook = hook
+                break
+
+    if webhook is None:
+        webhook = await message.channel.create_webhook(name='CoolVivy embed')
+
+    return webhook
+
+
 async def fetchEmbed(message, isInteraction):
     newMessage = await message.channel.fetch_message(message.id)
+    embeds = []
+    webhook = None
+    if not isInteraction:
+        webhook = await fetchWebhook(message)
+    canUseWebhook = webhook is not None
+
     for embed in newMessage.embeds:
         if any(
                 word in embed.url for word in
@@ -77,11 +106,11 @@ async def fetchEmbed(message, isInteraction):
                 raise Exception('No data found')
 
             #create a new embed
-            embedVar = discord.Embed(title=fieldParts.get(
-                'title', embed.title),
-                                     description=fieldParts.get('description'),
-                                     color=0x00dcff,
-                                     url=embed.url)
+            embedVar = discord.Embed(
+                title=fieldParts.get('title', embed.title),
+                description=fieldParts.get('description'),
+                color=fieldParts.get('embedColour', 0x00dcff),
+                url=embed.url)
 
             #add platform link if applicable
             setAuthorLink(embedVar, fieldParts.get('embedPlatformType'))
@@ -97,7 +126,7 @@ async def fetchEmbed(message, isInteraction):
             for key, value in fieldParts.items():
                 if key not in [
                         'description', 'title', 'thumbnailUrl',
-                        'embedPlatformType'
+                        'embedPlatformType', 'embedColour'
                 ]:
                     inline = key not in ['Tags', 'Description']
                     embedVar.add_field(name=key, value=value, inline=inline)
@@ -117,11 +146,27 @@ async def fetchEmbed(message, isInteraction):
             if isInteraction:
                 return embedVar
             else:
+                if canUseWebhook:
+                    embeds.append(embedVar)
+                    continue
                 await message.channel.send(embed=embedVar)
         else:
             raise Exception(
                 "This doesn't seem to be a supported URL.\nCurrently only "
                 "Bandcamp, SoundCloud, Spotify and YouTube are supported.")
+    if canUseWebhook:
+        footer_embed = discord.Embed(color=0x00dcff)
+        footer_embed.set_footer(text='Powered by CoolVivy',
+                                icon_url=message.channel.guild.me.avatar.url)
+        embeds.append(footer_embed)
+        await webhook.send(
+            content=message.content,
+            embeds=embeds,
+            username=message.author.display_name,
+            avatar_url=message.author.avatar.url,
+        )
+        #remove original message
+        await message.delete()
 
 
 #Check if it's a Youtube Music track based on track type
@@ -134,7 +179,7 @@ def isYoutubeMusic(type):
 
 
 def getYouTubeParts(embed):
-    youtubeParts = {}
+    youtubeParts = {'embedPlatformType': 'youtube', 'embedColour': 0xff0000}
     ytmusic = YTMusic()
     videoId = re.search(r'watch\?v=([^&]*)', embed.url) or re.search(
         'shorts/([^&]*)', embed.url)
@@ -159,7 +204,6 @@ def getYouTubeParts(embed):
             youtubeParts[
                 'Artist'] = f'[{author}](https://music.youtube.com/channel/{channelId})'
         else:
-            youtubeParts['embedPlatformType'] = 'youtube'
             youtubeParts[
                 'Channel'] = f'[{embed.author.name}]({embed.author.url})'
 

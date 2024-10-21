@@ -49,7 +49,7 @@ class TestSoundcloudUtils(unittest.TestCase):
             mock_requests_get.assert_called_once_with(mock_track_url)
             mock_soundcloud_api.return_value.resolve.assert_called_once_with(
                 'https://soundcloud.com/resolved-url')
-        else:  
+        else:
             self.fail("This test is intentionally failing.")
 
     @patch('soundcloud_utils.requests.get')

@@ -175,7 +175,7 @@ class BandcampScraper:
 
 
 def getBandcampParts(embed):
-    bandcampParts = {'embedPlatformType': 'bandcamp'}
+    bandcampParts = {'embedPlatformType': 'bandcamp', 'embedColour': 0x1da0c3}
 
     if re.match(discography_page_pattern, embed.url):
         bandcampParts['title'] = embed.provider.name

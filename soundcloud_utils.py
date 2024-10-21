@@ -33,7 +33,10 @@ def fetchTrack(track_url):
 
 
 def getSoundcloudParts(embed):
-    soundcloudParts = {'embedPlatformType': 'soundcloud'}
+    soundcloudParts = {
+        'embedPlatformType': 'soundcloud',
+        'embedColour': 0xff5500
+    }
 
     track = fetchTrack(embed.url)
 
