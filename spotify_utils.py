@@ -48,7 +48,7 @@ def getSpotifyParts(embed):
             spotifyParts[f'{attribute}'] = parts[index]
 
         #remove album field because embed doesn't look great
-        spotifyParts.pop('Album')
+        spotifyParts.pop('Album', None)
 
         artist_parts_comma = spotifyParts['Artist'].split(', ')
         if len(artist_parts_comma) > 1:
