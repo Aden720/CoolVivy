@@ -75,7 +75,9 @@ async def fetchWebhook(message):
         return None
     # Create a webhook
     webhook = None
-    webhooks = await message.channel.webhooks()
+    channel = message.channel.parent if hasattr(message.channel,
+                                                'parent') else message.channel
+    webhooks = await channel.webhooks()
     if len(webhooks) > 0:
         for hook in webhooks:
             if hook.token is not None:
@@ -159,12 +161,19 @@ async def fetchEmbed(message, isInteraction):
         footer_embed.set_footer(text='Powered by CoolVivy',
                                 icon_url=message.channel.guild.me.avatar.url)
         embeds.append(footer_embed)
-        await webhook.send(
-            content=message.content,
-            embeds=embeds,
-            username=message.author.display_name,
-            avatar_url=message.author.avatar.url,
-        )
+        if hasattr(message.channel, 'parent'):
+            await webhook.send(content=message.content,
+                               embeds=embeds,
+                               username=message.author.display_name,
+                               avatar_url=message.author.avatar.url,
+                               thread=message.channel)
+        else:
+            await webhook.send(
+                content=message.content,
+                embeds=embeds,
+                username=message.author.display_name,
+                avatar_url=message.author.avatar.url,
+            )
         #remove original message
         await message.delete()
 
