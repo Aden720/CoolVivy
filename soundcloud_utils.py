@@ -88,9 +88,13 @@ def getSoundcloudParts(embed):
         # if track.description:
         #     soundcloudParts['Description'] = cleanLinks(track.description)
 
-    elif isinstance(track, Playlist):
+    elif isinstance(track, Playlist):  #set, playlist or album
         soundcloudParts['title'] = f'{track.title}'
-        soundcloudParts['description'] = 'Playlist'
+        if (track.is_album):
+            soundcloudParts['description'] = 'Album'
+            soundcloudParts['Artist'] = track.user['username']
+        else:
+            soundcloudParts['description'] = 'Playlist'
 
         #Genre
         if track.genre:
