@@ -47,6 +47,9 @@ def getSpotifyParts(embed):
         for index, attribute in enumerate(attributes):
             spotifyParts[f'{attribute}'] = parts[index]
 
+        #remove album field because embed doesn't look great
+        spotifyParts.pop('Album')
+
         artist_parts_comma = spotifyParts['Artist'].split(', ')
         if len(artist_parts_comma) > 1:
             spotifyParts['Artists'] = spotifyParts['Artist']
@@ -60,4 +63,5 @@ def getSpotifyParts(embed):
                 key: spotifyParts[key]
                 for key in order if key in spotifyParts
             }
+
     return spotifyParts
