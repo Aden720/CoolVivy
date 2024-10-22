@@ -46,8 +46,8 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    if message.author == bot.user or (testInstance == "True"
-                                      and str(message.author.id) != user2):
+    if message.author == bot.user or (testInstance == "True" and str(
+            message.author.id) != user2) or message.author.bot is True:
         # or (testInstance == 'False' and str(message.author.id) == user2):
         return
     elif bot.user and (str(bot.user.id) in message.content):
@@ -158,11 +158,8 @@ async def fetchEmbed(message, isInteraction):
                 "This doesn't seem to be a supported URL.\nCurrently only "
                 "Bandcamp, SoundCloud, Spotify and YouTube are supported.")
     if canUseWebhook and len(embeds) > 0:
-        footer_embed = discord.Embed(color=0x00dcff)
-        footer_embed.set_footer(
-            text=f'Powered by CoolVivy {message.author.id}',
-            icon_url=message.channel.guild.me.avatar.url)
-        embeds.append(footer_embed)
+        embeds[-1].set_footer(text=f'Powered by CoolVivy {message.author.id}',
+                              icon_url=message.channel.guild.me.avatar.url)
         if hasattr(message.channel, 'parent'):
             await webhook.send(content=message.content,
                                embeds=embeds,
