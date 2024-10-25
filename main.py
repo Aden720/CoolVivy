@@ -365,26 +365,6 @@ def setAuthorLink(embedMessage, embedType):
             icon_url='https://s4.bcbits.com/img/favicon/favicon-32x32.png')
 
 
-# Define a context menu for getting embed metadata
-@bot.tree.context_menu(name='get track metadata')
-async def fetch_embed_message(interaction: discord.Interaction,
-                              message: discord.Message):
-    if (testInstance == 'True' and str(interaction.user.id) != user2):  # or (
-        #testInstance == 'False' and str(interaction.user.id) == user2):
-        return
-    await interaction.response.send_message(
-        content=f'Fetching details for {message.jump_url}', ephemeral=True)
-    try:
-        trackEmbed = await fetchEmbed(message, True)
-        if trackEmbed:
-            await interaction.followup.send(
-                content=f'{interaction.user.mention} here are the details for '
-                f'{message.jump_url}',
-                embed=trackEmbed)
-    except Exception as e:
-        await interaction.followup.send(content=str(e), ephemeral=True)
-
-
 #Allow user to delete a message related to them or the bot, for cleanup
 @bot.tree.context_menu(name='delete message')
 async def delete_bot_message(interaction: discord.Interaction,
@@ -421,6 +401,28 @@ async def delete_bot_message(interaction: discord.Interaction,
                 ephemeral=True)
     except Exception as e:
         await interaction.response.send_message(content=str(e), ephemeral=True)
+
+
+# Define a context menu for getting embed metadata
+@bot.tree.context_menu(name='get track metadata')
+async def fetch_embed_message(interaction: discord.Interaction,
+                              message: discord.Message):
+    if (testInstance == 'True' and str(interaction.user.id) != user2):  # or (
+        #testInstance == 'False' and str(interaction.user.id) == user2):
+        return
+    await interaction.response.send_message(
+        content=f'Fetching details for {message.jump_url}', ephemeral=True)
+    try:
+        if message.author.id == interaction.user.id:
+            await fetchEmbed(message, False)
+        else:
+            trackEmbed = await fetchEmbed(message, True)
+            if trackEmbed:
+                await interaction.followup.send(
+                    content=interaction.user.mention,
+                    embed=trackEmbed)
+    except Exception as e:
+        await interaction.followup.send(content=str(e), ephemeral=True)
 
 
 try:
