@@ -12,15 +12,17 @@ from general_utils import (
 class TestGeneralUtils(unittest.TestCase):
 
     def test_formatMillisecondsToDurationString(self):
+        self.assertEqual(formatMillisecondsToDurationString(1000), '`0:01`')
+        self.assertEqual(formatMillisecondsToDurationString(60000), '`1:00`')
+        self.assertEqual(formatMillisecondsToDurationString(61000), '`1:01`')
         self.assertEqual(formatMillisecondsToDurationString(3599000),
                          '`59:59`')
         self.assertEqual(formatMillisecondsToDurationString(3600000),
-                         '`01:00:00`')
+                         '`1:00:00`')
         self.assertEqual(formatMillisecondsToDurationString(3661000),
-                         '`01:01:01`')
-        self.assertEqual(formatMillisecondsToDurationString(60000), '`01:00`')
-        self.assertEqual(formatMillisecondsToDurationString(61000), '`01:01`')
-        self.assertEqual(formatMillisecondsToDurationString(1000), '`00:01`')
+                         '`1:01:01`')
+        self.assertEqual(formatMillisecondsToDurationString(36000000),
+                         '`10:00:00`')
 
     def test_formatTimeToDisplay_timestamp(self):
         self.assertEqual(
@@ -76,15 +78,12 @@ class TestGeneralUtils(unittest.TestCase):
                 https://soundcloud.com/hexagon/steve-hartz-like-home
                 check out https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj on spotify
                 instagram: https://www.instagram.com/p/Cj2J8k0n1fC/
-                '''
-            ),
-                '''
+                '''), '''
                 <https://www.youtube.com/watch?v=dQw4w9WgXcQ>
                 <https://soundcloud.com/hexagon/steve-hartz-like-home>
                 check out <https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj> on spotify
                 instagram: <https://www.instagram.com/p/Cj2J8k0n1fC/>
-                '''
-        )
+                ''')
 
 
 if __name__ == '__main__':
