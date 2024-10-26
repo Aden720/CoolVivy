@@ -22,15 +22,14 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-user1 = str(os.getenv("USER1"))
-user2 = str(os.getenv("USER2"))
-testInstance = os.getenv("TEST_INSTANCE")
+ownerUser = str(os.getenv("OWNER_USER_ID"))
+testInstance = os.getenv("TEST_INSTANCE", "False")
 servers = os.getenv("SERVERS")
 if servers:
     server_whitelist = json.loads(servers)
 else:
     server_whitelist = []
-    print("MY_ARRAY is not set in the environment variables.")
+    print("SERVERS is not set in the environment variables.")
 
 
 @bot.event
@@ -47,16 +46,16 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     if message.author == bot.user or (testInstance == "True" and str(
-            message.author.id) != user2) or message.author.bot is True:
+            message.author.id) != ownerUser) or message.author.bot is True:
         # or (testInstance == 'False' and str(message.author.id) == user2):
         return
     elif bot.user and (str(bot.user.id) in message.content):
         if 'hello' in message.content.lower():
             await message.channel.send('Hello!')
-        elif str(message.author.id) == user1:
-            await message.channel.send('Figure it out yourself.')
         else:
-            await message.channel.send(f'Ask <@{user2}> for help.')
+            await message.channel.send(
+                f'Ask <@{ownerUser}> for help.'
+                if ownerUser else 'Use **/help** for help.')
     elif str(message.guild.id) in server_whitelist:
         await asyncio.sleep(3)
         try:
@@ -407,7 +406,8 @@ async def delete_bot_message(interaction: discord.Interaction,
 @bot.tree.context_menu(name='get track metadata')
 async def fetch_embed_message(interaction: discord.Interaction,
                               message: discord.Message):
-    if (testInstance == 'True' and str(interaction.user.id) != user2):  # or (
+    if (testInstance == 'True'
+            and str(interaction.user.id) != ownerUser):  # or (
         #testInstance == 'False' and str(interaction.user.id) == user2):
         return
     await interaction.response.send_message(
