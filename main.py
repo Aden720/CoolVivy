@@ -228,8 +228,10 @@ def getYouTubeParts(embed):
         #         'description']
 
         #Square Thumbnail
-        youtubeParts['thumbnailUrl'] = track['videoDetails']['thumbnail'][
-            'thumbnails'][-1]['url']
+        videoThumbnail = track['videoDetails']['thumbnail']['thumbnails'][-1]
+        youtubeParts['thumbnailUrl'] = (
+            videoThumbnail['url'] if videoThumbnail['width']
+            == videoThumbnail['height'] else embed.thumbnail.url)
 
     else:
         playlistId = re.search(r'playlist\?list=([^&]*)', embed.url)
