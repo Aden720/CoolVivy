@@ -419,10 +419,23 @@ async def fetch_embed_message(interaction: discord.Interaction,
             trackEmbed = await fetchEmbed(message, True)
             if trackEmbed:
                 await interaction.followup.send(
-                    content=interaction.user.mention,
-                    embed=trackEmbed)
+                    content=interaction.user.mention, embed=trackEmbed)
     except Exception as e:
         await interaction.followup.send(content=str(e), ephemeral=True)
+
+
+@bot.tree.command(name="help", description="Show help information")
+async def help_command(interaction: discord.Interaction):
+    help_text = """I provide information about track links and albums.
+
+__**How to use**__
+On any track link from Soundcloud, Spotify, Bandcamp or YouTube:
+1. Right click/hold a message
+1. Select **Apps**
+1. Select **get track metadata**.
+    - You can clean up messages I've sent by selecting the **delete message** option.
+    """.strip()
+    await interaction.response.send_message(help_text, ephemeral=True)
 
 
 try:
