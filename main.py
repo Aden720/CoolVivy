@@ -368,6 +368,18 @@ def setAuthorLink(embedMessage, embedType):
             icon_url='https://s4.bcbits.com/img/favicon/favicon-32x32.png')
 
 
+def getUserIdFromFooter(message):
+    if len(message.embeds) > 0:
+        footer = message.embeds[-1].footer
+        if footer:
+            # Regex to match 'Powered by Vivy 126532652625'
+            powered_by_vivy_regex = re.compile(r"Powered by CoolVivy (\d+)")
+            match = powered_by_vivy_regex.search(str(footer.text))
+            if match and match.group(1):
+                return match.group(1)
+    return None
+
+
 #Allow user to delete a message related to them or the bot, for cleanup
 @bot.tree.context_menu(name='delete message')
 async def delete_bot_message(interaction: discord.Interaction,
@@ -380,16 +392,11 @@ async def delete_bot_message(interaction: discord.Interaction,
         if (bot.user and message.author.id == bot.user.id) or \
            (message.author.id == interaction.user.id):
             canDelete = True
-        elif message.author.bot is True and len(message.embeds) > 0:
-            embed = message.embeds[-1]
-            if embed.footer is not None:
-                # Regex to match 'Powered by Vivy 126532652625'
-                powered_by_vivy_regex = re.compile(
-                    r"Powered by CoolVivy (\d+)")
-                match = powered_by_vivy_regex.search(str(embed.footer.text))
-                # check the user id matches
-                if match and match.group(1) == str(interaction.user.id):
-                    canDelete = True
+        elif message.author.bot is True:
+            userId = getUserIdFromFooter(message)
+            # check the user id matches
+            if userId == str(interaction.user.id):
+                canDelete = True
         if canDelete:
             await message.delete()
             # await interaction.response.send_message(content='Attempting to delete...',
