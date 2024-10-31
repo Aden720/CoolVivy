@@ -44,6 +44,24 @@ async def on_ready():
 
 
 @bot.event
+async def on_guild_join(guild):
+    # Find a text channel to send the welcome message
+    if guild.system_channel is not None:
+        to_send = guild.system_channel
+    else:
+        # Use the first channel the bot has permissions to send messages in
+        to_send = discord.utils.find(
+            lambda x: x.permissions_for(guild.me).send_messages,
+            guild.text_channels)
+    # Message content
+    join_message = f"Hello {guild.name}!\nThanks for inviting me.\n"\
+        "Use `/help` for the basic instructions. [so cool.](https://i.imgur.com/fFvOiry.png)"
+    # Send the message
+    if to_send:
+        await to_send.send(join_message)
+
+
+@bot.event
 async def on_message(message):
     if message.author.bot is True \
         or (testInstance == "True" and str(message.author.id) != ownerUser):
@@ -189,8 +207,10 @@ async def fetchEmbed(message, isInteraction):
             message.content = (
                 f'{referencedUser.mention if referencedUser else ""} {jump_url}\n'
                 f'{message.content}')
-        embeds[-1].set_footer(text=f'Powered by CoolVivy {message.author.id}',
-                              icon_url=message.channel.guild.me.avatar.url)
+        embeds[-1].set_footer(
+            text='Powered by CoolVivy',
+            icon_url=
+            f'{message.channel.guild.me.avatar.url}#{message.author.id}')
         if hasattr(message.channel, 'parent'):
             await webhook.send(content=message.content,
                                embeds=embeds,
@@ -408,8 +428,8 @@ def getUserIdFromFooter(message):
         footer = message.embeds[-1].footer
         if footer:
             # Regex to match 'Powered by Vivy 126532652625'
-            powered_by_vivy_regex = re.compile(r"Powered by CoolVivy (\d+)")
-            match = powered_by_vivy_regex.search(str(footer.text))
+            powered_by_vivy_regex = re.compile(r".*#(\d+)")
+            match = powered_by_vivy_regex.search(str(footer.icon_url))
             if match and match.group(1):
                 return int(match.group(1))
     return None
