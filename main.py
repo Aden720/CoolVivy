@@ -45,8 +45,8 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    if message.author == bot.user or (testInstance == "True" and str(
-            message.author.id) != ownerUser) or message.author.bot is True:
+    if message.author.bot is True \
+        or (testInstance == "True" and str(message.author.id) != ownerUser):
         # or (testInstance == 'False' and str(message.author.id) == user2):
         return
     elif bot.user and (str(bot.user.id) in message.content):
@@ -62,6 +62,26 @@ async def on_message(message):
             await fetchEmbed(message, False)
         except Exception as e:
             print(f'Error: {e}')
+    else:
+        referencedUser = await getReferencedUser(message)
+        if referencedUser:
+            await referencedUser.send(
+                f'You were mentioned in {message.jump_url} '
+                f'by {message.author.mention}.')
+
+
+# If the message is a reply to the bot's message,
+# get the replied message and fetch the original user
+async def getReferencedUser(message):
+    if message.reference and message.reference.resolved.author.bot:
+        referencedUserId = getUserIdFromFooter(message.reference.resolved)
+        if referencedUserId and referencedUserId != message.author.id:
+            referencedUser = await message.guild.fetch_member(referencedUserId)
+            if referencedUser:
+                hasMentionedUserInMessage = referencedUser.mention in message.content
+                if not hasMentionedUserInMessage:
+                    return referencedUser
+    return None
 
 
 async def fetchWebhook(message):
@@ -94,8 +114,11 @@ async def fetchEmbed(message, isInteraction):
     newMessage = await message.channel.fetch_message(message.id)
     embeds = []
     webhook = None
+    referencedUser = None
+    sentReplyMessage = False
     if not isInteraction:
         webhook = await fetchWebhook(message)
+        referencedUser = await getReferencedUser(message)
     canUseWebhook = webhook is not None
 
     for embed in newMessage.embeds:
@@ -151,12 +174,21 @@ async def fetchEmbed(message, isInteraction):
                 if canUseWebhook:
                     embeds.append(embedVar)
                     continue
-                await message.channel.send(embed=embedVar)
+                if referencedUser:
+                    await message.reference.resolved.reply(embed=embedVar)
+                    sentReplyMessage = True
+                else:
+                    await message.reply(embed=embedVar)
         else:
             raise Exception(
                 "This doesn't seem to be a supported URL.\nCurrently only "
                 "Bandcamp, SoundCloud, Spotify and YouTube are supported.")
     if canUseWebhook and len(embeds) > 0:
+        # replace message content if the message is a reply
+        if referencedUser:
+            message.content = (
+                f'{referencedUser.mention} {message.reference.resolved.jump_url}\n'
+                f'{message.content}')
         embeds[-1].set_footer(text=f'Powered by CoolVivy {message.author.id}',
                               icon_url=message.channel.guild.me.avatar.url)
         if hasattr(message.channel, 'parent'):
@@ -172,8 +204,12 @@ async def fetchEmbed(message, isInteraction):
                 username=message.author.display_name,
                 avatar_url=message.author.avatar.url,
             )
+        sentReplyMessage = True
         #remove original message
         await message.delete()
+    if not sentReplyMessage and referencedUser:
+        await referencedUser.send(f'You were mentioned in {message.jump_url} '
+                                  f'by {message.author.mention}.')
 
 
 #Check if it's a Youtube Music track based on track type
@@ -376,7 +412,7 @@ def getUserIdFromFooter(message):
             powered_by_vivy_regex = re.compile(r"Powered by CoolVivy (\d+)")
             match = powered_by_vivy_regex.search(str(footer.text))
             if match and match.group(1):
-                return match.group(1)
+                return int(match.group(1))
     return None
 
 
@@ -395,7 +431,7 @@ async def delete_bot_message(interaction: discord.Interaction,
         elif message.author.bot is True:
             userId = getUserIdFromFooter(message)
             # check the user id matches
-            if userId == str(interaction.user.id):
+            if userId == interaction.user.id:
                 canDelete = True
         if canDelete:
             await message.delete()
