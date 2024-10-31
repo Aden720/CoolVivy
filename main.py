@@ -65,9 +65,7 @@ async def on_message(message):
     else:
         referencedUser = await getReferencedUser(message)
         if referencedUser:
-            await referencedUser.send(
-                f'You were mentioned in {message.jump_url} '
-                f'by {message.author.mention}.')
+            await message.reply(referencedUser.mention, mention_author=False)
 
 
 # If the message is a reply to the bot's message,
@@ -180,14 +178,16 @@ async def fetchEmbed(message, isInteraction):
                 else:
                     await message.reply(embed=embedVar)
         else:
-            raise Exception(
-                "This doesn't seem to be a supported URL.\nCurrently only "
-                "Bandcamp, SoundCloud, Spotify and YouTube are supported.")
+            if isInteraction:
+                raise Exception(
+                    "This doesn't seem to be a supported URL.\nCurrently only "
+                    "Bandcamp, SoundCloud, Spotify and YouTube are supported.")
     if canUseWebhook and len(embeds) > 0:
         # replace message content if the message is a reply
-        if referencedUser:
+        if message.reference:
+            jump_url = message.reference.resolved.jump_url
             message.content = (
-                f'{referencedUser.mention} {message.reference.resolved.jump_url}\n'
+                f'{referencedUser.mention if referencedUser else ""} {jump_url}\n'
                 f'{message.content}')
         embeds[-1].set_footer(text=f'Powered by CoolVivy {message.author.id}',
                               icon_url=message.channel.guild.me.avatar.url)
@@ -208,8 +208,7 @@ async def fetchEmbed(message, isInteraction):
         #remove original message
         await message.delete()
     if not sentReplyMessage and referencedUser:
-        await referencedUser.send(f'You were mentioned in {message.jump_url} '
-                                  f'by {message.author.mention}.')
+        await message.reply(referencedUser.mention, mention_author=False)
 
 
 #Check if it's a Youtube Music track based on track type
