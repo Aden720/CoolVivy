@@ -55,7 +55,7 @@ async def on_guild_join(guild):
             guild.text_channels)
     # Message content
     join_message = f"Hello {guild.name}!\nThanks for inviting me.\n"\
-        "Use `/help` for the basic instructions. [so cool.](https://i.imgur.com/fFvOiry.png)"
+        "Use `/help` for the basic instructions. [❤︎](https://i.imgur.com/fFvOiry.png)"
     # Send the message
     if to_send:
         await to_send.send(join_message)
