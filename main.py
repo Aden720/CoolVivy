@@ -54,8 +54,8 @@ async def on_guild_join(guild):
             lambda x: x.permissions_for(guild.me).send_messages,
             guild.text_channels)
     # Message content
-    join_message = f"Hello {guild.name}!\nThanks for inviting me.\n"\
-        "Use `/help` for the basic instructions. [❤︎](https://i.imgur.com/fFvOiry.png)"
+    join_message = f"Hello {guild.name}!\nThanks for inviting me [❤︎](https://i.imgur.com/fFvOiry.png).\n"\
+        "Use `/help` for the basic instructions."
     # Send the message
     if to_send:
         await to_send.send(join_message)
@@ -126,13 +126,13 @@ async def fetchWebhook(message):
     return webhook
 
 
-async def fetchEmbed(message, isInteraction):
+async def fetchEmbed(message, isInteraction=False, isDM=False):
     newMessage = await message.channel.fetch_message(message.id)
     embeds = []
     webhook = None
     referencedUser = None
     sentReplyMessage = False
-    if not isInteraction:
+    if not isInteraction and not isDM:
         webhook = await fetchWebhook(message)
         referencedUser = await getReferencedUser(message)
     canUseWebhook = webhook is not None
@@ -480,7 +480,9 @@ async def fetch_embed_message(interaction: discord.Interaction,
         content=f'Fetching details for {message.jump_url}', ephemeral=True)
     try:
         if message.author.id == interaction.user.id:
-            await fetchEmbed(message, False)
+            await fetchEmbed(
+                message, False,
+                isinstance(interaction.channel, discord.DMChannel))
         else:
             trackEmbed = await fetchEmbed(message, True)
             if trackEmbed:
