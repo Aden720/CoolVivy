@@ -1,12 +1,13 @@
 import json
 import os
 import re
+from datetime import datetime, timezone
 
 import requests
 from bs4 import BeautifulSoup
 from dotmap import DotMap
 
-from general_utils import formatMillisecondsToDurationString
+from general_utils import formatMillisecondsToDurationString, formatTimeToDisplay
 
 endpoint = os.getenv('ENDPOINT')
 if endpoint is None:
@@ -56,7 +57,8 @@ class Album:
         self.artist = pageData['byArtist']['name']
         self.num_tracks = pageData['numTracks']
         self.tracks = pageData['track']['itemListElement']
-        self.release_date = pageData['datePublished']
+        self.release_date = formatTimeToDisplay(pageData['datePublished'],
+                                                '%d %b %Y %H:%M:%S GMT')
         self.tags = pageData['keywords']
         self.publisher = {
             'name': pageData['publisher']['name'],
@@ -67,7 +69,9 @@ class Album:
         if albumData:
             self.release_date = albumData
             self.tracks = albumData['tracks']
-            self.release_date = albumData['release_date']
+            self.release_date = datetime.fromtimestamp(
+                albumData['release_date'],
+                tz=timezone.utc).strftime('%-d %B %Y')
             if len(albumData['tags']) > 0:
                 self.tags = albumData['tags']
 
