@@ -7,7 +7,7 @@ import requests
 from bs4 import BeautifulSoup
 from dotmap import DotMap
 
-from general_utils import formatMillisecondsToDurationString, formatTimeToDisplay
+from general_utils import formatMillisecondsToDurationString, formatTimeToDisplay, remove_trailing_slash
 
 endpoint = os.getenv('ENDPOINT')
 if endpoint is None:
@@ -189,7 +189,7 @@ def getBandcampParts(embed):
     #fetches the data from the bandcamp url
     try:
         raise Exception('bypassing until mapping is complete')
-        scraper = BandcampScraper(embed.url)
+        scraper = BandcampScraper(remove_trailing_slash(embed.url))
         if scraper.isTrack:
             track = scraper.track
             bandcampParts.update(track.mapToParts())

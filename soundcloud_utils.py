@@ -7,6 +7,7 @@ from general_utils import (
     cleanLinks,
     formatMillisecondsToDurationString,
     formatTimeToDisplay,
+    remove_trailing_slash,
 )
 
 
@@ -38,7 +39,7 @@ def getSoundcloudParts(embed):
         'embedColour': 0xff5500
     }
 
-    track = fetchTrack(embed.url)
+    track = fetchTrack(remove_trailing_slash(embed.url))
 
     if isinstance(track, Track):
         artist = track.publisher_metadata.get(
@@ -96,7 +97,8 @@ def getSoundcloudParts(embed):
         soundcloudParts['title'] = f'{track.title}'
         if (track.is_album):
             soundcloudParts['description'] = 'Album'
-            soundcloudParts['Artist'] = track.user['username']
+            soundcloudParts['Artist'] = (f'[{track.user["username"]}]'
+                                         f'({track.user["permalink_url"]})')
         else:
             soundcloudParts['description'] = 'Playlist'
 

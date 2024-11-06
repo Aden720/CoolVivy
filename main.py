@@ -13,6 +13,7 @@ from general_utils import (
     formatMillisecondsToDurationString,
     formatTimeToDisplay,
     formatTimeToTimestamp,
+    remove_trailing_slash,
 )
 from soundcloud_utils import getSoundcloudParts
 from spotify_utils import getSpotifyParts
@@ -151,7 +152,7 @@ async def fetchEmbed(message, isInteraction=False, isDM=False):
                 title=fieldParts.get('title', embed.title),
                 description=fieldParts.get('description'),
                 color=fieldParts.get('embedColour', 0x00dcff),
-                url=embed.url)
+                url=remove_trailing_slash(embed.url))
 
             #add platform link if applicable
             setAuthorLink(embedVar, fieldParts.get('embedPlatformType'))
