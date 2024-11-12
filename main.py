@@ -259,8 +259,12 @@ def getYouTubeParts(embed):
 
         #Artist/Channel
         videoType = track['videoDetails'].get('musicVideoType')
-        author = track['microformat']['microformatDataRenderer'][
-            'pageOwnerDetails']['name'].replace(' - Topic', '')
+        channelAuthor = track['microformat']['microformatDataRenderer'][
+            'pageOwnerDetails']['name']
+        musicAuthor = track['videoDetails']['author']
+        author = channelAuthor.replace(
+            ' - Topic',
+            '') if channelAuthor.endswith(' - Topic') else musicAuthor
         channelId = track['videoDetails']['channelId']
         isYoutubeMusicTrack = isYoutubeMusic(videoType)
         if isYoutubeMusicTrack:
