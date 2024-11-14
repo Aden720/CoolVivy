@@ -75,7 +75,7 @@ async def on_message(message):
             await message.channel.send(
                 f'Ask <@{ownerUser}> for help.'
                 if ownerUser else 'Use **/help** for help.')
-    elif str(message.guild.id) in server_whitelist:
+    elif message.guild and str(message.guild.id) in server_whitelist:
         await asyncio.sleep(3)
         try:
             await fetchEmbed(message, False)
@@ -436,7 +436,7 @@ def getUserIdFromFooter(message):
     if len(message.embeds) > 0:
         footer = message.embeds[-1].footer
         if footer:
-            # Regex to match 'Powered by Vivy 126532652625'
+            # Regex to match 'iconURL#126532652625'
             powered_by_vivy_regex = re.compile(r".*#(\d+)")
             match = powered_by_vivy_regex.search(str(footer.icon_url))
             if match and match.group(1):
