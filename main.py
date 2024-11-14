@@ -435,7 +435,7 @@ def setAuthorLink(embedMessage, embedType):
 def getUserIdFromFooter(message):
     if len(message.embeds) > 0:
         footer = message.embeds[-1].footer
-        if footer:
+        if footer and footer.icon_url:
             # Regex to match 'iconURL#126532652625'
             powered_by_vivy_regex = re.compile(r".*#(\d+)")
             match = powered_by_vivy_regex.search(str(footer.icon_url))
