@@ -10,3 +10,6 @@ channel = "stable-23_05"
 run = ["python", "main.py"]
 deploymentTarget = "gce"
 ignorePorts = true
+
+[env]
+REPLIT_DISABLE_PACKAGE_LAYER = "1"
