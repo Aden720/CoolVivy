@@ -64,10 +64,12 @@ def getSoundcloudParts(embed):
                 track.created_at, '%Y-%m-%dT%H:%M:%SZ')
 
         #Likes
-        soundcloudParts['Likes'] = f':orange_heart: {track.likes_count}'
+        if track.likes_count:
+            soundcloudParts['Likes'] = f':orange_heart: {track.likes_count}'
 
         #Plays
-        soundcloudParts['Plays'] = f':notes: {track.playback_count:,}'
+        if track.playback_count:
+            soundcloudParts['Plays'] = f':notes: {track.playback_count:,}'
 
         #Buy Link
         if track.purchase_url:
