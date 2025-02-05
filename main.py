@@ -263,7 +263,8 @@ def getYouTubeParts(embed):
             'pageOwnerDetails']['name']
         musicAuthor = track['videoDetails']['author']
         author = musicAuthor
-        if channelAuthor.endswith(' - Topic'):
+        if channelAuthor.endswith(
+                ' - Topic') and channelAuthor != 'Release - Topic':
             channelAuthor = channelAuthor.replace(' - Topic', '')
             #Choose the longest artist name (the case for most scenarios)
             if len(channelAuthor) > len(musicAuthor):
