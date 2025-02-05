@@ -13,3 +13,4 @@ ignorePorts = true
 
 [env]
 REPLIT_DISABLE_PACKAGE_LAYER = "1"
+REPLIT_PYTHON_PACKAGE_LAYER = "0"
