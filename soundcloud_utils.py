@@ -47,7 +47,7 @@ def getSoundcloudParts(embed):
             track.artist) if track.publisher_metadata else track.artist
         if artist.lower() in track.title.lower():
             soundcloudParts['title'] = track.title if artist.lower(
-            ) == track.artist.lower() else f'{artist} - {track.title}'
+            ) == track.artist.lower() else f'{track.artist} - {track.title}'
         else:
             soundcloudParts['title'] = f'{artist} - {track.title}'
 
