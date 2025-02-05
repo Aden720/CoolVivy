@@ -43,8 +43,10 @@ def getSoundcloudParts(embed):
 
     if isinstance(track, Track):
         artist = track.publisher_metadata.get(
-            'artist',
-            track.artist) if track.publisher_metadata else track.artist
+            'writer_composer',
+            track.publisher_metadata.get(
+                'artist',
+                track.artist)) if track.publisher_metadata else track.artist
         if artist.lower() in track.title.lower():
             soundcloudParts['title'] = track.title if artist.lower(
             ) == track.artist.lower() else f'{track.artist} - {track.title}'
