@@ -7,7 +7,11 @@ import requests
 from bs4 import BeautifulSoup
 from dotmap import DotMap
 
-from general_utils import formatMillisecondsToDurationString, formatTimeToDisplay, remove_trailing_slash
+from general_utils import (
+    formatMillisecondsToDurationString,
+    formatTimeToDisplay,
+    remove_trailing_slash,
+)
 
 endpoint = os.getenv('ENDPOINT')
 if endpoint is None:
