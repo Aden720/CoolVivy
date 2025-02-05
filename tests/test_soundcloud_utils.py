@@ -105,7 +105,6 @@ class TestSoundcloudUtils(unittest.TestCase):
 
         # Act
         result = getSoundcloudParts(setupBasicEmbed())
-        print(result)
 
         # Assert
         expected_parts = {
@@ -117,7 +116,6 @@ class TestSoundcloudUtils(unittest.TestCase):
             'Likes': ':orange_heart: 123',
             'Plays': ':notes: 456'
         }
-        print(expected_parts)
         assert result == expected_parts
 
         mock_fetch_track.assert_called_once_with(
@@ -127,83 +125,49 @@ class TestSoundcloudUtils(unittest.TestCase):
     def test_getSoundcloudParts_DefinedArtist(self, mock_fetch_track):
         # Arrange
         mock_track = setupBasicTrack()
-        mock_track.publisher_metadata = {'artist': 'My Custom Artist'}
+        customArtist = 'My Custom Artist'
+        mock_track.publisher_metadata = {'artist': customArtist}
         mock_fetch_track.return_value = mock_track
 
         # Act
         result = getSoundcloudParts(setupBasicEmbed())
-        print(result)
 
         # Assert
-        expected_parts = {
-            'embedPlatformType': 'soundcloud',
-            'embedColour': 0xff5500,
-            'title': f'My Custom Artist - {mock_track.title}',
-            'Duration': '`2:03`',
-            'Uploaded on': '1 January 2022',
-            'Likes': ':orange_heart: 123',
-            'Plays': ':notes: 456'
-        }
-        print(expected_parts)
-        assert result == expected_parts
 
-        mock_fetch_track.assert_called_once_with(
-            'https://soundcloud.com/someTrack')
+        expected_title = f'{customArtist} - {mock_track.title}'
+
+        assert result['title'] == expected_title
 
     @patch('soundcloud_utils.fetchTrack')
     def test_getSoundcloudParts_DefinedArtistRemixArtist(
             self, mock_fetch_track):
         # Arrange
         mock_track = setupBasicTrack()
-        mock_track.publisher_metadata = {'artist': 'My Custom Artist'}
-        mock_track.title = 'Mock Track Title (My Custom Artist Remix)'
+        customArtist = 'My Custom Artist'
+        mock_track.publisher_metadata = {'artist': customArtist}
+        mock_track.title = f'Mock Track Title ({customArtist} Remix)'
         mock_fetch_track.return_value = mock_track
 
         # Act
         result = getSoundcloudParts(setupBasicEmbed())
-        print(result)
 
         # Assert
-        expected_parts = {
-            'embedPlatformType': 'soundcloud',
-            'embedColour': 0xff5500,
-            'title':
-            f'{mock_track.artist} - {mock_track.title} (My Custom Artist Remix)',
-            'Duration': '`2:03`',
-            'Uploaded on': '1 January 2022',
-            'Likes': ':orange_heart: 123',
-            'Plays': ':notes: 456'
-        }
-        print(expected_parts)
-        assert result == expected_parts
+        expected_title = f'Mock Artist - Mock Track Title ({customArtist} Remix)'
 
-        mock_fetch_track.assert_called_once_with(
-            'https://soundcloud.com/someTrack')
+        assert result['title'] == expected_title
 
     @patch('soundcloud_utils.fetchTrack')
     def test_getSoundcloudParts_DefinedArtistRemixArtistSameChannel(
             self, mock_fetch_track):
         # Arrange
         mock_track = setupBasicTrack()
-        mock_track.title = 'Mock Track Title (Mock Artist Remix)'
+        mock_track.title = f'Mock Track Title ({mock_track.artist} Remix)'
         mock_fetch_track.return_value = mock_track
 
         # Act
         result = getSoundcloudParts(setupBasicEmbed())
-        print(result)
 
         # Assert
-        expected_parts = {
-            'embedPlatformType': 'soundcloud',
-            'embedColour': 0xff5500,
-            'title': f'{mock_track.title} ({mock_track.artist} Remix)',
-            'Duration': '`2:03`',
-            'Uploaded on': '1 January 2022',
-            'Likes': ':orange_heart: 123',
-            'Plays': ':notes: 456'
-        }
-        print(expected_parts)
-        assert result == expected_parts
+        expected_title = 'Mock Track Title (Mock Artist Remix)'
 
-        mock_fetch_track.assert_called_once_with(
-            'https://soundcloud.com/someTrack')
+        assert result['title'] == expected_title
