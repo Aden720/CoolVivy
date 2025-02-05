@@ -23,6 +23,7 @@ def setupBasicTrack():
     mock_track.purchase_title = ''
     mock_track.purchase_url = ''
     mock_track.user = {}
+    mock_track.publisher_metadata = {}
     return mock_track
 
 
