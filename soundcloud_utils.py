@@ -42,15 +42,20 @@ def getSoundcloudParts(embed):
     track = fetchTrack(remove_trailing_slash(embed.url))
 
     if isinstance(track, Track):
+        if checkTrackTitle(track.title):
+            setTrackTitle(track)
         artist = track.publisher_metadata.get(
             'writer_composer',
             track.publisher_metadata.get(
                 'artist',
                 track.artist)) if track.publisher_metadata else track.artist
+
         if artist.lower() in track.title.lower():
             soundcloudParts['title'] = track.title if artist.lower(
             ) == track.artist.lower() else f'{track.artist} - {track.title}'
         else:
+            if artist == track.user.get('username'):
+                artist = track.artist
             soundcloudParts['title'] = f'{artist} - {track.title}'
 
         if track.genre:
@@ -137,3 +142,16 @@ def getSoundcloudParts(embed):
         if embed.description:
             soundcloudParts['Description'] = cleanLinks(embed.description)
     return soundcloudParts
+
+
+def checkTrackTitle(track_title):
+    return '-' in track_title or '–' in track_title
+
+
+def setTrackTitle(track: Track):
+    trackNameRegex = r"(.+?)\s[-–]\s(.*)"
+    fullTitle = f'{track.artist}-{track.title}'
+    match = re.match(trackNameRegex, fullTitle)
+    if match:
+        track.title = match.group(2)
+        track.artist = match.group(1)
