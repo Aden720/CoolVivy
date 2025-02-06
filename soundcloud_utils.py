@@ -44,11 +44,7 @@ def getSoundcloudParts(embed):
     if isinstance(track, Track):
         if checkTrackTitle(track.title):
             setTrackTitle(track)
-        artist = track.publisher_metadata.get(
-            'writer_composer',
-            track.publisher_metadata.get(
-                'artist',
-                track.artist)) if track.publisher_metadata else track.artist
+        artist = getTrackArtist(track)
 
         if artist.lower() in track.title.lower():
             soundcloudParts['title'] = track.title if artist.lower(
@@ -154,4 +150,18 @@ def setTrackTitle(track: Track):
     match = re.match(trackNameRegex, fullTitle)
     if match:
         track.title = match.group(2)
-        track.artist = match.group(1)
+        track.artist = match.group(1)\
+
+
+def getTrackArtist(track: Track):
+    user = track.user.get('username')
+    if track.publisher_metadata:
+        metaComposer = track.publisher_metadata.get('writer_composer')
+        metaArtist = track.publisher_metadata.get('artist')
+        if metaArtist and user and metaArtist != user:
+            return metaArtist
+        elif metaComposer:
+            return metaComposer
+        elif metaArtist:
+            return metaArtist
+    return track.artist
