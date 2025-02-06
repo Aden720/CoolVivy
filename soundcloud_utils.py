@@ -150,7 +150,7 @@ def setTrackTitle(track: Track):
     match = re.match(trackNameRegex, fullTitle)
     if match:
         track.title = match.group(2)
-        track.artist = match.group(1)\
+        track.artist = match.group(1)
 
 
 def getTrackArtist(track: Track):
