@@ -1,8 +1,8 @@
-
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from mockData.youtube_mock_scenarios import setupBasicEmbed, setupBasicVideo
+
 from youtube_utils import getYouTubeParts, isYoutubeMusic
 
 
@@ -35,8 +35,8 @@ class TestYoutubeUtils(unittest.TestCase):
     def test_getYouTubeParts_release_topic(self, mock_fetch_track):
         # Arrange
         mock_video = setupBasicVideo()
-        mock_video['microformat']['microformatDataRenderer']['pageOwnerDetails'][
-            'name'] = 'Release - Topic'
+        mock_video['microformat']['microformatDataRenderer'][
+            'pageOwnerDetails']['name'] = 'Release - Topic'
         mock_fetch_track.return_value = (mock_video, 1)
 
         # Act
@@ -60,8 +60,9 @@ class TestYoutubeUtils(unittest.TestCase):
 
         # Assert
         self.assertEqual(result['embedPlatformType'], 'youtube')
-        self.assertEqual(result['Channel'],
-                         '[Mock Channel](https://youtube.com/channel/UC123456789)')
+        self.assertEqual(
+            result['Channel'],
+            '[Mock Channel](https://youtube.com/channel/UC123456789)')
 
     @patch('youtube_utils.fetchTrack')
     def test_getYouTubeParts_no_track_found(self, mock_fetch_track):
