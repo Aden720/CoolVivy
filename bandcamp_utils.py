@@ -31,11 +31,20 @@ class Track:
     #map to track fields
     def __init__(self, pageData, trackData):
         self.title = pageData['name']
+        self.tags = pageData['keywords']
+        self.thumbnail = pageData['image']
         self.artist = {
             'name': pageData['byArtist']['name'],
             'url': pageData['byArtist'].get('@id')
         }
-        self.tags = pageData['keywords']
+        self.publisher = {
+            'name': pageData['publisher']['name'],
+            'url': pageData['publisher'].get('@id')
+        }
+        self.album = {
+            'name': pageData['inAlbum']['name'],
+            'url': pageData['inAlbum'].get('@id')
+        }
 
         #extra data from API
         if trackData:
@@ -50,15 +59,29 @@ class Track:
 
     def mapToParts(self):
         parts = {}
-        parts['title'] = self.title
-        if self.is_purchasable:
-            parts['Price'] = format_currency(self.price,
-                                             self.currency,
-                                             locale='en_US')
-        parts['Released on'] = formatTimeToDisplay(str(self.release_date),
-                                                   '%s')
+        if self.thumbnail:
+            parts['thumbnailUrl'] = self.thumbnail
+        parts['title'] = self.artist['name'] + ' - ' + self.title
+        if self.artist:
+            parts['Artist'] = (f'[{self.artist["name"]}]({self.artist["url"]})'
+                               if self.artist['url'] else self.artist['name'])
+        if self.album:
+            parts['Album'] = (f'[{self.album["name"]}]({self.album["url"]})'
+                              if self.album['url'] else self.album['name'])
+        if self.publisher and self.publisher['name'] != self.artist['name']:
+            parts[
+                'Channel'] = f'[{self.publisher["name"]}]({self.publisher["url"]})'
         parts['Duration'] = formatMillisecondsToDurationString(self.duration *
                                                                1000)
+        if self.release_date:
+            release_date = datetime.fromtimestamp(self.release_date,
+                                                  tz=timezone.utc)
+            parts['Released on'] = formatTimeToDisplay(
+                release_date.strftime('%Y-%m-%dT%H:%M:%S'),
+                '%Y-%m-%dT%H:%M:%S')
+        if self.is_purchasable:
+            parts[
+                'Price'] = f'`{format_currency(self.price,self.currency,locale="en_US")}`'
         return parts
 
 
