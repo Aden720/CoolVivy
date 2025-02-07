@@ -203,51 +203,51 @@ def getBandcampParts(embed):
     except Exception as e:
         #fallback method from embed
         print(f"An error occurred: {e}")
-
-        #get details from embed instead
-        channelUrl = re.sub(r'(https?://[a-zA-Z0-9\-]*\.bandcamp\.com).*',
-                            r'\1', embed.url)
-        if embed.title:
-            bandcampParts['title'], artist = embed.title.split(', by ')
-            bandcampParts['Artist'] = artist
-            if artist != 'Various Artists' and artist not in bandcampParts[
-                    "title"]:
-                title_artist_pattern = re.compile(r'^.+\s-\s.+$')
-                #channel name may not always be artist
-                if not title_artist_pattern.match(embed.title):
-                    bandcampParts[
-                        'title'] = f'{artist} - {bandcampParts["title"]}'
-                artistString = bandcampParts['title'].split(' - ')[0]
-                artist_parts_comma = artistString.split(', ')
-                artist_parts_ampersand = artistString.split(' & ')
-                if len(artist_parts_comma) > 1 or len(
-                        artist_parts_ampersand) > 1:
-                    bandcampParts['Artists'] = artistString
-                    bandcampParts.pop('Artist', None)
-                else:
-                    bandcampParts['Artist'] = artistString
-
-        if embed.description:
-            if embed.description.startswith('from the album'):
-                bandcampParts['Album'] = embed.description.split(
-                    'from the album ')[-1]
-            elif embed.description.startswith('track by'):
-                bandcampParts['description'] = 'Single'
-            else:
-                bandcampParts['title'] = bandcampParts['title'].split(
-                    ' - ')[-1]
-                bandcampParts['description'] = embed.description
-
-        if embed.provider:
-            if embed.provider.name != bandcampParts.get('Artist'):
-                bandcampParts['Channel'] = (
-                    f'[{embed.provider.name}]'
-                    f'({embed.provider.url or channelUrl})')
-            else:
-                bandcampParts[
-                    'Artist'] = f'[{bandcampParts["Artist"]}]({channelUrl})'
+        bandcampParts.update(getPartsFromEmbed(embed))
 
     return bandcampParts
+
+
+#get track details from embed
+def getPartsFromEmbed(embed):
+    trackParts = {}
+    channelUrl = re.sub(r'(https?://[a-zA-Z0-9\-]*\.bandcamp\.com).*', r'\1',
+                        embed.url)
+    if embed.title:
+        trackParts['title'], artist = embed.title.split(', by ')
+        trackParts['Artist'] = artist
+        if artist != 'Various Artists' and artist not in trackParts["title"]:
+            title_artist_pattern = re.compile(r'^.+\s-\s.+$')
+            #channel name may not always be artist
+            if not title_artist_pattern.match(embed.title):
+                trackParts['title'] = f'{artist} - {trackParts["title"]}'
+            artistString = trackParts['title'].split(' - ')[0]
+            artist_parts_comma = artistString.split(', ')
+            artist_parts_ampersand = artistString.split(' & ')
+            if len(artist_parts_comma) > 1 or len(artist_parts_ampersand) > 1:
+                trackParts['Artists'] = artistString
+                trackParts.pop('Artist', None)
+            else:
+                trackParts['Artist'] = artistString
+
+    if embed.description:
+        if embed.description.startswith('from the album'):
+            trackParts['Album'] = embed.description.split(
+                'from the album ')[-1]
+        elif embed.description.startswith('track by'):
+            trackParts['description'] = 'Single'
+        else:
+            trackParts['title'] = trackParts['title'].split(' - ')[-1]
+            trackParts['description'] = embed.description
+
+    if embed.provider:
+        if embed.provider.name != trackParts.get('Artist'):
+            trackParts['Channel'] = (f'[{embed.provider.name}]'
+                                     f'({embed.provider.url or channelUrl})')
+        else:
+            trackParts['Artist'] = f'[{trackParts["Artist"]}]({channelUrl})'
+
+    return trackParts
 
 
 def callAPI(artistId, itemId, type):
