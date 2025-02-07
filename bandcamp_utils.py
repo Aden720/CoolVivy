@@ -52,7 +52,13 @@ class Track:
         parts = {}
         parts['title'] = self.title
         if self.is_purchasable:
-            parts['Price'] = format_currency(self.price, self.currency, locale='en_US')
+            parts['Price'] = format_currency(self.price,
+                                             self.currency,
+                                             locale='en_US')
+        parts['Released on'] = formatTimeToDisplay(str(self.release_date),
+                                                   '%s')
+        parts['Duration'] = formatMillisecondsToDurationString(self.duration *
+                                                               1000)
         return parts
 
 
@@ -125,7 +131,7 @@ class BandcampScraper:
             self.track = self._parse_track(data)
             self.isTrack = True
             self.isAlbum = False
-            #return Track(data)
+            # return Track(data)
         elif re.match(album_url_pattern, url):
             self.album = self._parse_album(data)
             self.isTrack = False
