@@ -4,6 +4,7 @@ import re
 from datetime import datetime, timezone
 
 import requests
+from babel.numbers import format_currency
 from bs4 import BeautifulSoup
 from dotmap import DotMap
 
@@ -50,6 +51,8 @@ class Track:
     def mapToParts(self):
         parts = {}
         parts['title'] = self.title
+        if self.is_purchasable:
+            parts['Price'] = format_currency(self.price, self.currency, locale='en_US')
         return parts
 
 
@@ -192,7 +195,7 @@ def getBandcampParts(embed):
 
     #fetches the data from the bandcamp url
     try:
-        raise Exception('bypassing until mapping is complete')
+        # raise Exception('bypassing until mapping is complete')
         scraper = BandcampScraper(remove_trailing_slash(embed.url))
         if scraper.isTrack:
             track = scraper.track
