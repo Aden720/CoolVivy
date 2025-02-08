@@ -193,6 +193,10 @@ class Album:
             parts[
                 'Tracks'] += f'\n...and {self.num_tracks - len(trackStrings)} more'
 
+        if self.tags and len(self.tags) > 0:
+            formatted_tags = [f'`{tag}`' for tag in self.tags]
+            parts['Tags'] = ', '.join(formatted_tags)
+
         return parts
 
 
