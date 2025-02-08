@@ -30,6 +30,7 @@ types = DotMap(album='a', track='t')
 class Track:
     #map to track fields
     def __init__(self, pageData, trackData):
+        self.trackUrl = pageData['@id']
         self.title = pageData['name']
         self.tags = pageData['keywords']
         self.thumbnail = pageData['image']
@@ -62,6 +63,20 @@ class Track:
         if self.thumbnail:
             parts['thumbnailUrl'] = self.thumbnail
         parts['title'] = self.artist['name'] + ' - ' + self.title
+        parts['Duration'] = formatMillisecondsToDurationString(self.duration *
+                                                               1000)
+        if self.is_purchasable:
+            parts['Price'] = (
+                f'`{format_currency(self.price, self.currency, locale="en_US")}`'
+            )
+        elif self.free_download:
+            parts['Price'] = f'`:arrow_down: [Free Download]({self.trackUrl})`'
+        if self.release_date:
+            release_date = datetime.fromtimestamp(self.release_date,
+                                                  tz=timezone.utc)
+            parts['Released on'] = formatTimeToDisplay(
+                release_date.strftime('%Y-%m-%dT%H:%M:%S'),
+                '%Y-%m-%dT%H:%M:%S')
         if self.artist:
             parts['Artist'] = (f'[{self.artist["name"]}]({self.artist["url"]})'
                                if self.artist['url'] else self.artist['name'])
@@ -71,17 +86,9 @@ class Track:
         if self.publisher and self.publisher['name'] != self.artist['name']:
             parts[
                 'Channel'] = f'[{self.publisher["name"]}]({self.publisher["url"]})'
-        parts['Duration'] = formatMillisecondsToDurationString(self.duration *
-                                                               1000)
-        if self.release_date:
-            release_date = datetime.fromtimestamp(self.release_date,
-                                                  tz=timezone.utc)
-            parts['Released on'] = formatTimeToDisplay(
-                release_date.strftime('%Y-%m-%dT%H:%M:%S'),
-                '%Y-%m-%dT%H:%M:%S')
-        if self.is_purchasable:
-            parts[
-                'Price'] = f'`{format_currency(self.price,self.currency,locale="en_US")}`'
+        if self.tags and len(self.tags) > 0:
+            formatted_tags = [f'`{tag}`' for tag in self.tags]
+            parts['Tags'] = ', '.join(formatted_tags)
         return parts
 
 
