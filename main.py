@@ -60,8 +60,8 @@ async def on_guild_join(guild):
 @bot.event
 async def on_message(message):
     if message.author.bot is True \
-        or (testInstance == "True" and str(message.author.id) != ownerUser):
-        # or (testInstance == 'False' and str(message.author.id) == user2):
+        or (testInstance == "True" and str(message.author.id) != ownerUser) or \
+        (testInstance == 'False' and str(message.author.id) == ownerUser):
         return
     elif bot.user and (str(bot.user.id) in message.content):
         if 'hello' in message.content.lower():

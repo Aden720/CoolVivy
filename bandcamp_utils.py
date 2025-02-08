@@ -32,7 +32,7 @@ class Track:
     def __init__(self, pageData, trackData):
         self.trackUrl = pageData['@id']
         self.title = pageData['name']
-        self.tags = pageData['keywords']
+        # self.tags = pageData['keywords']
         self.thumbnail = pageData['image']
         self.artist = {
             'name': pageData['byArtist']['name'],
@@ -47,16 +47,20 @@ class Track:
             'url': pageData['inAlbum'].get('@id')
         }
 
+        #change the artist if the track is from a different artist
+        if self.publisher and self.publisher['name'] == self.artist['name'] and checkTrackTitle(self.title):
+            setTrackTitle(self)
+
         #extra data from API
         if trackData:
-            self.free_download = trackData['free_download']
-            if len(trackData['tags']) > 0:
-                self.tags = trackData['tags']
-            self.currency = trackData['currency']
-            self.price = trackData['price']
             self.is_purchasable = trackData['is_purchasable']
+            self.free_download = trackData['free_download']
+            self.price = trackData['price']
+            self.currency = trackData['currency']
             self.duration = trackData['tracks'][0]['duration']
             self.release_date = trackData['release_date']
+            if len(trackData['tags']) > 0:
+                self.tags = trackData['tags']
 
     def mapToParts(self):
         parts = {}
@@ -71,6 +75,7 @@ class Track:
             )
         elif self.free_download:
             parts['Price'] = f'`:arrow_down: [Free Download]({self.trackUrl})`'
+            
         if self.release_date:
             release_date = datetime.fromtimestamp(self.release_date,
                                                   tz=timezone.utc)
@@ -79,10 +84,10 @@ class Track:
                 '%Y-%m-%dT%H:%M:%S')
         if self.artist:
             parts['Artist'] = (f'[{self.artist["name"]}]({self.artist["url"]})'
-                               if self.artist['url'] else self.artist['name'])
+                               if self.artist.get('url') else self.artist['name'])
         if self.album:
             parts['Album'] = (f'[{self.album["name"]}]({self.album["url"]})'
-                              if self.album['url'] else self.album['name'])
+                              if self.album.get('url') else self.album['name'])
         if self.publisher and self.publisher['name'] != self.artist['name']:
             parts[
                 'Channel'] = f'[{self.publisher["name"]}]({self.publisher["url"]})'
@@ -97,12 +102,17 @@ class Album:
     #map to album fields
     def __init__(self, pageData, albumData):
         self.title = pageData['name']
-        self.artist = pageData['byArtist']['name']
         self.num_tracks = pageData['numTracks']
         self.tracks = pageData['track']['itemListElement']
+        self.tracksData = None
         self.release_date = formatTimeToDisplay(pageData['datePublished'],
                                                 '%d %b %Y %H:%M:%S GMT')
-        self.tags = pageData['keywords']
+        # self.tags = pageData['keywords']
+
+        self.artist = {
+            'name': pageData['byArtist']['name'],
+            'url': pageData['byArtist'].get('@id')
+        }
         self.publisher = {
             'name': pageData['publisher']['name'],
             'url': pageData['publisher'].get('@id')
@@ -110,42 +120,73 @@ class Album:
 
         #extra data from API
         if albumData:
-            self.release_date = albumData
-            self.tracks = albumData['tracks']
-            self.release_date = datetime.fromtimestamp(
-                albumData['release_date'],
-                tz=timezone.utc).strftime('%-d %B %Y')
+            self.tracksData = albumData['tracks']
+            self.is_purchasable = albumData['is_purchasable']
+            self.free_download = albumData['free_download']
+            self.price = albumData['price']
+            self.currency = albumData['currency']
+            release_date = datetime.fromtimestamp(albumData['release_date'],
+                  tz=timezone.utc)
+            self.release_date = formatTimeToDisplay(
+                release_date.strftime('%Y-%m-%dT%H:%M:%S'),
+                '%Y-%m-%dT%H:%M:%S')
             if len(albumData['tags']) > 0:
                 self.tags = albumData['tags']
 
     def mapToParts(self):
         parts = {}
         parts['title'] = self.title
+        parts['description'] = f'{self.num_tracks} track album'
         trackStrings = []
-        artists = {self.artist}
+        trackSummaryCharLength = 0
+        artists = {self.artist['name']}
         totalDuration = 0
-        for track in self.tracks:
-            durationMs = track["duration"] * 1000
+        for track, trackData in zip(self.tracks, self.tracksData):
+            durationMs = trackData['duration'] * 1000
             totalDuration += durationMs
-            trackStrings.append(
-                f'{track["track_num"]}. [{track["band_name"]} - {track["title"]}]'
+            if checkTrackTitle(trackData['title']):
+                trackNameRegex = r"(.+?)\s[-–]\s(.*)"
+                match = re.match(trackNameRegex, trackData['title'])
+                if match:
+                    trackData['title'] = match.group(2)
+                    trackData['band_name'] = match.group(1)
+            trackString = (f'{trackData["track_num"]}. '
+                f'[{trackData["band_name"]} - {trackData["title"]}]'
                 #map the url from page
-                #f'({track[url?]})'
-                f' `{formatMillisecondsToDurationString(durationMs)}`')
-            artists.add(track['band_name'])
+                f'({track["item"].get("@id")})'
+                f' `{formatMillisecondsToDurationString(durationMs)}`'))
+            trackStringLength = len(trackString) + 1
+            if trackSummaryCharLength + trackStringLength <= 1000:
+                trackStrings.append(trackString)
+                trackSummaryCharLength += trackStringLength
+            artists.add(trackData['band_name'])
 
-        if len(artists) > 1 or self.artist == 'Various Artists':
+        parts['Duration'] = formatMillisecondsToDurationString(totalDuration)
+        if self.is_purchasable:
+            parts['Price'] = (
+                f'`{format_currency(self.price, self.currency, locale="en_US")}`'
+            )
+        elif self.free_download:
+            parts['Price'] = f'`:arrow_down: [Free Download]({self.trackUrl})`'
+        if self.release_date:
+            parts['Released on'] = self.release_date
+        if len(artists) > 1 or self.artist['name'] == 'Various Artists':
             parts['title'] = self.title
             parts['Artist'] = 'Various Artists'
         else:
             parts['title'] = f'{self.artist} - {self.title}'
-            parts['Artist'] = self.artist
+            parts['Artist'] = self.artist['name']
 
         if self.publisher['name'] != parts['Artist']:
             parts['Channel'] = (f'[{self.publisher["name"]}]'
                                 f'({self.publisher["url"]})')
         else:
-            parts['Artist'] = f'[{self.artist}]({self.publisher["url"]})'
+            parts['Artist'] = (f'[{self.artist["name"]}]({self.artist["url"]})'
+                               if self.artist.get('url') else self.artist['name'])
+
+        parts['Tracks'] = '\n'.join(trackStrings)
+        if len(trackStrings) != self.num_tracks:
+            parts['Tracks'] += f'\n...and {self.num_tracks - len(trackStrings)} more'
 
         return parts
 
@@ -305,3 +346,18 @@ def callAPI(artistId, itemId, type):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         return None
+
+
+def checkTrackTitle(track_title):
+    return '-' in track_title or '–' in track_title
+
+
+def setTrackTitle(track: Track):
+    trackNameRegex = r"(.+?)\s[-–]\s(.*)"
+    match = re.match(trackNameRegex, track.title)
+    if match:
+        track.title = match.group(2)
+        track.artist = {
+            'name': match.group(1),
+            'url': None
+        }
