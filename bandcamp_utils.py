@@ -60,8 +60,7 @@ class Track:
             self.currency = trackData['currency']
             self.duration = trackData['tracks'][0]['duration']
             self.release_date = trackData['release_date']
-            if len(trackData['tags']) > 0:
-                self.tags = trackData['tags']
+            self.tags = trackData['tags']
 
     def mapToParts(self):
         parts = {}
@@ -93,7 +92,7 @@ class Track:
         if self.publisher and self.publisher['name'] != self.artist['name']:
             parts[
                 'Channel'] = f'[{self.publisher["name"]}]({self.publisher["url"]})'
-        if self.tags and len(self.tags) > 0:
+        if hasattr(self, 'tags') and len(self.tags) > 0:
             formatted_tags = [f'`{tag}`' for tag in self.tags]
             parts['Tags'] = ', '.join(formatted_tags)
         return parts
@@ -127,13 +126,12 @@ class Album:
             self.free_download = albumData['free_download']
             self.price = albumData['price']
             self.currency = albumData['currency']
+            self.tags = albumData['tags']
             release_date = datetime.fromtimestamp(albumData['release_date'],
                                                   tz=timezone.utc)
             self.release_date = formatTimeToDisplay(
                 release_date.strftime('%Y-%m-%dT%H:%M:%S'),
                 '%Y-%m-%dT%H:%M:%S')
-            if len(albumData['tags']) > 0:
-                self.tags = albumData['tags']
 
     def mapToParts(self):
         parts = {}
@@ -153,8 +151,10 @@ class Album:
                     trackData['title'] = match.group(2)
                     trackData['band_name'] = match.group(1)
             trackString = (
-                f'{trackData["track_num"]}. '
-                f'[{trackData["band_name"]} - {trackData["title"]}]'
+                f'{trackData["track_num"]}. ' +
+                (f'[{trackData["band_name"]} - {trackData["title"]}]'
+                 if trackData['band_name'] != self.artist['name'] else
+                 f'[{trackData["title"]}]') +
                 #map the url from page
                 f'({track["item"].get("@id")})'
                 f' `{formatMillisecondsToDurationString(durationMs)}`')
@@ -162,7 +162,8 @@ class Album:
             if trackSummaryCharLength + trackStringLength <= 1000:
                 trackStrings.append(trackString)
                 trackSummaryCharLength += trackStringLength
-            artists.add(trackData['band_name'])
+            if self.artist['name'] not in trackData['band_name']:
+                artists.add(trackData['band_name'])
 
         parts['Duration'] = formatMillisecondsToDurationString(totalDuration)
         if self.is_purchasable:
@@ -193,7 +194,7 @@ class Album:
             parts[
                 'Tracks'] += f'\n...and {self.num_tracks - len(trackStrings)} more'
 
-        if self.tags and len(self.tags) > 0:
+        if hasattr(self, 'tags') and len(self.tags) > 0:
             formatted_tags = [f'`{tag["name"]}`' for tag in self.tags]
             parts['Tags'] = ', '.join(formatted_tags)
 
