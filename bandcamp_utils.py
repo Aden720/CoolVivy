@@ -48,7 +48,8 @@ class Track:
         }
 
         #change the artist if the track is from a different artist
-        if self.publisher and self.publisher['name'] == self.artist['name'] and checkTrackTitle(self.title):
+        if self.publisher and self.publisher['name'] == self.artist[
+                'name'] and checkTrackTitle(self.title):
             setTrackTitle(self)
 
         #extra data from API
@@ -75,7 +76,7 @@ class Track:
             ) if self.price > 0 else f'[Free]({self.trackUrl})'
         elif self.free_download:
             parts['Price'] = f'`:arrow_down: [Free Download]({self.trackUrl})`'
-            
+
         if self.release_date:
             release_date = datetime.fromtimestamp(self.release_date,
                                                   tz=timezone.utc)
@@ -84,7 +85,8 @@ class Track:
                 '%Y-%m-%dT%H:%M:%S')
         if self.artist:
             parts['Artist'] = (f'[{self.artist["name"]}]({self.artist["url"]})'
-                               if self.artist.get('url') else self.artist['name'])
+                               if self.artist.get('url') else
+                               self.artist['name'])
         if self.album:
             parts['Album'] = (f'[{self.album["name"]}]({self.album["url"]})'
                               if self.album.get('url') else self.album['name'])
@@ -105,7 +107,7 @@ class Album:
         self.albumUrl = pageData['@id']
         self.num_tracks = pageData['numTracks']
         self.tracks = pageData['track']['itemListElement']
-        self.tracksData = None
+        self.tracksData = albumData['tracks']
         self.release_date = formatTimeToDisplay(pageData['datePublished'],
                                                 '%d %b %Y %H:%M:%S GMT')
         # self.tags = pageData['keywords']
@@ -121,13 +123,12 @@ class Album:
 
         #extra data from API
         if albumData:
-            self.tracksData = albumData['tracks']
             self.is_purchasable = albumData['is_purchasable']
             self.free_download = albumData['free_download']
             self.price = albumData['price']
             self.currency = albumData['currency']
             release_date = datetime.fromtimestamp(albumData['release_date'],
-                  tz=timezone.utc)
+                                                  tz=timezone.utc)
             self.release_date = formatTimeToDisplay(
                 release_date.strftime('%Y-%m-%dT%H:%M:%S'),
                 '%Y-%m-%dT%H:%M:%S')
@@ -151,7 +152,8 @@ class Album:
                 if match:
                     trackData['title'] = match.group(2)
                     trackData['band_name'] = match.group(1)
-            trackString = (f'{trackData["track_num"]}. '
+            trackString = (
+                f'{trackData["track_num"]}. '
                 f'[{trackData["band_name"]} - {trackData["title"]}]'
                 #map the url from page
                 f'({track["item"].get("@id")})'
@@ -165,9 +167,8 @@ class Album:
         parts['Duration'] = formatMillisecondsToDurationString(totalDuration)
         if self.is_purchasable:
             parts['Price'] = (
-                f'`{format_currency(self.price, self.currency, locale="en_US")}`' if self.price > 0 else
-                f'`[Free]({self.albumUrl})`'
-            )
+                f'`{format_currency(self.price, self.currency, locale="en_US")}`'
+                if self.price > 0 else f'[Free]({self.albumUrl})')
         elif self.free_download:
             parts['Price'] = f'`:arrow_down: [Free Download]({self.albumUrl})`'
         if self.release_date:
@@ -184,11 +185,13 @@ class Album:
                                 f'({self.publisher["url"]})')
         else:
             parts['Artist'] = (f'[{self.artist["name"]}]({self.artist["url"]})'
-                               if self.artist.get('url') else self.artist['name'])
+                               if self.artist.get('url') else
+                               self.artist['name'])
 
         parts['Tracks'] = '\n'.join(trackStrings)
         if len(trackStrings) != self.num_tracks:
-            parts['Tracks'] += f'\n...and {self.num_tracks - len(trackStrings)} more'
+            parts[
+                'Tracks'] += f'\n...and {self.num_tracks - len(trackStrings)} more'
 
         return parts
 
@@ -359,7 +362,4 @@ def setTrackTitle(track: Track):
     match = re.match(trackNameRegex, track.title)
     if match:
         track.title = match.group(2)
-        track.artist = {
-            'name': match.group(1),
-            'url': None
-        }
+        track.artist = {'name': match.group(1), 'url': None}
