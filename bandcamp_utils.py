@@ -72,7 +72,7 @@ class Track:
         if self.is_purchasable:
             parts['Price'] = (
                 f'`{format_currency(self.price, self.currency, locale="en_US")}`'
-            )
+            ) if self.price > 0 else f'[Free]({self.trackUrl})'
         elif self.free_download:
             parts['Price'] = f'`:arrow_down: [Free Download]({self.trackUrl})`'
             
@@ -102,6 +102,7 @@ class Album:
     #map to album fields
     def __init__(self, pageData, albumData):
         self.title = pageData['name']
+        self.albumUrl = pageData['@id']
         self.num_tracks = pageData['numTracks']
         self.tracks = pageData['track']['itemListElement']
         self.tracksData = None
@@ -154,7 +155,7 @@ class Album:
                 f'[{trackData["band_name"]} - {trackData["title"]}]'
                 #map the url from page
                 f'({track["item"].get("@id")})'
-                f' `{formatMillisecondsToDurationString(durationMs)}`'))
+                f' `{formatMillisecondsToDurationString(durationMs)}`')
             trackStringLength = len(trackString) + 1
             if trackSummaryCharLength + trackStringLength <= 1000:
                 trackStrings.append(trackString)
@@ -164,10 +165,11 @@ class Album:
         parts['Duration'] = formatMillisecondsToDurationString(totalDuration)
         if self.is_purchasable:
             parts['Price'] = (
-                f'`{format_currency(self.price, self.currency, locale="en_US")}`'
+                f'`{format_currency(self.price, self.currency, locale="en_US")}`' if self.price > 0 else
+                f'`[Free]({self.albumUrl})`'
             )
         elif self.free_download:
-            parts['Price'] = f'`:arrow_down: [Free Download]({self.trackUrl})`'
+            parts['Price'] = f'`:arrow_down: [Free Download]({self.albumUrl})`'
         if self.release_date:
             parts['Released on'] = self.release_date
         if len(artists) > 1 or self.artist['name'] == 'Various Artists':

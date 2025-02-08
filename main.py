@@ -60,8 +60,8 @@ async def on_guild_join(guild):
 @bot.event
 async def on_message(message):
     if message.author.bot is True \
-        or (testInstance == "True" and str(message.author.id) != ownerUser) or \
-        (testInstance == 'False' and str(message.author.id) == ownerUser):
+        or (testInstance == "True" and str(message.author.id) != ownerUser):# or \
+        #(testInstance == 'False' and str(message.author.id) == ownerUser):
         return
     elif bot.user and (str(bot.user.id) in message.content):
         if 'hello' in message.content.lower():
@@ -165,7 +165,7 @@ async def fetchEmbed(message, isInteraction=False, isDM=False):
                         'description', 'title', 'thumbnailUrl',
                         'embedPlatformType', 'embedColour'
                 ]:
-                    inline = key not in ['Tags', 'Description']
+                    inline = key not in ['Tags', 'Description', 'Tracks']
                     embedVar.add_field(name=key, value=value, inline=inline)
 
             #remove embed from original message
