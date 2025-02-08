@@ -177,7 +177,7 @@ class Album:
             parts['title'] = self.title
             parts['Artist'] = 'Various Artists'
         else:
-            parts['title'] = f'{self.artist} - {self.title}'
+            parts['title'] = f'{self.artist["name"]} - {self.title}'
             parts['Artist'] = self.artist['name']
 
         if self.publisher['name'] != parts['Artist']:
@@ -194,7 +194,7 @@ class Album:
                 'Tracks'] += f'\n...and {self.num_tracks - len(trackStrings)} more'
 
         if self.tags and len(self.tags) > 0:
-            formatted_tags = [f'`{tag}`' for tag in self.tags]
+            formatted_tags = [f'`{tag["name"]}`' for tag in self.tags]
             parts['Tags'] = ', '.join(formatted_tags)
 
         return parts
