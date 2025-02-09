@@ -42,7 +42,7 @@ class Track:
             'name': pageData['publisher']['name'],
             'url': pageData['publisher'].get('@id')
         }
-        numTracks = pageData['inAlbum']['albumRelease'].get(
+        numTracks = pageData['inAlbum'].get(
             'numTracks', 2)  #this data seems to only be returned for singles
         if numTracks > 1:
             self.album = {
