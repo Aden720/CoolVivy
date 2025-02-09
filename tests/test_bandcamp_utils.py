@@ -123,7 +123,7 @@ class TestBandcampUtils(unittest.TestCase):
 
         # Assert
         self.assertEqual(parts['Price'],
-                         '`:arrow_down: [Free Download](http://track.com)`')
+                         ':arrow_down: [Free Download](http://track.com)')
 
     def test_track_with_different_publisher(self):
         # Arrange
