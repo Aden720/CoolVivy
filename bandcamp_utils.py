@@ -48,7 +48,7 @@ class Track:
         }
 
         #change the artist if the track is from a different artist
-        if self.publisher and self.publisher['name'] == self.artist[
+        if self.publisher and self.publisher['name'] in self.artist[
                 'name'] and checkTrackTitle(self.title):
             setTrackTitle(self)
 
