@@ -1,8 +1,10 @@
-
 from unittest.mock import MagicMock
+
 from bandcamp_utils import Track
 
+
 class MockTrack(Track):
+
     def __init__(self,
                  title='Test Track',
                  artist='Test Artist',
@@ -20,7 +22,7 @@ class MockTrack(Track):
         self.is_purchasable = True
         self.price = 7.00
         self.currency = 'USD'
-        self.tags = ['tag1', 'tag2']
+        self.tags = [{'name': 'tag1'}, {'name': 'tag2'}]
         self.thumbnail = None
         self.free_download = False
 

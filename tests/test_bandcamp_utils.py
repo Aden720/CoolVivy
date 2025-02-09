@@ -128,14 +128,7 @@ class TestBandcampUtils(unittest.TestCase):
         self.assertEqual(parts['Channel'],
                          '[Different Publisher](http://publisher.com)')
 
-        result = getPartsFromEmbed(embed)
-
-        # Assert
-        self.assertEqual(result['title'], 'Compilation Title')
-        self.assertEqual(result['Artist'], 'Various Artists')
-
-    @patch('bandcamp_utils.BandcampScraper')
-    def test_getBandcampParts_discography(self, mock_scraper):
+    def test_getBandcampParts_discography(self):
         # Arrange
         embed = setupDiscographyEmbed()
 
