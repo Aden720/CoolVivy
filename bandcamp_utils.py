@@ -75,7 +75,7 @@ class Track:
                 f'`{format_currency(self.price, self.currency, locale="en_US")}`'
             ) if self.price > 0 else f'[Free]({self.trackUrl})'
         elif self.free_download:
-            parts['Price'] = f'`:arrow_down: [Free Download]({self.trackUrl})`'
+            parts['Price'] = f':arrow_down: [Free Download]({self.trackUrl})'
 
         if self.release_date:
             release_date = datetime.fromtimestamp(self.release_date,
@@ -175,7 +175,7 @@ class Album:
                 f'`{format_currency(self.price, self.currency, locale="en_US")}`'
                 if self.price > 0 else f'[Free]({self.albumUrl})')
         elif self.free_download:
-            parts['Price'] = f'`:arrow_down: [Free Download]({self.albumUrl})`'
+            parts['Price'] = f':arrow_down: [Free Download]({self.albumUrl})'
         if self.release_date:
             parts['Released on'] = self.release_date
         if len(artists) > 1 or self.artist['name'] == 'Various Artists':
