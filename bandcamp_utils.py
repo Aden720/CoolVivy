@@ -42,10 +42,11 @@ class Track:
             'name': pageData['publisher']['name'],
             'url': pageData['publisher'].get('@id')
         }
-        self.album = {
-            'name': pageData['inAlbum']['name'],
-            'url': pageData['inAlbum'].get('@id')
-        }
+        if len(pageData['inAlbum']['albumRelease']) > 1:
+            self.album = {
+                'name': pageData['inAlbum']['name'],
+                'url': pageData['inAlbum'].get('@id')
+            }
 
         #change the artist if the track is from a different artist
         if self.publisher and self.publisher['name'] in self.artist[
@@ -89,7 +90,7 @@ class Track:
             if artistIsMultipleArtists(parts['Artist']):
                 parts['Artists'] = parts['Artist']
                 parts.pop('Artist')
-        if self.album:
+        if hasattr(self, 'album'):
             parts['Album'] = (f'[{self.album["name"]}]({self.album["url"]})'
                               if self.album.get('url') else self.album['name'])
         if self.publisher and self.publisher['name'] != self.artist['name']:
