@@ -92,9 +92,9 @@ class Track:
         if self.publisher and self.publisher['name'] != self.artist['name']:
             parts[
                 'Channel'] = f'[{self.publisher["name"]}]({self.publisher["url"]})'
-        if hasattr(self, 'tags') and len(self.tags) > 0:
-            formatted_tags = [f'`{tag}`' for tag in self.tags]
-            parts['Tags'] = ', '.join(formatted_tags)
+        formatted_tags = getFormattedTags(self)
+        if formatted_tags:
+            parts['Tags'] = formatted_tags
         return parts
 
 
@@ -194,9 +194,9 @@ class Album:
             parts[
                 'Tracks'] += f'\n...and {self.num_tracks - len(trackStrings)} more'
 
-        if hasattr(self, 'tags') and len(self.tags) > 0:
-            formatted_tags = [f'`{tag["name"]}`' for tag in self.tags]
-            parts['Tags'] = ', '.join(formatted_tags)
+        formatted_tags = getFormattedTags(self)
+        if formatted_tags:
+            parts['Tags'] = formatted_tags
 
         return parts
 
@@ -368,3 +368,9 @@ def setTrackTitle(track: Track):
     if match:
         track.title = match.group(2)
         track.artist = {'name': match.group(1), 'url': None}
+
+
+def getFormattedTags(track):
+    if hasattr(track, 'tags') and len(track.tags) > 0:
+        formatted_tags = [f'`{tag["name"]}`' for tag in track.tags]
+        return ', '.join(formatted_tags)
