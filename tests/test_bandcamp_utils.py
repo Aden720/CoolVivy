@@ -95,7 +95,7 @@ class TestBandcampUtils(unittest.TestCase):
 
         # Assert
         self.assertEqual(result['title'], 'Compilation Title')
-        self.assertEqual(result['Artist'], 'Various Artists')
+        self.assertEqual(result['Artists'], 'Various Artists')
 
     def test_track_mapping(self):
         # Arrange
@@ -138,11 +138,13 @@ class TestBandcampUtils(unittest.TestCase):
         self.assertEqual(parts['Channel'],
                          '[Different Publisher](http://publisher.com)')
 
-
     def test_track_with_multiple_artists(self):
         # Arrange
         track = MockTrack()
-        track.artist = {'name': 'Artist One, Artist Two', 'url': 'http://test.com'}
+        track.artist = {
+            'name': 'Artist One, Artist Two',
+            'url': 'http://test.com'
+        }
 
         # Act
         parts = track.mapToParts()
@@ -150,9 +152,9 @@ class TestBandcampUtils(unittest.TestCase):
         # Assert
         self.assertEqual(parts['title'], 'Artist One, Artist Two - Test Track')
         self.assertIn('Artists', parts)
-        self.assertEqual(parts['Artists'], '[Artist One, Artist Two](http://test.com)')
+        self.assertEqual(parts['Artists'],
+                         '[Artist One, Artist Two](http://test.com)')
         self.assertNotIn('Artist', parts)
-
 
     def test_getBandcampParts_discography(self):
         # Arrange

@@ -95,6 +95,9 @@ class Track:
         formatted_tags = getFormattedTags(self)
         if formatted_tags:
             parts['Tags'] = formatted_tags
+        if artistIsMultipleArtists(parts['Artist']):
+            parts['Artists'] = parts['Artist']
+            parts.pop('Artist')
         return parts
 
 
@@ -184,7 +187,7 @@ class Album:
                                self.artist['name'])
 
         if artistIsMultipleArtists(parts['Artist']):
-            parts['Artists'] = parts['Artists']
+            parts['Artists'] = parts['Artist']
             parts.pop('Artist')
 
         if self.publisher['name'] != self.artist['name']:
@@ -305,21 +308,24 @@ def getPartsFromEmbed(embed):
     trackParts = {}
     channelUrl = re.sub(r'(https?://[a-zA-Z0-9\-]*\.bandcamp\.com).*', r'\1',
                         embed.url)
+    artist = ''
+
     if embed.title:
         title, artist = embed.title.split(', by ')
         if artist != 'Various Artists' and artist not in title:
             title_artist_match = getTrackTitleParts(title)
             #channel name may not always be artist
-            if not title_artist_match:
-                artistString = artist
-            else:
-                artistString = title_artist_match.group(1)
+            if title_artist_match:
+                artist = title_artist_match.group(1)
                 title = title_artist_match.group(2)
-            trackParts['title'] = f'{artistString} - {title}'
-            if artistIsMultipleArtists(artistString):
-                trackParts['Artists'] = artistString
-            else:
-                trackParts['Artist'] = artistString
+            trackParts['title'] = f'{artist} - {title}'
+        else:
+            trackParts['title'] = title
+
+        if artistIsMultipleArtists(artist):
+            trackParts['Artists'] = artist
+        else:
+            trackParts['Artist'] = artist
 
     if embed.description:
         if embed.description.startswith('from the album'):
@@ -331,13 +337,15 @@ def getPartsFromEmbed(embed):
             trackParts['title'] = trackParts['title'].split(' - ')[-1]
             trackParts['description'] = embed.description
 
-    if embed.provider:
-        if ('Artist' in trackParts and embed.provider.name != trackParts['Artist']) or \
-            ('Artists' in trackParts and embed.provider.name != trackParts['Artists']):
-            trackParts['Channel'] = (f'[{embed.provider.name}]'
-                                     f'({embed.provider.url or channelUrl})')
-        else:
-            trackParts['Artist'] = f'[{trackParts["Artist"]}]({channelUrl})'
+    if embed.provider and embed.provider.name != artist:
+        trackParts['Channel'] = (f'[{embed.provider.name}]'
+                                 f'({embed.provider.url or channelUrl})')
+    else:
+        artistLink = f'[{artist}]({channelUrl})'
+        if 'Artist' in trackParts:
+            trackParts['Artist'] = artistLink
+        elif 'Artists' in trackParts:
+            trackParts['Artists'] = artistLink
 
     return trackParts
 
@@ -383,6 +391,8 @@ def getFormattedTags(track):
 
 
 def artistIsMultipleArtists(artistString):
+    if artistString == 'Various Artists':
+        return True
     artist_parts_comma = artistString.split(', ')
     artist_parts_ampersand = artistString.split(' & ')
     return len(artist_parts_comma) > 1 or len(artist_parts_ampersand) > 1
