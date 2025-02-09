@@ -179,15 +179,17 @@ class Album:
             parts['Artist'] = 'Various Artists'
         else:
             parts['title'] = f'{self.artist["name"]} - {self.title}'
-            parts['Artist'] = self.artist['name']
-
-        if self.publisher['name'] != parts['Artist']:
-            parts['Channel'] = (f'[{self.publisher["name"]}]'
-                                f'({self.publisher["url"]})')
-        else:
             parts['Artist'] = (f'[{self.artist["name"]}]({self.artist["url"]})'
                                if self.artist.get('url') else
                                self.artist['name'])
+
+        if artistIsMultipleArtists(parts['Artist']):
+            parts['Artists'] = parts['Artists']
+            parts.pop('Artist')
+
+        if self.publisher['name'] != self.artist['name']:
+            parts['Channel'] = (f'[{self.publisher["name"]}]'
+                                f'({self.publisher["url"]})')
 
         parts['Tracks'] = '\n'.join(trackStrings)
         if len(trackStrings) != self.num_tracks:
@@ -314,9 +316,7 @@ def getPartsFromEmbed(embed):
                 artistString = title_artist_match.group(1)
                 title = title_artist_match.group(2)
             trackParts['title'] = f'{artistString} - {title}'
-            artist_parts_comma = artistString.split(', ')
-            artist_parts_ampersand = artistString.split(' & ')
-            if len(artist_parts_comma) > 1 or len(artist_parts_ampersand) > 1:
+            if artistIsMultipleArtists(artistString):
                 trackParts['Artists'] = artistString
             else:
                 trackParts['Artist'] = artistString
@@ -380,3 +380,9 @@ def getFormattedTags(track):
     if hasattr(track, 'tags') and len(track.tags) > 0:
         formatted_tags = [f'`{tag["name"]}`' for tag in track.tags]
         return ', '.join(formatted_tags)
+
+
+def artistIsMultipleArtists(artistString):
+    artist_parts_comma = artistString.split(', ')
+    artist_parts_ampersand = artistString.split(' & ')
+    return len(artist_parts_comma) > 1 or len(artist_parts_ampersand) > 1
