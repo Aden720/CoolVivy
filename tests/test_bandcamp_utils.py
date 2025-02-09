@@ -1,12 +1,13 @@
-
 import unittest
 from unittest.mock import patch
 
 from mockData.bandcamp_mock_scenarios import (
-    setupBasicEmbed,
+    MockTrack,
     setupAlbumEmbed,
+    setupBasicEmbed,
     setupDiscographyEmbed,
 )
+
 from bandcamp_utils import getBandcampParts, getPartsFromEmbed
 
 
@@ -21,9 +22,10 @@ class TestBandcampUtils(unittest.TestCase):
 
         # Assert
         self.assertEqual(result['title'], 'Artist Name - Song Title')
-        self.assertEqual(result['Artist'], '[Artist Name](https://artist.bandcamp.com)')
+        self.assertEqual(result['Artist'],
+                         '[Artist Name](https://artist.bandcamp.com)')
         self.assertEqual(result['Album'], 'Album Name')
-        
+
     def test_getPartsFromEmbed_track_with_hyphen(self):
         # Arrange
         embed = setupBasicEmbed()
@@ -45,10 +47,12 @@ class TestBandcampUtils(unittest.TestCase):
         result = getPartsFromEmbed(embed)
 
         # Assert
-        self.assertEqual(result['title'], 'Artist One & Artist Two - Song Title')
+        self.assertEqual(result['title'],
+                         'Artist One & Artist Two - Song Title')
         self.assertEqual(result['Artists'], 'Artist One & Artist Two')
-        self.assertEqual(result['Channel'], '[Channel Name](https://artist.bandcamp.com)')
-        
+        self.assertEqual(result['Channel'],
+                         '[Channel Name](https://artist.bandcamp.com)')
+
     def test_getPartsFromEmbed_track_with_multiple_artists(self):
         # Arrange
         embed = setupBasicEmbed()
@@ -58,9 +62,11 @@ class TestBandcampUtils(unittest.TestCase):
         result = getPartsFromEmbed(embed)
 
         # Assert
-        self.assertEqual(result['title'], 'Artist One, Artist Two - Song Title')
+        self.assertEqual(result['title'],
+                         'Artist One, Artist Two - Song Title')
         self.assertEqual(result['Artists'], 'Artist One, Artist Two')
-        self.assertEqual(result['Channel'], '[Channel Name](https://artist.bandcamp.com)')
+        self.assertEqual(result['Channel'],
+                         '[Channel Name](https://artist.bandcamp.com)')
 
     def test_getPartsFromEmbed_album(self):
         # Arrange
@@ -71,7 +77,8 @@ class TestBandcampUtils(unittest.TestCase):
 
         # Assert
         self.assertEqual(result['title'], 'Artist Name - Album Title')
-        self.assertEqual(result['Artist'], '[Artist Name](https://artist.bandcamp.com)')
+        self.assertEqual(result['Artist'],
+                         '[Artist Name](https://artist.bandcamp.com)')
 
     def test_getPartsFromEmbed_various_artists(self):
         # Arrange
@@ -80,14 +87,13 @@ class TestBandcampUtils(unittest.TestCase):
 
         # Act
 
-
     def test_track_mapping(self):
         # Arrange
         track = MockTrack()
-        
+
         # Act
         parts = track.mapToParts()
-        
+
         # Assert
         self.assertEqual(parts['title'], 'Test Artist - Test Track')
         self.assertEqual(parts['Duration'], '`3:00`')
@@ -101,25 +107,26 @@ class TestBandcampUtils(unittest.TestCase):
         track = MockTrack()
         track.is_purchasable = False
         track.free_download = True
-        
+
         # Act
         parts = track.mapToParts()
-        
+
         # Assert
-        self.assertEqual(parts['Price'], '`:arrow_down: [Free Download](http://track.com)`')
+        self.assertEqual(parts['Price'],
+                         '`:arrow_down: [Free Download](http://track.com)`')
 
     def test_track_with_different_publisher(self):
         # Arrange
         track = MockTrack()
         track.publisher['name'] = 'Different Publisher'
-        
+
         # Act
         parts = track.mapToParts()
-        
+
         # Assert
         self.assertTrue('Channel' in parts)
-        self.assertEqual(parts['Channel'], '[Different Publisher](http://publisher.com)')
-
+        self.assertEqual(parts['Channel'],
+                         '[Different Publisher](http://publisher.com)')
 
         result = getPartsFromEmbed(embed)
 
