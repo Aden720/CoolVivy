@@ -86,6 +86,9 @@ class Track:
             parts['Artist'] = (f'[{self.artist["name"]}]({self.artist["url"]})'
                                if self.artist.get('url') else
                                self.artist['name'])
+            if artistIsMultipleArtists(parts['Artist']):
+                parts['Artists'] = parts['Artist']
+                parts.pop('Artist')
         if self.album:
             parts['Album'] = (f'[{self.album["name"]}]({self.album["url"]})'
                               if self.album.get('url') else self.album['name'])
@@ -95,9 +98,6 @@ class Track:
         formatted_tags = getFormattedTags(self)
         if formatted_tags:
             parts['Tags'] = formatted_tags
-        if artistIsMultipleArtists(parts['Artist']):
-            parts['Artists'] = parts['Artist']
-            parts.pop('Artist')
         return parts
 
 
