@@ -304,19 +304,20 @@ def getPartsFromEmbed(embed):
     channelUrl = re.sub(r'(https?://[a-zA-Z0-9\-]*\.bandcamp\.com).*', r'\1',
                         embed.url)
     if embed.title:
-        trackParts['title'], artist = embed.title.split(', by ')
-        trackParts['Artist'] = artist
-        if artist != 'Various Artists' and artist not in trackParts["title"]:
-            title_artist_pattern = re.compile(r'^.+\s-\s.+$')
+        title, artist = embed.title.split(', by ')
+        if artist != 'Various Artists' and artist not in title:
+            title_artist_match = getTrackTitleParts(title)
             #channel name may not always be artist
-            if not title_artist_pattern.match(embed.title):
-                trackParts['title'] = f'{artist} - {trackParts["title"]}'
-            artistString = trackParts['title'].split(' - ')[0]
+            if not title_artist_match:
+                artistString = artist
+            else:
+                artistString = title_artist_match.group(1)
+                title = title_artist_match.group(2)
+            trackParts['title'] = f'{artistString} - {title}'
             artist_parts_comma = artistString.split(', ')
             artist_parts_ampersand = artistString.split(' & ')
             if len(artist_parts_comma) > 1 or len(artist_parts_ampersand) > 1:
                 trackParts['Artists'] = artistString
-                trackParts.pop('Artist', None)
             else:
                 trackParts['Artist'] = artistString
 
@@ -331,7 +332,8 @@ def getPartsFromEmbed(embed):
             trackParts['description'] = embed.description
 
     if embed.provider:
-        if embed.provider.name != trackParts.get('Artist'):
+        if ('Artist' in trackParts and embed.provider.name != trackParts['Artist']) or \
+            ('Artists' in trackParts and embed.provider.name != trackParts['Artists']):
             trackParts['Channel'] = (f'[{embed.provider.name}]'
                                      f'({embed.provider.url or channelUrl})')
         else:
@@ -362,9 +364,13 @@ def checkTrackTitle(track_title):
     return '-' in track_title or '–' in track_title
 
 
-def setTrackTitle(track: Track):
+def getTrackTitleParts(title):
     trackNameRegex = r"(.+?)\s[-–]\s(.*)"
-    match = re.match(trackNameRegex, track.title)
+    return re.match(trackNameRegex, title)
+
+
+def setTrackTitle(track: Track):
+    match = getTrackTitleParts(track.title)
     if match:
         track.title = match.group(2)
         track.artist = {'name': match.group(1), 'url': None}

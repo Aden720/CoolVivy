@@ -25,6 +25,7 @@ class TestBandcampUtils(unittest.TestCase):
         self.assertEqual(result['Artist'],
                          '[Artist Name](https://artist.bandcamp.com)')
         self.assertEqual(result['Album'], 'Album Name')
+        self.assertNotIn('Channel', result)
 
     def test_getPartsFromEmbed_track_with_hyphen(self):
         # Arrange
@@ -37,11 +38,14 @@ class TestBandcampUtils(unittest.TestCase):
         # Assert
         self.assertEqual(result['title'], 'Featured Artist - Song Title')
         self.assertEqual(result['Artist'], 'Featured Artist')
+        self.assertEqual(result['Channel'],
+                         '[Artist Name](https://artist.bandcamp.com)')
 
     def test_getPartsFromEmbed_track_with_ampersand(self):
         # Arrange
         embed = setupBasicEmbed()
         embed.title = 'Artist One & Artist Two - Song Title, by Channel Name'
+        embed.provider.name = 'Channel Name'
 
         # Act
         result = getPartsFromEmbed(embed)
@@ -57,6 +61,7 @@ class TestBandcampUtils(unittest.TestCase):
         # Arrange
         embed = setupBasicEmbed()
         embed.title = 'Artist One, Artist Two - Song Title, by Channel Name'
+        embed.provider.name = 'Channel Name'
 
         # Act
         result = getPartsFromEmbed(embed)
