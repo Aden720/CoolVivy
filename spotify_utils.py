@@ -1,7 +1,10 @@
 import os
+import re
 
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
+
+from general_utils import formatMillisecondsToDurationString, formatTimeToDisplay
 
 spotifyClientId = os.getenv("SPOTIFY_CLIENT_ID")
 spotifyClientSecret = os.getenv("SPOTIFY_CLIENT_SECRET")
@@ -11,20 +14,72 @@ def getSpotifyParts(embed):
     spotifyParts = {'embedPlatformType': 'spotify', 'embedColour': 0x1db954}
 
     try:
-        raise Exception('bypassing until mapping is complete')
         #fetches the data from the spotify url
         sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
             client_id=spotifyClientId, client_secret=spotifyClientSecret))
 
         if embed.url.startswith('https://open.spotify.com/track'):
             track = sp.track(embed.url)
-            spotifyParts['Artist'] = track['artists'][0]['name']
-            spotifyParts['Type'] = 'Track'
-            spotifyParts['Duration'] = track['duration_ms']
-            spotifyParts['Released'] = track['album']['release_date'][:4]
+            if not track:
+                raise Exception('Spotify track data not found')
+
+            #aliases
+            title = track['name']
+            artists = track['artists']
+            album = track['album']
+            releaseDate = album['release_date']
+            releaseDateFormat = album['release_date_precision']
+
+            #duration
+            spotifyParts['Duration'] = (formatMillisecondsToDurationString(
+                track["duration_ms"]))
+
+            #Released on
+            if releaseDateFormat == 'day':
+                releaseDateString = formatTimeToDisplay(
+                    releaseDate, '%Y-%m-%d')
+            elif releaseDateFormat == 'month':
+                releaseDateString = formatTimeToDisplay(
+                    releaseDate, '%Y-%m', '%B %Y')
+            else:
+                releaseDateString = releaseDate
+            spotifyParts['Released'] = releaseDateString
+
+            #thumbnail
+            if len(album['images']) > 0:
+                spotifyParts['thumbnailUrl'] = album['images'][0]['url']
+
+            #artist
+            artistString = ', '.join([
+                f'[{artist["name"]}]({artist["external_urls"]["spotify"]})'
+                for artist in artists
+            ])
+            titleArtists = ', '.join([
+                artist['name'] for artist in artists
+                if artist['name'] not in title
+            ])
+            if len(artists) > 1:
+                spotifyParts['Artists'] = artistString
+            else:
+                spotifyParts['Artist'] = artistString
+            # spotifyParts['Type'] = 'Track'
+
+            #album
+            if album.get('total_tracks') > 1:
+                spotifyParts['Album'] = (f'[{album["name"]}](\
+                {album["external_urls"]["spotify"]})')
+
+            #title
+            remixRegex = r"(.+?)\s[-–]\s(.*?Remix.*)"
+            if re.match(remixRegex, title):
+                title = re.sub(remixRegex, r'\1 (\2)', title)
+            spotifyParts['title'] = (f'{titleArtists} - {title}'
+                                     if titleArtists else title)
         elif embed.url.startswith('https://open.spotify.com/album'):
+            raise Exception('bypassing until mapping is complete')
             album = sp.album(embed.url)
         elif embed.url.startswith('https://open.spotify.com/playlist'):
+            raise Exception('bypassing until mapping is complete')
             playlist = sp.playlist(embed.url)
     except Exception as e:
         print(f"Error occurred: {e}")

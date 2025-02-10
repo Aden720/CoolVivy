@@ -109,6 +109,7 @@ class Album:
     #map to album fields
     def __init__(self, pageData, albumData):
         self.title = pageData['name']
+        self.thumbnail = pageData['image']
         self.albumUrl = pageData['@id']
         self.num_tracks = pageData['numTracks']
         self.tracks = pageData['track']['itemListElement']
@@ -141,6 +142,8 @@ class Album:
 
     def mapToParts(self):
         parts = {}
+        if self.thumbnail:
+            parts['thumbnailUrl'] = self.thumbnail
         parts['title'] = self.title
         parts['description'] = f'{self.num_tracks} track album'
         trackStrings = []
