@@ -126,12 +126,12 @@ def getSoundcloudParts(embed):
         if track.genre:
             soundcloudParts['Genre'] = f'`{track.genre}`'
 
-        #Likes
-        soundcloudParts['Likes'] = f':orange_heart: {track.likes_count}'
-
         #Duration
         soundcloudParts['Duration'] = formatMillisecondsToDurationString(
             track.duration)
+
+        #Likes
+        soundcloudParts['Likes'] = f':orange_heart: {track.likes_count}'
 
         #Created by
         # soundcloudParts['Created by'] = f'`{track.user["username"]}`'
