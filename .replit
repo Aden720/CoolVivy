@@ -12,5 +12,4 @@ deploymentTarget = "gce"
 ignorePorts = true
 
 [env]
-REPLIT_DISABLE_PACKAGE_LAYER = "1"
-REPLIT_PYTHON_PACKAGE_LAYER = "0"
+REPLIT_PYTHON_PACKAGE_LAYER = "1"
