@@ -101,11 +101,26 @@ def getSoundcloudParts(embed):
     elif isinstance(track, Playlist):  #set, playlist or album
         soundcloudParts['title'] = f'{track.title}'
         if (track.is_album):
-            soundcloudParts['description'] = 'Album'
+            soundcloudParts['description'] = f'{track.track_count} track album'
             soundcloudParts['Artist'] = (f'[{track.user["username"]}]'
                                          f'({track.user["permalink_url"]})')
+            trackStrings = []
+            trackSummaryCharLength = 0
+            for song in track.tracks:
+                outputString = (
+                    f'1. [{song.title}]({song.permalink_url}) '
+                    f'{formatMillisecondsToDurationString(song.duration)}')
+                outputStringLength = len(outputString) + 1
+                if trackSummaryCharLength + outputStringLength <= 1000:
+                    trackStrings.append(outputString)
+
+            soundcloudParts['Tracks'] = '\n'.join(trackStrings)
+            if len(trackStrings) != track.track_count:
+                soundcloudParts['Tracks'] += (
+                    f'\n...and {track.track_count - len(trackStrings)} more')
         else:
-            soundcloudParts['description'] = 'Playlist'
+            soundcloudParts[
+                'description'] = f'Playlist ({track.track_count} tracks)'
 
         #Genre
         if track.genre:
@@ -113,9 +128,6 @@ def getSoundcloudParts(embed):
 
         #Likes
         soundcloudParts['Likes'] = f':orange_heart: {track.likes_count}'
-
-        #Tracks
-        soundcloudParts['Tracks'] = f'`{track.track_count}`'
 
         #Duration
         soundcloudParts['Duration'] = formatMillisecondsToDurationString(
