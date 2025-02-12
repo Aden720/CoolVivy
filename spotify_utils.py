@@ -70,7 +70,7 @@ def getSpotifyParts(embed):
                 {album["external_urls"]["spotify"]})')
 
             #title
-            remixRegex = r"(.+?)\s[-–]\s(.*?Remix.*)"
+            remixRegex = r"(.+?)\s[-–]\s(.*?(Remix|Mix).*)"
             if re.match(remixRegex, title):
                 title = re.sub(remixRegex, r'\1 (\2)', title)
             spotifyParts['title'] = (f'{titleArtists} - {title}'
