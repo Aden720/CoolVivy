@@ -38,6 +38,14 @@ class Track:
             'name': pageData['byArtist']['name'],
             'url': pageData['byArtist'].get('@id')
         }
+        albumArtist = pageData['inAlbum'].get('byArtist')
+        if albumArtist:
+            artistName = albumArtist.get('name')
+            if artistName != self.artist['name']:
+                self.artist = {
+                    'name': artistName,
+                    'url': albumArtist.get('@id')
+                }
         self.publisher = {
             'name': pageData['publisher']['name'],
             'url': pageData['publisher'].get('@id')
