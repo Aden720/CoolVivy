@@ -1,10 +1,12 @@
 import os
 import re
+from typing import Optional
 
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
 from general_utils import formatMillisecondsToDurationString, formatTimeToDisplay
+from object_types.spotify_types import SpotifyAlbum, SpotifyPlaylist, SpotifyPlaylistTracks
 
 spotifyClientId = os.getenv("SPOTIFY_CLIENT_ID")
 spotifyClientSecret = os.getenv("SPOTIFY_CLIENT_SECRET")
@@ -58,9 +60,10 @@ def getSpotifyParts(embed):
             spotifyParts['title'] = (f'{titleArtists} - {title}'
                                      if titleArtists else title)
         elif embed.url.startswith('https://open.spotify.com/album'):
-            album = sp.album(embed.url)
-            if not album:
+            data = sp.album(embed.url)
+            if not data:
                 raise Exception('Spotify album data not found')
+            album: SpotifyAlbum = data
             #aliases
             title = album['name']
             artists = album['artists']
@@ -73,22 +76,26 @@ def getSpotifyParts(embed):
             trackStrings = []
             trackSummaryCharLength = 0
             totalDuration = 0
+            maxDisplayableTracksReached = False
             for track in tracks:
                 totalDuration += track['duration_ms']
-                trackTitle = reformatTitle(track['name'])
-                trackArtists = getFormattedTitleArtistString(
-                    track['artists'], trackTitle)
-                trackString = (
-                    '1. ' +
-                    (f'[{trackArtists} - {trackTitle}]' if trackArtists
-                     and trackArtists != titleArtists else f'[{trackTitle}]') +
-                    f'({track["external_urls"]["spotify"]})' +
-                    f' `{formatMillisecondsToDurationString(track["duration_ms"])}`'
-                )
-                trackStringLength = len(trackString) + 1
-                if trackSummaryCharLength + trackStringLength <= 1000:
-                    trackStrings.append(trackString)
-                    trackSummaryCharLength += trackStringLength
+                if not maxDisplayableTracksReached:
+                    trackTitle = reformatTitle(track['name'])
+                    trackArtists = getFormattedTitleArtistString(
+                        track['artists'], trackTitle)
+                    trackString = (
+                        f'{track["track_number"]}. ' +
+                        (f'[{trackArtists} - {trackTitle}]' if trackArtists and
+                         trackArtists != titleArtists else f'[{trackTitle}]') +
+                        f'({track["external_urls"]["spotify"]})' +
+                        f' `{formatMillisecondsToDurationString(track["duration_ms"])}`'
+                    )
+                    trackStringLength = len(trackString) + 1
+                    if trackSummaryCharLength + trackStringLength <= 1000:
+                        trackStrings.append(trackString)
+                        trackSummaryCharLength += trackStringLength
+                    else:
+                        maxDisplayableTracksReached = True
 
             spotifyParts['Duration'] = (
                 formatMillisecondsToDurationString(totalDuration))
@@ -127,12 +134,81 @@ def getSpotifyParts(embed):
                     'Tracks'] += f'\n...and {totalTracks - len(trackStrings)} more'
 
             #title
-            spotifyParts['title'] = (f'{titleArtists} - {title}'
-                                     if titleArtists and titleArtists != 'Various Artists' else title)
+            spotifyParts['title'] = (
+                f'{titleArtists} - {title}' if titleArtists
+                and titleArtists != 'Various Artists' else title)
 
         elif embed.url.startswith('https://open.spotify.com/playlist'):
-            raise Exception('bypassing until mapping is complete')
-            playlist = sp.playlist(embed.url)
+            data = sp.playlist(embed.url)
+            if not data:
+                raise Exception('Spotify playlist data not found')
+            playlist: SpotifyPlaylist = data
+
+            #aliases
+            tracks = playlist['tracks']['items']
+            totalTracks = playlist['tracks']['total']
+
+            #title
+            spotifyParts['title'] = playlist['name']
+
+            #read in paginated track data
+            trackStrings = []
+            trackSummaryCharLength = 0
+            totalDuration = 0
+            maxDisplayableTracksReached = False
+            for trackEntry in tracks:
+                track = trackEntry['track']
+                totalDuration += track['duration_ms']
+                if not maxDisplayableTracksReached:
+                    trackTitle = reformatTitle(track['name'])
+                    trackArtists = getFormattedTitleArtistString(
+                        track['artists'], trackTitle)
+                    trackString = (
+                        '1. ' + (f'[{trackArtists} - {trackTitle}]'
+                                 if trackArtists else f'[{trackTitle}]') +
+                        f'({track["external_urls"]["spotify"]})' +
+                        f' `{formatMillisecondsToDurationString(track["duration_ms"])}`'
+                    )
+                    trackStringLength = len(trackString) + 1
+                    if trackSummaryCharLength + trackStringLength <= 1000:
+                        trackStrings.append(trackString)
+                        trackSummaryCharLength += trackStringLength
+                    else:
+                        maxDisplayableTracksReached = True
+
+            current_track_page: Optional[SpotifyPlaylistTracks] = playlist[
+                'tracks']
+            while current_track_page and current_track_page['next']:
+                current_track_page = sp.next(current_track_page)
+                if current_track_page:
+                    for trackEntry in current_track_page['items']:
+                        totalDuration += trackEntry['track']['duration_ms']
+
+            #duration
+            spotifyParts['Duration'] = (
+                formatMillisecondsToDurationString(totalDuration))
+
+            #creator/owner
+            spotifyParts['Created by'] = (
+                f'[{playlist["owner"]["display_name"]}]({playlist["owner"]["external_urls"]["spotify"]})'
+            )
+            spotifyParts['Saves'] = f'`{playlist["followers"]["total"]}`'
+
+            #thumbnail
+            if len(playlist['images']) > 0:
+                spotifyParts['thumbnailUrl'] = playlist['images'][0]['url']
+
+            #description
+            if playlist.get('description'):
+                spotifyParts['Description'] = playlist['description']
+            spotifyParts['description'] = (f'Playlist ({totalTracks} songs)')
+
+            #tracks
+            spotifyParts['Tracks'] = '\n'.join(trackStrings)
+            if len(trackStrings) != totalTracks:
+                spotifyParts['Tracks'] += (
+                    f'\n...and {totalTracks - len(trackStrings)} more')
+
     except Exception as e:
         print(f"Error occurred: {e}")
         #fallback method from embed

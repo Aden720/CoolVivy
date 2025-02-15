@@ -106,13 +106,17 @@ def getSoundcloudParts(embed):
                                          f'({track.user["permalink_url"]})')
             trackStrings = []
             trackSummaryCharLength = 0
+            maxDisplayableTracksReached = False
             for song in track.tracks:
-                outputString = (
-                    f'1. [{song.title}]({song.permalink_url}) '
-                    f'{formatMillisecondsToDurationString(song.duration)}')
-                outputStringLength = len(outputString) + 1
-                if trackSummaryCharLength + outputStringLength <= 1000:
-                    trackStrings.append(outputString)
+                if not maxDisplayableTracksReached:
+                    outputString = (
+                        f'1. [{song.title}]({song.permalink_url}) '
+                        f'{formatMillisecondsToDurationString(song.duration)}')
+                    outputStringLength = len(outputString) + 1
+                    if trackSummaryCharLength + outputStringLength <= 1000:
+                        trackStrings.append(outputString)
+                    else:
+                        maxDisplayableTracksReached = True
 
             soundcloudParts['Tracks'] = '\n'.join(trackStrings)
             if len(trackStrings) != track.track_count:

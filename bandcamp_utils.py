@@ -158,6 +158,7 @@ class Album:
         trackSummaryCharLength = 0
         artists = {self.artist['name']}
         totalDuration = 0
+        maxDisplayableTracksReached = False
         for track, trackData in zip(self.tracks, self.tracksData):
             durationMs = trackData['duration'] * 1000
             totalDuration += durationMs
@@ -167,18 +168,21 @@ class Album:
                 if match:
                     trackData['title'] = match.group(2)
                     trackData['band_name'] = match.group(1)
-            trackString = (
-                f'{trackData["track_num"]}. ' +
-                (f'[{trackData["band_name"]} - {trackData["title"]}]'
-                 if trackData['band_name'] != self.artist['name'] else
-                 f'[{trackData["title"]}]') +
-                #map the url from page
-                f'({track["item"].get("@id")})'
-                f' `{formatMillisecondsToDurationString(durationMs)}`')
-            trackStringLength = len(trackString) + 1
-            if trackSummaryCharLength + trackStringLength <= 1000:
-                trackStrings.append(trackString)
-                trackSummaryCharLength += trackStringLength
+            if not maxDisplayableTracksReached:
+                trackString = (
+                    f'{trackData["track_num"]}. ' +
+                    (f'[{trackData["band_name"]} - {trackData["title"]}]'
+                     if trackData['band_name'] != self.artist['name'] else
+                     f'[{trackData["title"]}]') +
+                    #map the url from page
+                    f'({track["item"].get("@id")})'
+                    f' `{formatMillisecondsToDurationString(durationMs)}`')
+                trackStringLength = len(trackString) + 1
+                if trackSummaryCharLength + trackStringLength <= 1000:
+                    trackStrings.append(trackString)
+                    trackSummaryCharLength += trackStringLength
+                else:
+                    maxDisplayableTracksReached = True
             if self.artist['name'] not in trackData['band_name']:
                 artists.add(trackData['band_name'])
 
