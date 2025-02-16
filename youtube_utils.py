@@ -4,6 +4,7 @@ from dotmap import DotMap
 from ytmusicapi import YTMusic
 
 from general_utils import (
+    escapeDiscordFormatting,
     formatMillisecondsToDurationString,
     formatTimeToDisplay,
     formatTimeToTimestamp,
@@ -165,7 +166,8 @@ def getYouTubeParts(embed):
                 trackUrl = f'https://www.youtube.com/watch?v={trackEntry["videoId"]})'
 
             trackString = (
-                f'1. [{trackTitle}]({trackUrl}) `{trackEntry["duration"]}`')
+                f'1. [{escapeDiscordFormatting(trackTitle)}]({trackUrl}) '
+                f'`{trackEntry["duration"]}`')
 
             trackStringLength = len(trackString) + 1
             if trackSummaryCharLength + trackStringLength <= 1000:

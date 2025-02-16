@@ -30,7 +30,7 @@ def cleanLinks(description):
     return re.sub(r'(https?:\/\/[a-zA-Z0-9\-\.]*[^\s]*)', r'<\1>', description)
 
 
-def escape_discord_formatting(text):
+def escapeDiscordFormatting(text):
     """
     Escapes Discord's special formatting characters to prevent unintended formatting
     * (italic/bold), _ (italic/underline), ~ (strikethrough), ` (code), | (spoiler)

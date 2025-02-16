@@ -8,7 +8,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from bandcamp_utils import getBandcampParts
-from general_utils import remove_trailing_slash
+from general_utils import escapeDiscordFormatting, remove_trailing_slash
 from soundcloud_utils import getSoundcloudParts
 from spotify_utils import getSpotifyParts
 from youtube_utils import getYouTubeParts
@@ -161,6 +161,9 @@ async def fetchEmbed(message, isInteraction=False, isDM=False):
 
             #populate embed fields
             for key, value in fieldParts.items():
+                if key == 'title':
+                    #reformat title without markup
+                    value = escapeDiscordFormatting(value)
                 if key not in [
                         'description', 'title', 'thumbnailUrl',
                         'embedPlatformType', 'embedColour'
