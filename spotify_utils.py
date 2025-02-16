@@ -128,10 +128,11 @@ def getSpotifyParts(embed):
             #Released on
             spotifyParts['Released'] = getReleaseDateString(album)
 
-            spotifyParts['Tracks'] = '\n'.join(trackStrings)
-            if len(trackStrings) != totalTracks:
-                spotifyParts[
-                    'Tracks'] += f'\n...and {totalTracks - len(trackStrings)} more'
+            if totalTracks > 1:
+                spotifyParts['Tracks'] = '\n'.join(trackStrings)
+                if len(trackStrings) != totalTracks:
+                    spotifyParts[
+                        'Tracks'] += f'\n...and {totalTracks - len(trackStrings)} more'
 
             #title
             spotifyParts['title'] = (
