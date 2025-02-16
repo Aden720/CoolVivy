@@ -160,7 +160,7 @@ def getYouTubeParts(embed):
                 #trackUrl = song['microformat']['microformatDataRenderer'][
                 #    'urlCanonical']
                 trackTitle = f'{artistString} - {trackEntry["title"]}'
-                trackUrl = f'(https://music.youtube.com/watch?v={trackEntry["videoId"]})'
+                trackUrl = f'https://music.youtube.com/watch?v={trackEntry["videoId"]}'
             else:
                 trackTitle = trackEntry['title']
                 trackUrl = f'https://www.youtube.com/watch?v={trackEntry["videoId"]})'
