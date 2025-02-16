@@ -30,5 +30,19 @@ def cleanLinks(description):
     return re.sub(r'(https?:\/\/[a-zA-Z0-9\-\.]*[^\s]*)', r'<\1>', description)
 
 
+def escape_discord_formatting(text):
+    """
+    Escapes Discord's special formatting characters to prevent unintended formatting
+    * (italic/bold), _ (italic/underline), ~ (strikethrough), ` (code), | (spoiler)
+    """
+    special_chars = ['*', '_', '~', '`', '|']
+    escaped_text = text
+    for char in special_chars:
+        escaped_text = escaped_text.replace(char, '\\' + char)
+    return escaped_text
+
+
+
+
 def remove_trailing_slash(url):
     return re.sub(r'/$', '', url)
