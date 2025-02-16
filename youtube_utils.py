@@ -145,30 +145,28 @@ def getYouTubeParts(embed):
         trackStrings = []
         trackSummaryCharLength = 0
         maxDisplayableTracksReached = False
-        ytMusic = YTMusic()
         for trackEntry in track['tracks']:
             if maxDisplayableTracksReached:
                 break
             if isYoutubeMusic(trackEntry['videoType']):
                 #Fetch the duration of the track
-                song = ytMusic.get_song(trackEntry['videoId'])
-                trackDuration = getVideoDisplayDuration(song)
+                #song = ytMusic.get_song(trackEntry['videoId'])
+                #trackDuration = getVideoDisplayDuration(song)
                 trackArtists = [
                     artist['name'] for artist in trackEntry['artists']
                 ]
                 artistString = formatArtistNames(trackArtists)
-                trackUrl = song['microformat']['microformatDataRenderer'][
-                    'urlCanonical']
-                trackString = (
-                    f'1. [{artistString} - {trackEntry["title"]}]({trackUrl})'
-                    + f' `{trackDuration}`')
+                #trackUrl = song['microformat']['microformatDataRenderer'][
+                #    'urlCanonical']
+                trackTitle = f'{artistString} - {trackEntry["title"]}'
+                trackUrl = f'(https://music.youtube.com/watch?v={trackEntry["videoId"]})'
             else:
-                trackString = (
-                    f'1. [{trackEntry["title"]}]' +
-                    f'(https://www.youtube.com/watch?v={trackEntry["videoId"]})'
-                    +
-                    f' `{trackEntry["artists"][0]["name"]}`'  #the duration is in name 🤷‍♂️
-                )
+                trackTitle = trackEntry['title']
+                trackUrl = f'https://www.youtube.com/watch?v={trackEntry["videoId"]})'
+
+            trackString = (
+                f'1. [{trackTitle}]({trackUrl}) `{trackEntry["duration"]}`')
+
             trackStringLength = len(trackString) + 1
             if trackSummaryCharLength + trackStringLength <= 1000:
                 trackStrings.append(trackString)
