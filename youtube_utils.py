@@ -4,7 +4,6 @@ from dotmap import DotMap
 from ytmusicapi import YTMusic
 
 from general_utils import (
-    escapeDiscordFormatting,
     formatMillisecondsToDurationString,
     formatTimeToDisplay,
     formatTimeToTimestamp,
@@ -146,28 +145,27 @@ def getYouTubeParts(embed):
         trackStrings = []
         trackSummaryCharLength = 0
         maxDisplayableTracksReached = False
+        ytMusic = YTMusic()
         for trackEntry in track['tracks']:
             if maxDisplayableTracksReached:
                 break
             if isYoutubeMusic(trackEntry['videoType']):
-                #Fetch the duration of the track
-                #song = ytMusic.get_song(trackEntry['videoId'])
-                #trackDuration = getVideoDisplayDuration(song)
                 trackArtists = [
                     artist['name'] for artist in trackEntry['artists']
                 ]
                 artistString = formatArtistNames(trackArtists)
-                #trackUrl = song['microformat']['microformatDataRenderer'][
-                #    'urlCanonical']
                 trackTitle = f'{artistString} - {trackEntry["title"]}'
                 trackUrl = f'https://music.youtube.com/watch?v={trackEntry["videoId"]}'
             else:
                 trackTitle = trackEntry['title']
-                trackUrl = f'https://www.youtube.com/watch?v={trackEntry["videoId"]})'
+                trackUrl = f'https://www.youtube.com/watch?v={trackEntry["videoId"]}'
 
-            trackString = (
-                f'1. [{escapeDiscordFormatting(trackTitle)}]({trackUrl}) '
-                f'`{trackEntry["duration"]}`')
+            if not trackEntry.get('duration'):
+                song = ytMusic.get_song(trackEntry['videoId'])
+                trackDuration = getVideoDisplayDuration(song)
+            else:
+                trackDuration = f'`{trackEntry["duration"]}`'
+            trackString = f'1. [{trackTitle}]({trackUrl}) {trackDuration}'
 
             trackStringLength = len(trackString) + 1
             if trackSummaryCharLength + trackStringLength <= 1000:
@@ -216,8 +214,7 @@ def isYoutubeMusic(type):
 
 def getVideoDisplayDuration(video):
     videoDuration = video['videoDetails']['lengthSeconds']
-    if videoDuration:
-        return formatMillisecondsToDurationString(int(videoDuration) * 1000)
+    return formatMillisecondsToDurationString(int(videoDuration) * 1000)
 
 
 def formatArtistNames(artists):

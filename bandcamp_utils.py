@@ -9,7 +9,6 @@ from bs4 import BeautifulSoup
 from dotmap import DotMap
 
 from general_utils import (
-    escapeDiscordFormatting,
     formatMillisecondsToDurationString,
     formatTimeToDisplay,
     remove_trailing_slash,
@@ -171,10 +170,10 @@ class Album:
                     trackData['band_name'] = match.group(1)
             if not maxDisplayableTracksReached:
                 trackString = (
-                    f'{trackData["track_num"]}. ' + escapeDiscordFormatting(
-                        f'[{trackData["band_name"]} - {trackData["title"]}]'
-                        if trackData['band_name'] !=
-                        self.artist['name'] else f'[{trackData["title"]}]') +
+                    f'{trackData["track_num"]}. ' +
+                    (f'[{trackData["band_name"]} - {trackData["title"]}]'
+                     if trackData['band_name'] != self.artist['name'] else
+                     f'[{trackData["title"]}]') +
                     #map the url from page
                     f'({track["item"].get("@id")})'
                     f' `{formatMillisecondsToDurationString(durationMs)}`')

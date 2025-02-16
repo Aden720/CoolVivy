@@ -6,7 +6,11 @@ import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
 from general_utils import formatMillisecondsToDurationString, formatTimeToDisplay
-from object_types.spotify_types import SpotifyAlbum, SpotifyPlaylist, SpotifyPlaylistTracks
+from object_types.spotify_types import (
+    SpotifyAlbum,
+    SpotifyPlaylist,
+    SpotifyPlaylistTracks,
+)
 
 spotifyClientId = os.getenv("SPOTIFY_CLIENT_ID")
 spotifyClientSecret = os.getenv("SPOTIFY_CLIENT_SECRET")

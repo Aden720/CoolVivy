@@ -5,7 +5,6 @@ from sclib import Playlist, SoundcloudAPI, Track
 
 from general_utils import (
     cleanLinks,
-    escapeDiscordFormatting,
     formatMillisecondsToDurationString,
     formatTimeToDisplay,
     remove_trailing_slash,
@@ -111,8 +110,7 @@ def getSoundcloudParts(embed):
             for song in track.tracks:
                 if not maxDisplayableTracksReached:
                     outputString = (
-                        f'1. [{escapeDiscordFormatting(song.title)}]'
-                        f'({song.permalink_url}) '
+                        f'1. [{song.title}]({song.permalink_url}) '
                         f'{formatMillisecondsToDurationString(song.duration)}')
                     outputStringLength = len(outputString) + 1
                     if trackSummaryCharLength + outputStringLength <= 1000:
