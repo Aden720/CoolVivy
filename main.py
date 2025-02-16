@@ -165,7 +165,9 @@ async def fetchEmbed(message, isInteraction=False, isDM=False):
                         'description', 'title', 'thumbnailUrl',
                         'embedPlatformType', 'embedColour'
                 ]:
-                    inline = key not in ['Tags', 'Description', 'Tracks']
+                    inline = key not in [
+                        'Tags', 'Description', 'Tracks', 'Videos'
+                    ]
                     embedVar.add_field(name=key, value=value, inline=inline)
 
             #remove embed from original message
