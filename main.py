@@ -1,14 +1,18 @@
 import asyncio
 import json
 import os
-import re
-
-import discord
+import replit 
 from discord import app_commands
 from discord.ext import commands
 
 from bandcamp_utils import getBandcampParts
-from general_utils import remove_trailing_slash
+from general_utils import (
+    find_and_categorize_links,
+    formatMillisecondsToDurationString,
+    formatTimeToDisplay,
+    formatTimeToTimestamp,
+    remove_trailing_slash,
+)
 from soundcloud_utils import getSoundcloudParts
 from spotify_utils import getSpotifyParts
 from youtube_utils import getYouTubeParts
@@ -133,6 +137,14 @@ async def fetchEmbed(message, isInteraction=False, isDM=False):
         referencedUser = await getReferencedUser(message)
     canUseWebhook = webhook is not None
 
+    supportedLinks = find_and_categorize_links(message.content)
+    for link, platform in supportedLinks:
+        fieldParts = {}
+        try:
+            fieldParts = getDescriptionParts(link, platform)
+        catch(e):
+            print(f'Error fetching field parts for link "{link}": {e}')
+            fieldParts = getDescriptionPartsFromEmbed()
     for embed in newMessage.embeds:
         if any(
                 word in embed.url for word in
