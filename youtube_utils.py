@@ -115,9 +115,14 @@ def getYouTubeParts(embed):
         trackStrings = []
         trackSummaryCharLength = 0
         for trackEntry in track['tracks']:
-            trackArtists = [artist['name'] for artist in trackEntry['artists']]
-            artistString = formatArtistNames(trackArtists)
-            trackTitle = f'{artistString} - {trackEntry["title"]}'
+            if trackEntry['artists'] == albumArtists:
+                trackTitle = trackEntry['title']
+            else:
+                trackArtists = [
+                    artist['name'] for artist in trackEntry['artists']
+                ]
+                artistString = formatArtistNames(trackArtists)
+                trackTitle = f'{artistString} - {trackEntry["title"]}'
             trackUrl = f'https://music.youtube.com/watch?v={trackEntry["videoId"]}'
             trackDuration = f'`{trackEntry["duration"]}`'
             trackString = f'1. [{trackTitle}]({trackUrl}) {trackDuration}'
