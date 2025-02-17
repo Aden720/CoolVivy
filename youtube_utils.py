@@ -96,6 +96,9 @@ def getYouTubeParts(embed):
         if albumTitle:
             youtubeParts['title'] = albumTitle
 
+        #Duration
+        youtubeParts['Duration'] = f'`{track["duration"]}`'
+
         #Artists
         albumArtists = track['artists']
         youtubeParts[
@@ -103,6 +106,12 @@ def getYouTubeParts(embed):
                 f'[{artist["name"]}](https://music.youtube.com/channel/{artist["id"]})'
                 for artist in albumArtists
             ])
+
+        #Released
+        albumReleaseDate = track['year']
+        if albumReleaseDate:
+            youtubeParts['Released'] = formatTimeToDisplay(
+                albumReleaseDate, '%Y')
 
         #Type
         albumTrackCount = track['trackCount']
@@ -138,20 +147,6 @@ def getYouTubeParts(embed):
         if len(trackStrings) != albumTrackCount:
             youtubeParts['Tracks'] += (
                 f'\n...and {albumTrackCount - len(trackStrings)} more')
-
-        #Duration
-        youtubeParts['Duration'] = f'`{track["duration"]}`'
-
-        #Released
-        albumReleaseDate = track['year']
-        if albumReleaseDate:
-            youtubeParts['Released'] = formatTimeToDisplay(
-                albumReleaseDate, '%Y')
-
-        #Description
-        albumDescription = track['description']
-        if albumDescription:
-            description = track['description']
 
         #Square Thumbnail
         youtubeParts['thumbnailUrl'] = track['thumbnails'][-1]['url']
