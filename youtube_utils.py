@@ -105,21 +105,37 @@ def getYouTubeParts(embed):
             ])
 
         #Type
+        albumTrackCount = track['trackCount']
         albumType = track['type']
-        if albumType:
-            youtubeParts['Type'] = albumType
+        youtubeParts['description'] = (
+            f'{albumType} ({albumTrackCount} song{"s" if albumTrackCount > 1 else ""})'
+            if albumType != 'Album' else f'{albumTrackCount} track album')
 
         #Tracks
-        albumTrackCount = track['trackCount']
-        if albumTrackCount:
-            youtubeParts['Tracks'] = (f'{albumTrackCount} song'
-                                      f'{"s" if albumTrackCount > 1 else ""}')
+        trackStrings = []
+        trackSummaryCharLength = 0
+        for trackEntry in track['tracks']:
+            trackArtists = [artist['name'] for artist in trackEntry['artists']]
+            artistString = formatArtistNames(trackArtists)
+            trackTitle = f'{artistString} - {trackEntry["title"]}'
+            trackUrl = f'https://music.youtube.com/watch?v={trackEntry["videoId"]}'
+            trackDuration = f'`{trackEntry["duration"]}`'
+            trackString = f'1. [{trackTitle}]({trackUrl}) {trackDuration}'
+
+            trackStringLength = len(trackString) + 1
+            if trackSummaryCharLength + trackStringLength <= 1000:
+                trackStrings.append(trackString)
+                trackSummaryCharLength += trackStringLength
+            else:
+                break
+
+        youtubeParts['Tracks'] = '\n'.join(trackStrings)
+        if len(trackStrings) != albumTrackCount:
+            youtubeParts['Tracks'] += (
+                f'\n...and {albumTrackCount - len(trackStrings)} more')
 
         #Duration
-        albumDuration = track['duration_seconds']
-        if albumDuration:
-            youtubeParts['Duration'] = formatMillisecondsToDurationString(
-                int(albumDuration) * 1000)
+        youtubeParts['Duration'] = f'`{track["duration"]}`'
 
         #Released
         albumReleaseDate = track['year']
@@ -172,11 +188,11 @@ def getYouTubeParts(embed):
                 trackStrings.append(trackString)
                 trackSummaryCharLength += trackStringLength
             else:
-                maxDisplayableTracksReached = True
-            youtubeParts['Videos'] = '\n'.join(trackStrings)
-            if len(trackStrings) != totalVideos:
-                youtubeParts['Videos'] += (
-                    f'\n...and {totalVideos - len(trackStrings)} more')
+                break
+        youtubeParts['Videos'] = '\n'.join(trackStrings)
+        if len(trackStrings) != totalVideos:
+            youtubeParts['Videos'] += (
+                f'\n...and {totalVideos - len(trackStrings)} more')
 
     if description:
         descriptionMatch = re.search('.+?\n\n(.+?)\n.*Released on: (.*?)\n',
