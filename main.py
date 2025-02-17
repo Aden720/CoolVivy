@@ -1,11 +1,14 @@
 import asyncio
 import json
 import os
-import replit 
-from discord import app_commands
+import re
+
+import discord
+from discord import TextChannel, app_commands
 from discord.ext import commands
 
 from bandcamp_utils import getBandcampParts
+from db_utils import add_mention, get_old_mentions, remove_mention
 from general_utils import (
     find_and_categorize_links,
     formatMillisecondsToDurationString,
@@ -35,12 +38,48 @@ else:
 @bot.event
 async def on_ready():
     print(f'We have logged in as {bot.user}')
+    bot.loop.create_task(cleanup_old_mentions())
     # Sync commands to make sure they are registered
     try:
         synced = await bot.tree.sync()
         print(f'Synced {len(synced)} command(s)')
     except Exception as e:
         print(f'Failed to sync commands: {e}')
+
+
+@bot.event
+async def on_reaction_add(reaction, user):
+    if not user.bot:
+        print(
+            f'User {user.name} reacted to message in {reaction.message.channel.name}'
+        )
+        # Get recent channel history (last 100 messages)
+        async for message in reaction.message.channel.history(limit=100):
+            # Check if message is from the bot and mentions the user
+            if message.author == bot.user and user in message.mentions:
+                # Only delete if it's not an embed message
+                if len(message.embeds) == 0:
+                    await message.delete()
+                    break  # Stop searching after finding and deleting the message
+
+
+async def cleanup_old_mentions():
+    while True:
+        old_mentions = get_old_mentions(days=7)
+        for mention in old_mentions:
+            channel = bot.get_channel(int(mention["channel_id"]))
+            if isinstance(channel, TextChannel):
+                try:
+                    message = await channel.fetch_message(
+                        int(mention["message_id"]))
+                    if message and len(message.embeds) == 0:
+                        await message.delete()
+                    remove_mention(mention["channel_id"], mention["user_id"],
+                                   mention["message_id"])
+                except Exception:
+                    remove_mention(mention["channel_id"], mention["user_id"],
+                                   mention["message_id"])
+        await asyncio.sleep(10)  # Check every hour
 
 
 @bot.event
@@ -83,7 +122,10 @@ async def on_message(message):
     else:
         referencedUser = await getReferencedUser(message)
         if referencedUser:
-            await message.reply(referencedUser.mention, mention_author=False)
+            reply = await message.reply(referencedUser.mention,
+                                        mention_author=False)
+            add_mention(str(message.channel.id), str(referencedUser.id),
+                        str(reply.id))
 
 
 # If the message is a reply to the bot's message,
@@ -238,7 +280,10 @@ async def fetchEmbed(message, isInteraction=False, isDM=False):
         #remove original message
         await message.delete()
     if not sentReplyMessage and referencedUser:
-        await message.reply(referencedUser.mention, mention_author=False)
+        reply = await message.reply(referencedUser.mention,
+                                    mention_author=False)
+        add_mention(str(message.channel.id), str(referencedUser.id),
+                    str(reply.id))
 
 
 def getDescriptionParts(embed):
