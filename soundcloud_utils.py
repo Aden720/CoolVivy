@@ -162,7 +162,8 @@ def checkTrackTitle(track_title):
 
 def setTrackTitle(track: Track):
     trackNameRegex = r"(.+?)\s[-–]\s(.*)"
-    fullTitle = f'{track.artist}-{track.title}'
+    fullTitle = f'{track.artist}-{track.title}' if track.artist != track.user.get(
+        'username') else track.title
     match = re.match(trackNameRegex, fullTitle)
     if match:
         track.title = match.group(2)
