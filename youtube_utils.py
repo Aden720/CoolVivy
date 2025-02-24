@@ -30,8 +30,11 @@ def fetchTrack(track_url):
             if not track.get('duration'):
                 albumBrowseId = ytmusic.get_album_browse_id(playlistId)
                 if albumBrowseId:
-                    track = ytmusic.get_album(albumBrowseId)
-                    trackType = types.album
+                    try:
+                        track = ytmusic.get_album(albumBrowseId)
+                        trackType = types.album
+                    except Exception as e:
+                        print(f"Error getting album browse id: {e}")
     return track, trackType
 
 
@@ -154,9 +157,14 @@ def getYouTubeParts(embed):
         totalVideos = track["trackCount"]
         youtubeParts['title'] = track['title']
         youtubeParts['description'] = f'Playlist ({totalVideos} videos)'
-        youtubeParts['thumbnailUrl'] = track['thumbnails'][-1]['url']
-        youtubeParts['Duration'] = f'`{track["duration"]}`'
-        youtubeParts['Last updated'] = track['year']
+        if len(track['thumbnails']) > 0:
+            youtubeParts['thumbnailUrl'] = track['thumbnails'][-1]['url']
+        duration = track['duration']
+        youtubeParts['Duration'] = (f'`{duration}`' if duration else
+                                    formatMillisecondsToDurationString(
+                                        track['duration_seconds'] * 1000))
+        if hasattr(track, 'year'):
+            youtubeParts['Last updated'] = track['year']
 
         trackStrings = []
         trackSummaryCharLength = 0

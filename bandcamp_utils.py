@@ -113,7 +113,6 @@ class Track:
 
 
 class Album:
-
     #map to album fields
     def __init__(self, pageData, albumData):
         self.title = pageData['name']
