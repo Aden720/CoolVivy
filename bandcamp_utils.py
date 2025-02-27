@@ -390,6 +390,9 @@ def checkTrackTitle(track_title):
 
 
 def getTrackTitleParts(title):
+    # Skip matching if the title has format "title (artist - edit)"
+    if re.search(r"\([^)]*[-–][^)]*\)$", title):
+        return None
     trackNameRegex = r"(.+?)\s[-–]\s(.*)"
     return re.match(trackNameRegex, title)
 
