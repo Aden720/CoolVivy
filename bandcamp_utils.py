@@ -171,8 +171,8 @@ class Album:
                 trackString = (
                     f'{trackData["track_num"]}. ' +
                     (f'[{trackData["band_name"]} - {trackData["title"]}]'
-                     if trackData['band_name'] != self.artist['name'] else
-                     f'[{trackData["title"]}]') +
+                     if trackData['band_name'].lower() != self.artist['name'].
+                     lower() else f'[{trackData["title"]}]') +
                     #map the url from page
                     f'({track["item"].get("@id")})'
                     f' `{formatMillisecondsToDurationString(durationMs)}`')
@@ -182,7 +182,8 @@ class Album:
                     trackSummaryCharLength += trackStringLength
                 else:
                     maxDisplayableTracksReached = True
-            if self.artist['name'] not in trackData['band_name']:
+            if self.artist['name'].lower() not in trackData['band_name'].lower(
+            ):
                 artists.add(trackData['band_name'])
 
         parts['Duration'] = formatMillisecondsToDurationString(totalDuration)
