@@ -365,6 +365,56 @@ async def fetch_embed_message(interaction: discord.Interaction,
         await interaction.followup.send(content=str(e), ephemeral=True)
 
 
+@bot.tree.context_menu(name="remove react")
+async def remove_reactions_command(interaction: discord.Interaction, message: discord.Message):
+    if not message.reactions:
+        await interaction.response.send_message("This message has no reactions.", ephemeral=True)
+        return
+
+    # Get all reactions by the bot
+    bot_reactions = [react for react in message.reactions if any(user.id == bot.user.id for user in [u async for u in react.users()])]
+    
+    if not bot_reactions:
+        await interaction.response.send_message("No bot reactions found on this message.", ephemeral=True)
+        return
+
+    # Create select options for each bot reaction
+    options = [
+        discord.SelectOption(
+            label=f"Remove {str(reaction.emoji)}",
+            value=str(reaction.emoji),
+            emoji=reaction.emoji
+        ) for reaction in bot_reactions
+    ]
+
+    # Create select menu
+    select = discord.ui.Select(
+        placeholder="Select reactions to remove...",
+        min_values=1,
+        max_values=len(options),
+        options=options
+    )
+    
+    # Create view for the select menu
+    view = discord.ui.View()
+    
+    async def select_callback(interaction: discord.Interaction):
+        for emoji in select.values:
+            await message.remove_reaction(emoji, bot.user)
+        await interaction.response.send_message(
+            f"Removed {len(select.values)} reaction(s)", 
+            ephemeral=True
+        )
+    
+    select.callback = select_callback
+    view.add_item(select)
+    
+    await interaction.response.send_message(
+        "Select the reactions to remove:",
+        view=view,
+        ephemeral=True
+    )
+
 @bot.tree.context_menu(name="example")
 async def example_command(interaction: discord.Interaction,
                           message: discord.Message):
