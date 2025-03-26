@@ -1,5 +1,6 @@
-import discord
 from typing import List
+
+import discord
 
 
 async def fetch_animated_emotes(guild: discord.Guild) -> List[discord.Emoji]:
@@ -12,7 +13,6 @@ async def fetch_animated_emotes(guild: discord.Guild) -> List[discord.Emoji]:
     """
     animated_emotes = [emoji for emoji in guild.emojis if emoji.animated]
     return animated_emotes
-
 
 
 class PaginatedSelect(discord.ui.View):
@@ -57,4 +57,3 @@ class PaginatedSelect(discord.ui.View):
             self.current_page += 1
             self.update_select_menu()
             await interaction.response.edit_message(view=self)
-

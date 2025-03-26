@@ -9,7 +9,7 @@ from discord.ext import commands
 
 from bandcamp_utils import getBandcampParts
 from general_utils import remove_trailing_slash
-from reactions import PaginatedSelect
+from reactions import PaginatedSelect, fetch_animated_emotes
 from soundcloud_utils import getSoundcloudParts
 from spotify_utils import getSpotifyParts
 from youtube_utils import getYouTubeParts
@@ -352,15 +352,19 @@ async def example_command(interaction: discord.Interaction,
     if (testInstance == 'True' and str(interaction.user.id) != ownerUser):
         return
     # Create a list of options (example with 50 options)
-    options = [
-        discord.SelectOption(label=f"Option {i}", value=str(i))
-        for i in range(1, 51)
-    ]
+    if interaction.guild is not None:
+        emotes = await fetch_animated_emotes(interaction.guild)
+        options = [
+            discord.SelectOption(label=f"{emote.url} {emote.name}",
+                                 value=str(emote.id)) for emote in emotes
+        ]
 
-    # Create the paginated view (25 items per page)
-    view = PaginatedSelect(options)
+        # Create the paginated view (25 items per page)
+        view = PaginatedSelect(options)
 
-    await interaction.response.send_message("Select an option:", view=view)
+        await interaction.response.send_message("Select an option:",
+                                                view=view,
+                                                ephemeral=True)
 
 
 @bot.tree.command(name="help", description="Show help information")
