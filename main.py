@@ -59,6 +59,16 @@ async def on_guild_join(guild):
 
 
 @bot.event
+async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
+    # Don't respond to bot reactions
+    if user.bot:
+        return
+        
+    # You can check for specific emoji reactions here
+    if str(reaction.emoji) == "👍":
+        await reaction.message.channel.send(f"{user.name} gave a thumbs up!")
+
+@bot.event
 async def on_message(message):
     if message.author.bot is True \
         or (testInstance == "True" and str(message.author.id) != ownerUser):# or \
