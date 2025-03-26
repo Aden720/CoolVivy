@@ -355,8 +355,9 @@ async def example_command(interaction: discord.Interaction,
     if interaction.guild is not None:
         emotes = await fetch_animated_emotes(interaction.guild)
         options = [
-            discord.SelectOption(label=f"{emote.url} {emote.name}",
-                                 value=str(emote.id)) for emote in emotes
+            discord.SelectOption(label=f"{emote.name}",
+                               emoji=emote,
+                               value=str(emote.id)) for emote in emotes
         ]
 
         # Create the paginated view (25 items per page)
