@@ -4,7 +4,6 @@ import os
 import re
 
 import discord
-from discord import app_commands
 from discord.ext import commands
 
 from bandcamp_utils import getBandcampParts
@@ -63,7 +62,7 @@ async def on_guild_join(guild):
 async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
     print(f"Reaction detected: {reaction.emoji} from {user.name}")
     # Don't respond to bot reactions
-    if user.bot:
+    if user.bot or not bot.user:
         return
 
     # Check if the bot has reacted to this message
@@ -366,54 +365,60 @@ async def fetch_embed_message(interaction: discord.Interaction,
 
 
 @bot.tree.context_menu(name="remove react")
-async def remove_reactions_command(interaction: discord.Interaction, message: discord.Message):
+async def remove_reactions_command(interaction: discord.Interaction,
+                                   message: discord.Message):
+    if not bot.user:
+        return
     if not message.reactions:
-        await interaction.response.send_message("This message has no reactions.", ephemeral=True)
+        await interaction.response.send_message(
+            "This message has no reactions.", ephemeral=True)
         return
 
     # Get all reactions by the bot
-    bot_reactions = [react for react in message.reactions if any(user.id == bot.user.id for user in [u async for u in react.users()])]
-    
+
+    bot_reactions = [
+        react for react in message.reactions
+        if any(user.id == bot.user.id
+               for user in [u async for u in react.users()])
+    ]
+
     if not bot_reactions:
-        await interaction.response.send_message("No bot reactions found on this message.", ephemeral=True)
+        await interaction.response.send_message(
+            "No bot reactions found on this message.", ephemeral=True)
         return
 
     # Create select options for each bot reaction
     options = [
-        discord.SelectOption(
-            label=f"Remove {str(reaction.emoji)}",
-            value=str(reaction.emoji),
-            emoji=reaction.emoji
-        ) for reaction in bot_reactions
+        discord.SelectOption(label=f"Remove {str(reaction.emoji)}",
+                             value=str(reaction.emoji),
+                             emoji=reaction.emoji)
+        for reaction in bot_reactions
     ]
 
     # Create select menu
-    select = discord.ui.Select(
-        placeholder="Select reactions to remove...",
-        min_values=1,
-        max_values=len(options),
-        options=options
-    )
-    
+    select = discord.ui.Select(placeholder="Select reactions to remove...",
+                               min_values=1,
+                               max_values=len(options),
+                               options=options)
+
     # Create view for the select menu
     view = discord.ui.View()
-    
+
     async def select_callback(interaction: discord.Interaction):
+        if not bot.user:
+            return
         for emoji in select.values:
             await message.remove_reaction(emoji, bot.user)
-        await interaction.response.send_message(
-            f"Removed {len(select.values)} reaction(s)", 
-            ephemeral=True
-        )
-    
+        await interaction.response.edit_message(
+            content="Removed {len(select.values)} reaction(s)", view=None)
+
     select.callback = select_callback
     view.add_item(select)
-    
-    await interaction.response.send_message(
-        "Select the reactions to remove:",
-        view=view,
-        ephemeral=True
-    )
+
+    await interaction.response.send_message("Select the reactions to remove:",
+                                            view=view,
+                                            ephemeral=True)
+
 
 @bot.tree.context_menu(name="example")
 async def example_command(interaction: discord.Interaction,
