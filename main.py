@@ -376,11 +376,12 @@ async def remove_reactions_command(interaction: discord.Interaction,
 
     # Get all reactions by the bot
 
-    bot_reactions = [
-        react for react in message.reactions
-        if any(user.id == bot.user.id
-               for user in [u async for u in react.users()])
-    ]
+    bot_reactions = []
+    for react in message.reactions:
+        async for user in react.users():
+            if user.id == bot.user.id:
+                bot_reactions.append(react)
+                break
 
     if not bot_reactions:
         await interaction.response.send_message(
