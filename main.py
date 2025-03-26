@@ -61,6 +61,7 @@ async def on_guild_join(guild):
 
 @bot.event
 async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
+    print(f"Reaction detected: {reaction.emoji} from {user.name}")
     # Don't respond to bot reactions
     if user.bot:
         return
