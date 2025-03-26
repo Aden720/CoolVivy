@@ -436,13 +436,12 @@ async def quick_react_command(interaction: discord.Interaction,
                                  value=str(emote.id)) for emote in emotes
         ]
 
-        # Create the paginated view (25 items per page)
-        view = PaginatedSelect(options)
+        # Create the paginated view (25 items per page, max 20 selections)
+        view = PaginatedSelect(options, max_selections=20)
         view.originalMessage = message
 
-        await interaction.response.send_message("Select an option:",
-                                                view=view,
-                                                ephemeral=True)
+        await interaction.response.send_message(
+            "Select emojis (max 20):", view=view, ephemeral=True)
 
 
 @bot.tree.command(name="help", description="Show help information")
