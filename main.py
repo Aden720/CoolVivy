@@ -430,14 +430,23 @@ async def quick_react_command(interaction: discord.Interaction,
     #grab all the animated emojis in the server
     if interaction.guild is not None:
         emotes = await fetch_animated_emotes(interaction.guild)
+        # Get current reactions
+        existing_reactions = {str(reaction.emoji) for reaction in message.reactions}
+        
+        # Filter out emotes that are already reacted
+        available_emotes = [emote for emote in emotes if str(emote) not in existing_reactions]
+        
         options = [
             discord.SelectOption(label=f"{emote.name}",
                                  emoji=emote,
-                                 value=str(emote.id)) for emote in emotes
+                                 value=str(emote.id)) for emote in available_emotes
         ]
 
-        # Create the paginated view (25 items per page, max 20 selections)
-        view = PaginatedSelect(options, max_selections=20)
+        # Calculate remaining slots
+        remaining_slots = 20 - len(existing_reactions)
+        
+        # Create the paginated view with remaining slots
+        view = PaginatedSelect(options, max_selections=max(0, remaining_slots))
         view.originalMessage = message
 
         await interaction.response.send_message("Select emojis (max 20):",
