@@ -64,9 +64,15 @@ async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
     if user.bot:
         return
         
-    # You can check for specific emoji reactions here
-    if str(reaction.emoji) == "👍":
-        await reaction.message.channel.send(f"{user.name} gave a thumbs up!")
+    # Check if the bot has reacted to this message
+    message = reaction.message
+    bot_reactions = [react for react in message.reactions if react.me]
+    
+    # If bot has reacted, check if the current reaction matches any bot reaction
+    for bot_reaction in bot_reactions:
+        if str(bot_reaction.emoji) == str(reaction.emoji):
+            await reaction.message.channel.send(f"{user.name} reacted with the same emoji as the bot!")
+            break
 
 @bot.event
 async def on_message(message):
