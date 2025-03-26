@@ -2,8 +2,6 @@ from typing import List
 
 import discord
 
-from general_utils import delete_message
-
 
 async def fetch_animated_emotes(guild: discord.Guild) -> List[discord.Emoji]:
     """
@@ -45,16 +43,8 @@ class PaginatedSelect(discord.ui.View):
 
         async def select_callback(interaction: discord.Interaction):
             selected_value = select.values[0]
-            try:
-                await delete_message(interaction.message.id)
-            except discord.NotFound:
-                print("Message not found, couldn't delete.")
-            except discord.Forbidden:
-                print("Bot does not have permission to delete the message.")
-            except discord.HTTPException as e:
-                print(f"Failed to delete message: {e}")
-            await interaction.response.send_message(
-                f"You selected: {selected_value}", ephemeral=True)
+            await interaction.response.edit_message(
+                content=f"You selected: {selected_value}", view=None)
 
         select.callback = select_callback
         self.add_item(select)

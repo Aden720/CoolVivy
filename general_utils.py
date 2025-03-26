@@ -2,6 +2,8 @@ import math
 import re
 from datetime import datetime
 
+import discord
+
 
 def formatMillisecondsToDurationString(milliseconds):
     (hours, seconds) = divmod(milliseconds / 1000, 3600)
@@ -32,18 +34,3 @@ def cleanLinks(description):
 
 def remove_trailing_slash(url):
     return re.sub(r'/$', '', url)
-
-
-async def delete_message(message_id):
-    message = find_message_by_id(message_id)
-    if message:
-        # Code to delete the message
-        print(f"Message {message_id} deleted.")
-    else:
-        print(f"Message not found, couldn't delete.")
-
-
-def find_message_by_id(message_id):
-    # Logic to find and return the message by ID
-    # Return None if not found
-    return None  # Placeholder
