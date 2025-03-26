@@ -71,7 +71,7 @@ async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
     # If bot has reacted, check if the current reaction matches any bot reaction
     for bot_reaction in bot_reactions:
         if str(bot_reaction.emoji) == str(reaction.emoji):
-            await reaction.message.channel.send(f"{user.name} reacted with the same emoji as the bot!")
+            await bot_reaction.remove(bot.user)
             break
 
 @bot.event
