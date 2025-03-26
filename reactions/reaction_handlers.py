@@ -43,8 +43,9 @@ class PaginatedSelect(discord.ui.View):
 
         async def select_callback(interaction: discord.Interaction):
             selected_value = select.values[0]
+            selected_emoji = next((opt.emoji for opt in select.options if opt.value == selected_value), None)
             await interaction.response.edit_message(
-                content=f"You selected: {selected_value}", view=None)
+                content=f"You selected: {selected_emoji} (ID: {selected_value})", view=None)
 
         select.callback = select_callback
         self.add_item(select)
