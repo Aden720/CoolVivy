@@ -40,6 +40,12 @@ class PaginatedSelect(discord.ui.View):
         select = discord.ui.Select(
             placeholder=f"Page {self.current_page + 1}/{self.total_pages}",
             options=self.options[start_idx:end_idx])
+        
+        async def select_callback(interaction: discord.Interaction):
+            selected_value = select.values[0]
+            await interaction.response.send_message(f"You selected: {selected_value}", ephemeral=True)
+            
+        select.callback = select_callback
         self.add_item(select)
 
     @discord.ui.button(label="Previous", style=discord.ButtonStyle.gray)
