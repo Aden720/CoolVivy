@@ -43,6 +43,7 @@ class PaginatedSelect(discord.ui.View):
         
         async def select_callback(interaction: discord.Interaction):
             selected_value = select.values[0]
+            await interaction.message.delete()
             await interaction.response.send_message(f"You selected: {selected_value}", ephemeral=True)
             
         select.callback = select_callback
