@@ -9,6 +9,7 @@ from discord.ext import commands
 
 from bandcamp_utils import getBandcampParts
 from general_utils import remove_trailing_slash
+from reactions import PaginatedSelect
 from soundcloud_utils import getSoundcloudParts
 from spotify_utils import getSpotifyParts
 from youtube_utils import getYouTubeParts
@@ -343,6 +344,23 @@ async def fetch_embed_message(interaction: discord.Interaction,
                     content=interaction.user.mention, embed=trackEmbed)
     except Exception as e:
         await interaction.followup.send(content=str(e), ephemeral=True)
+
+
+@bot.tree.context_menu(name="example")
+async def example_command(interaction: discord.Interaction,
+                          message: discord.Message):
+    if (testInstance == 'True' and str(interaction.user.id) != ownerUser):
+        return
+    # Create a list of options (example with 50 options)
+    options = [
+        discord.SelectOption(label=f"Option {i}", value=str(i))
+        for i in range(1, 51)
+    ]
+
+    # Create the paginated view (25 items per page)
+    view = PaginatedSelect(options)
+
+    await interaction.response.send_message("Select an option:", view=view)
 
 
 @bot.tree.command(name="help", description="Show help information")
