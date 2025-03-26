@@ -430,28 +430,38 @@ async def quick_react_command(interaction: discord.Interaction,
     #grab all the animated emojis in the server
     if interaction.guild is not None:
         emotes = await fetch_animated_emotes(interaction.guild)
-        # Get current reactions
         existing_reactions = {str(reaction.emoji) for reaction in message.reactions}
+        remaining_slots = 20 - len(existing_reactions)
+        
+        if remaining_slots <= 0:
+            await interaction.response.send_message(
+                "This message already has the maximum number of reactions (20).",
+                ephemeral=True)
+            return
         
         # Filter out emotes that are already reacted
         available_emotes = [emote for emote in emotes if str(emote) not in existing_reactions]
         
+        if not available_emotes:
+            await interaction.response.send_message(
+                "No new emotes available to add.", 
+                ephemeral=True)
+            return
+            
         options = [
             discord.SelectOption(label=f"{emote.name}",
                                  emoji=emote,
                                  value=str(emote.id)) for emote in available_emotes
         ]
-
-        # Calculate remaining slots
-        remaining_slots = 20 - len(existing_reactions)
         
         # Create the paginated view with remaining slots
-        view = PaginatedSelect(options, max_selections=max(0, remaining_slots))
+        view = PaginatedSelect(options, max_selections=remaining_slots)
         view.originalMessage = message
 
-        await interaction.response.send_message("Select emojis (max 20):",
-                                                view=view,
-                                                ephemeral=True)
+        await interaction.response.send_message(
+            f"Select emojis ({remaining_slots} slots remaining):",
+            view=view,
+            ephemeral=True)
 
 
 @bot.tree.command(name="help", description="Show help information")
