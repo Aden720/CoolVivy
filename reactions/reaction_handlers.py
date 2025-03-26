@@ -23,7 +23,8 @@ class PaginatedSelect(discord.ui.View):
         self.options = options
         self.current_page = 0
         self.items_per_page = items_per_page
-        self.total_pages = -(-len(options) // items_per_page)  # Ceiling division
+        self.total_pages = -(-len(options) // items_per_page
+                             )  # Ceiling division
         self.selected_emojis = set()
         self.max_selections = max_selections
         self.update_select_menu()
@@ -40,36 +41,42 @@ class PaginatedSelect(discord.ui.View):
 
         # Create new select menu with current page's options
         select = discord.ui.Select(
-            placeholder=f"Page {self.current_page + 1}/{self.total_pages} ({len(self.selected_emojis)}/{self.max_selections})",
+            placeholder=
+            f"Page {self.current_page + 1}/{self.total_pages} ({len(self.selected_emojis)}/{self.max_selections})",
             options=self.options[start_idx:end_idx],
-            max_values=min(end_idx - start_idx, self.max_selections - len(self.selected_emojis))
-        )
+            max_values=min(end_idx - start_idx,
+                           self.max_selections - len(self.selected_emojis)))
 
         async def select_callback(interaction: discord.Interaction):
-            new_emojis = [next((opt.emoji for opt in select.options if opt.value == value), None) 
-                         for value in select.values]
+            new_emojis = [
+                next((opt.emoji
+                      for opt in select.options if opt.value == value), None)
+                for value in select.values
+            ]
             new_emojis = [e for e in new_emojis if e]
-            
-            if len(self.selected_emojis) + len(new_emojis) > self.max_selections:
+
+            if len(self.selected_emojis) + len(
+                    new_emojis) > self.max_selections:
                 await interaction.response.send_message(
-                    f"Cannot select more than {self.max_selections} emojis.", 
-                    ephemeral=True
-                )
+                    f"Cannot select more than {self.max_selections} emojis.",
+                    ephemeral=True)
                 return
 
             self.selected_emojis.update(new_emojis)
-            
+
             if interaction.message:
                 for emoji in new_emojis:
                     await self.originalMessage.add_reaction(emoji)
-            
+
             content = f"Selected: {' '.join(str(e) for e in self.selected_emojis)}"
             if len(self.selected_emojis) >= self.max_selections:
                 content += "\nMaximum selections reached!"
-                await interaction.response.edit_message(content=content, view=None)
+                await interaction.response.edit_message(content=content,
+                                                        view=None)
             else:
                 self.update_select_menu()
-                await interaction.response.edit_message(content=content, view=self)
+                await interaction.response.edit_message(content=content,
+                                                        view=self)
 
         select.callback = select_callback
         self.add_item(select)

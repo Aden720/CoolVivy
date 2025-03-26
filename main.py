@@ -390,7 +390,7 @@ async def remove_reactions_command(interaction: discord.Interaction,
 
     # Create select options for each bot reaction
     options = [
-        discord.SelectOption(label=f"Remove {str(reaction.name)}",
+        discord.SelectOption(label=f"Remove {str(reaction.emoji.name)}",
                              value=str(reaction.emoji),
                              emoji=reaction.emoji)
         for reaction in bot_reactions
@@ -411,7 +411,7 @@ async def remove_reactions_command(interaction: discord.Interaction,
         for emoji in select.values:
             await message.remove_reaction(emoji, bot.user)
         await interaction.response.edit_message(
-            content="Removed {len(select.values)} reaction(s)", view=None)
+            content=f"Removed {len(select.values)} reaction(s)", view=None)
 
     select.callback = select_callback
     view.add_item(select)
@@ -440,8 +440,9 @@ async def quick_react_command(interaction: discord.Interaction,
         view = PaginatedSelect(options, max_selections=20)
         view.originalMessage = message
 
-        await interaction.response.send_message(
-            "Select emojis (max 20):", view=view, ephemeral=True)
+        await interaction.response.send_message("Select emojis (max 20):",
+                                                view=view,
+                                                ephemeral=True)
 
 
 @bot.tree.command(name="help", description="Show help information")
