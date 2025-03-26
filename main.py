@@ -390,7 +390,7 @@ async def remove_reactions_command(interaction: discord.Interaction,
 
     # Create select options for each bot reaction
     options = [
-        discord.SelectOption(label=f"Remove {str(reaction.emoji)}",
+        discord.SelectOption(label=f"Remove {str(reaction.name)}",
                              value=str(reaction.emoji),
                              emoji=reaction.emoji)
         for reaction in bot_reactions
@@ -421,12 +421,13 @@ async def remove_reactions_command(interaction: discord.Interaction,
                                             ephemeral=True)
 
 
-@bot.tree.context_menu(name="example")
-async def example_command(interaction: discord.Interaction,
-                          message: discord.Message):
+@bot.tree.context_menu(name="quick react (gif)")
+async def quick_react_command(interaction: discord.Interaction,
+                              message: discord.Message):
     if (testInstance == 'True' and str(interaction.user.id) != ownerUser):
         return
-    # Create a list of options (example with 50 options)
+
+    #grab all the animated emojis in the server
     if interaction.guild is not None:
         emotes = await fetch_animated_emotes(interaction.guild)
         options = [
