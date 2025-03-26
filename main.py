@@ -362,6 +362,7 @@ async def example_command(interaction: discord.Interaction,
 
         # Create the paginated view (25 items per page)
         view = PaginatedSelect(options)
+        view.originalMessage = message
 
         await interaction.response.send_message("Select an option:",
                                                 view=view,

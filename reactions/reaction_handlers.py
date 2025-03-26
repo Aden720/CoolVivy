@@ -19,6 +19,7 @@ class PaginatedSelect(discord.ui.View):
 
     def __init__(self, options, items_per_page=25):
         super().__init__()
+        self.originalMessage: discord.Message
         self.options = options
         self.current_page = 0
         self.items_per_page = items_per_page
@@ -43,9 +44,14 @@ class PaginatedSelect(discord.ui.View):
 
         async def select_callback(interaction: discord.Interaction):
             selected_value = select.values[0]
-            selected_emoji = next((opt.emoji for opt in select.options if opt.value == selected_value), None)
+            selected_emoji = next(
+                (opt.emoji
+                 for opt in select.options if opt.value == selected_value),
+                None)
             await interaction.response.edit_message(
-                content=f"You selected: {selected_emoji} (ID: {selected_value})", view=None)
+                content=f"You selected: {selected_emoji}", view=None)
+            if selected_emoji and interaction.message:
+                await self.originalMessage.add_reaction(selected_emoji)
 
         select.callback = select_callback
         self.add_item(select)
