@@ -63,16 +63,17 @@ async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
     # Don't respond to bot reactions
     if user.bot:
         return
-        
+
     # Check if the bot has reacted to this message
     message = reaction.message
     bot_reactions = [react for react in message.reactions if react.me]
-    
+
     # If bot has reacted, check if the current reaction matches any bot reaction
     for bot_reaction in bot_reactions:
         if str(bot_reaction.emoji) == str(reaction.emoji):
             await bot_reaction.remove(bot.user)
             break
+
 
 @bot.event
 async def on_message(message):
@@ -372,8 +373,8 @@ async def example_command(interaction: discord.Interaction,
         emotes = await fetch_animated_emotes(interaction.guild)
         options = [
             discord.SelectOption(label=f"{emote.name}",
-                               emoji=emote,
-                               value=str(emote.id)) for emote in emotes
+                                 emoji=emote,
+                                 value=str(emote.id)) for emote in emotes
         ]
 
         # Create the paginated view (25 items per page)
