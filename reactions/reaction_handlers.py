@@ -1,4 +1,17 @@
 import discord
+from typing import List
+
+
+async def fetch_animated_emotes(guild: discord.Guild) -> List[discord.Emoji]:
+    """
+    Fetches all custom animated emotes from a server.
+    Args:
+        guild (discord.Guild): The Discord server to fetch emotes from
+    Returns:
+        List[discord.Emoji]: List of animated emotes
+    """
+    animated_emotes = [emoji for emoji in guild.emojis if emoji.animated]
+    return animated_emotes
 
 
 
