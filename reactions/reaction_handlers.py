@@ -77,8 +77,12 @@ class PaginatedSelect(discord.ui.View):
                         await self.originalMessage.add_reaction(emoji)
                         self.selected_emojis.update({emoji})
                     except discord.HTTPException as e:
-                        #try and fetch the emoji from the server
-                        pass
+                        # Try to fetch the emoji from the server
+                        emoji_id = str(emoji.id)
+                        fetched_emoji = discord.utils.get(message.guild.emojis, id=int(emoji_id))
+                        if fetched_emoji:
+                            await self.originalMessage.add_reaction(fetched_emoji)
+                            self.selected_emojis.update({fetched_emoji})
 
             content = f"Selected: {' '.join(str(e) for e in self.selected_emojis)}"
             if len(self.selected_emojis) >= self.max_selections:
