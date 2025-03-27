@@ -48,7 +48,7 @@ class PaginatedSelect(discord.ui.View):
                 disabled=True)
         else:
             remaining = self.max_selections - len(self.selected_emojis)
-            placeholder = f"Select emojis ({remaining} slots remaining)"
+            placeholder = f"Select emojis ({remaining} remaining)"
             if self.total_pages > 1:
                 placeholder += f"\tPage {self.current_page + 1}/{self.total_pages}"
             select = discord.ui.Select(placeholder=placeholder,
@@ -77,9 +77,14 @@ class PaginatedSelect(discord.ui.View):
                         await self.originalMessage.add_reaction(emoji)
                         self.selected_emojis.update({emoji})
                     except discord.HTTPException as e:
-                        content = f"Selected: {' '.join(str(e) for e in self.selected_emojis)}\n**🚫 Cannot use restricted emoji**"
+                        content = (
+                            f"Selected: {' '.join(str(e) for e in self.selected_emojis)}"
+                            if len(self.selected_emojis) else
+                            "No reactions selected."
+                        ) + "\n**🚫 Cannot use restricted emoji**"
                         self.update_select_menu()
-                        await interaction.response.edit_message(content=content, view=self)
+                        await interaction.response.edit_message(
+                            content=content, view=self)
                         return
                         # if interaction.message.guild:
                         #     # Try to fetch the emoji from the server
