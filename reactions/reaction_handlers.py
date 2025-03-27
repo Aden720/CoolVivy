@@ -78,7 +78,7 @@ class PaginatedSelect(discord.ui.View):
                         self.selected_emojis.update({emoji})
                     except discord.HTTPException as e:
                         content = (
-                            f"Selected: {' '.join(str(e) for e in self.selected_emojis)}"
+                            f"Selected: {self.format_selected_emojis()}"
                             if len(self.selected_emojis) else
                             "No reactions selected."
                         ) + "\n**🚫 Cannot use restricted emoji**"
@@ -86,18 +86,8 @@ class PaginatedSelect(discord.ui.View):
                         await interaction.response.edit_message(
                             content=content, view=self)
                         return
-                        # if interaction.message.guild:
-                        #     # Try to fetch the emoji from the server
-                        #     emoji_id = str(emoji.id)
-                        #     fetched_emoji = discord.utils.get(
-                        #         interaction.message.guild.emojis,
-                        #         id=int(emoji_id))
-                        #     if fetched_emoji:
-                        #         await self.originalMessage.add_reaction(
-                        #             fetched_emoji)
-                        #         self.selected_emojis.update({fetched_emoji})
 
-            content = f"Selected: {' '.join(str(e) for e in self.selected_emojis)}"
+            content = f"Selected: {self.format_selected_emojis()}"
             if len(self.selected_emojis) >= self.max_selections:
                 content += "\nMaximum selections reached!"
                 await interaction.response.edit_message(content=content,
@@ -146,6 +136,9 @@ class PaginatedSelect(discord.ui.View):
 
     async def done_interaction(self, interaction: discord.Interaction):
         content = (
-            f"Added reactions: {' '.join(str(e) for e in self.selected_emojis)}"
+            f"Added reactions: {self.format_selected_emojis()}"
             if len(self.selected_emojis) else "No reactions added.")
         await interaction.response.edit_message(content=content, view=None)
+
+    def format_selected_emojis(self):
+        return ' '.join(str(e) for e in self.selected_emojis)
