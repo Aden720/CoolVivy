@@ -77,12 +77,17 @@ class PaginatedSelect(discord.ui.View):
                         await self.originalMessage.add_reaction(emoji)
                         self.selected_emojis.update({emoji})
                     except discord.HTTPException as e:
-                        # Try to fetch the emoji from the server
-                        emoji_id = str(emoji.id)
-                        fetched_emoji = discord.utils.get(message.guild.emojis, id=int(emoji_id))
-                        if fetched_emoji:
-                            await self.originalMessage.add_reaction(fetched_emoji)
-                            self.selected_emojis.update({fetched_emoji})
+                        pass
+                        # if interaction.message.guild:
+                        #     # Try to fetch the emoji from the server
+                        #     emoji_id = str(emoji.id)
+                        #     fetched_emoji = discord.utils.get(
+                        #         interaction.message.guild.emojis,
+                        #         id=int(emoji_id))
+                        #     if fetched_emoji:
+                        #         await self.originalMessage.add_reaction(
+                        #             fetched_emoji)
+                        #         self.selected_emojis.update({fetched_emoji})
 
             content = f"Selected: {' '.join(str(e) for e in self.selected_emojis)}"
             if len(self.selected_emojis) >= self.max_selections:
@@ -132,7 +137,7 @@ class PaginatedSelect(discord.ui.View):
             await interaction.response.edit_message(view=self)
 
     async def done_interaction(self, interaction: discord.Interaction):
-        await interaction.response.edit_message(
-            content=
-            f"Added reactions: {' '.join(str(e) for e in self.selected_emojis)}",
-            view=None)
+        content = (
+            f"Added reactions: {' '.join(str(e) for e in self.selected_emojis)}"
+            if len(self.selected_emojis) else "No reactions added.")
+        await interaction.response.edit_message(content=content, view=None)
