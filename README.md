@@ -6,12 +6,12 @@ Read [their getting-started guides](https://discordpy.readthedocs.io/en/stable/#
 ## Getting Started
 
 To get set up, you'll need to follow [these bot account setup instructions](https://discordpy.readthedocs.io/en/stable/discord.html),
-and then copy the token for your bot and added it as a secret with the key of `TOKEN` in the "Secrets (Environment variables)" panel.
+and then copy the token for your bot and added it as a secret with the key of `BOT_TOKEN` in the "Secrets (Environment variables)" panel.
 
 ### Environment Secrets
 
 #### Initialized in main.py
-- `TOKEN`: This is the bot token used to authenticate and run your Discord bot. It allows your bot to connect to the Discord API and perform perform its functions.
+- `BOT_TOKEN`: This is the bot token used to authenticate and run your Discord bot. It allows your bot to connect to the Discord API and perform perform its functions.
 
 - `OWNER_USER_ID`: Used to identify the owner user or administrator within your bot, possibly for restricting certain commands or features to this user.
   

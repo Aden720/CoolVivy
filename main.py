@@ -486,7 +486,7 @@ On any track link from Soundcloud, Spotify, Bandcamp or YouTube:
 
 
 try:
-    token = os.getenv("TOKEN") or ""
+    token = os.getenv("BOT_TOKEN") or ""
     if token == "":
         raise Exception("Please add your token to the Secrets pane.")
     bot.run(token)
