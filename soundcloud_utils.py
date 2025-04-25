@@ -82,6 +82,9 @@ def getSoundcloudParts(embed):
             soundcloudParts['Buy/Download Link'] = (
                 f'{":arrow_down:" if isDownload else ":link:"} '
                 f'[{buyLinkName}]({track.purchase_url})')
+        elif track.downloadable and track.has_downloads_left:
+            soundcloudParts[':arrow_down: File download available'] = (
+                f'<{track.download_url}>' if track.download_url else ' ')
 
         #Channel
         if track.user:
