@@ -99,6 +99,7 @@ class Track:
                                self.artist['name'])
             if artistIsMultipleArtists(parts['Artist']):
                 parts['Artists'] = parts['Artist']
+                parts['title'] = self.title
                 parts.pop('Artist')
         if hasattr(self, 'album'):
             parts['Album'] = (f'[{self.album["name"]}]({self.album["url"]})'
