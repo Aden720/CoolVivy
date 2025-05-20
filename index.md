@@ -29,6 +29,9 @@ When you authorize this bot using OAuth2, it uses only the permissions you grant
 
 We do **not** share any data with third parties. Your server ID is stored privately and securely.
 
+##Terms of Service
+[Read the Terms of Service](./terms.md)
+
 ## Contact
 
 If you have any questions or concerns about this policy, please contact:  
