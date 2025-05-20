@@ -25,6 +25,10 @@ and then copy the token for your bot and added it as a secret with the key of `B
 
 - `SPOTIFY_CLIENT_SECRET`: This is the client secret for the Spotify API, used together with the client ID for secure authentication.
 
+#### Used in youtube_utils.py
+- `YOUTUBE_CLIENT_ID`: This is the client ID of your Google Cloud Console project client.
+- `YOUTUBE_CLIENT_SECRET`: This is the client secret for the YoutubeData API. Follow the instructions at https://ytmusicapi.readthedocs.io/en/stable/setup/oauth.html for more details.
+
 ## FAQ
 
 If you get the following error message while trying to start the server: `429 Too Many Requests` (accompanied by a lot of HTML code), 

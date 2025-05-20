@@ -1,7 +1,8 @@
+import os
 import re
 
 from dotmap import DotMap
-from ytmusicapi import YTMusic
+from ytmusicapi import OAuthCredentials, YTMusic
 
 from general_utils import (
     formatMillisecondsToDurationString,
@@ -11,10 +12,16 @@ from general_utils import (
 
 types = DotMap(track=1, album=2, playlist=3)
 
+youtubeClientId = os.getenv("YOUTUBE_CLIENT_ID", 'default_value')
+youtubeClientSecret = os.getenv("YOUTUBE_CLIENT_SECRET", 'default_value')
+
 
 def fetchTrack(track_url):
     track, trackType = None, None
-    ytmusic = YTMusic()
+    ytmusic = YTMusic('oauth.json',
+                      oauth_credentials=OAuthCredentials(
+                          client_id=youtubeClientId,
+                          client_secret=youtubeClientSecret))
     videoId = re.search(r'watch\?v=([^&]*)', track_url) or re.search(
         'shorts/([^&]*)', track_url)
     if videoId is not None:
