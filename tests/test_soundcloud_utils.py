@@ -2,7 +2,13 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from mockData.soundcloud_mock_scenarios import setupBasicEmbed, setupBasicTrack
+from mockData.soundcloud_mock_scenarios import (
+    setupBasicEmbed,
+    setupBasicTrack,
+    setupBasicTrackWithBuyLinkBuy,
+    setupBasicTrackWithBuyLinkDownload,
+    setupBasicTrackWithDirectDownloadEnabled,
+)
 from sclib import Track
 
 from soundcloud_utils import fetchTrack, getSoundcloudParts, split_tags
@@ -112,6 +118,82 @@ class TestSoundcloudUtils(unittest.TestCase):
             'embedColour': 0xff5500,
             'title': f'{mock_track.artist} - {mock_track.title}',
             'Duration': '`2:03`',
+            'Uploaded on': '1 January 2022',
+            'Likes': ':orange_heart: 123',
+            'Plays': ':notes: 456'
+        }
+        self.assertEqual(result, expected_parts)
+
+        mock_fetch_track.assert_called_once_with(
+            'https://soundcloud.com/someTrack')
+
+    @patch('soundcloud_utils.fetchTrack')
+    def test_getSoundcloudParts_downloadLink(self, mock_fetch_track):
+        # Arrange
+        mock_track = setupBasicTrackWithBuyLinkDownload()
+        mock_fetch_track.return_value = mock_track
+
+        # Act
+        result = getSoundcloudParts(setupBasicEmbed())
+
+        # Assert
+        expected_parts = {
+            'embedPlatformType': 'soundcloud',
+            'embedColour': 0xff5500,
+            'title': f'{mock_track.artist} - {mock_track.title}',
+            'Duration': '`2:03`',
+            'Buy/Download Link': ':arrow_down: [Download](<test@test.com>)',
+            'Uploaded on': '1 January 2022',
+            'Likes': ':orange_heart: 123',
+            'Plays': ':notes: 456'
+        }
+        self.assertEqual(result, expected_parts)
+
+        mock_fetch_track.assert_called_once_with(
+            'https://soundcloud.com/someTrack')
+
+    @patch('soundcloud_utils.fetchTrack')
+    def test_getSoundcloudParts_BuyLink(self, mock_fetch_track):
+        # Arrange
+        mock_track = setupBasicTrackWithBuyLinkBuy()
+        mock_fetch_track.return_value = mock_track
+
+        # Act
+        result = getSoundcloudParts(setupBasicEmbed())
+
+        # Assert
+        expected_parts = {
+            'embedPlatformType': 'soundcloud',
+            'embedColour': 0xff5500,
+            'title': f'{mock_track.artist} - {mock_track.title}',
+            'Duration': '`2:03`',
+            'Uploaded on': '1 January 2022',
+            'Buy/Download Link': ':link: [Buy/Stream](<test@test.com>)',
+            'Likes': ':orange_heart: 123',
+            'Plays': ':notes: 456'
+        }
+        self.assertEqual(result, expected_parts)
+
+        mock_fetch_track.assert_called_once_with(
+            'https://soundcloud.com/someTrack')
+
+    @patch('soundcloud_utils.fetchTrack')
+    def test_getSoundcloudParts_DirectDownload(self, mock_fetch_track):
+        # Arrange
+        mock_track = setupBasicTrackWithDirectDownloadEnabled()
+        mock_fetch_track.return_value = mock_track
+
+        # Act
+        result = getSoundcloudParts(setupBasicEmbed())
+
+        # Assert
+        expected_parts = {
+            'embedPlatformType': 'soundcloud',
+            'embedColour': 0xff5500,
+            'title': f'{mock_track.artist} - {mock_track.title}',
+            'Duration': '`2:03`',
+            'description':
+            ':arrow_down: **Download button is on** :arrow_down:[here](<test@test.com>)',
             'Uploaded on': '1 January 2022',
             'Likes': ':orange_heart: 123',
             'Plays': ':notes: 456'

@@ -24,12 +24,36 @@ def setupBasicTrack():
     mock_track.purchase_url = ''
     mock_track.user = {}
     mock_track.publisher_metadata = {}
+    mock_track.is_downloadable = False
+    mock_track.has_downloads_left = False
     return mock_track
 
 
 def setupBasicTrackWithLikes():
     mock_track = setupBasicTrack()
     mock_track.likes_count = 100
+    return mock_track
+
+
+def setupBasicTrackWithDirectDownloadEnabled():
+    mock_track = setupBasicTrack()
+    mock_track.is_downloadable = True
+    mock_track.has_downloads_left = True
+    mock_track.download_url = 'test@test.com'
+    return mock_track
+
+
+def setupBasicTrackWithBuyLinkDownload():
+    mock_track = setupBasicTrack()
+    mock_track.purchase_title = 'Download'
+    mock_track.purchase_url = 'test@test.com'
+    return mock_track
+
+
+def setupBasicTrackWithBuyLinkBuy():
+    mock_track = setupBasicTrack()
+    mock_track.purchase_title = 'Buy/Stream'
+    mock_track.purchase_url = 'test@test.com'
     return mock_track
 
 
