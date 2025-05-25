@@ -62,7 +62,7 @@ class TestYoutubeUtils(unittest.TestCase):
         self.assertEqual(result['embedPlatformType'], 'youtube')
         self.assertEqual(
             result['Channel'],
-            '[Mock Channel](https://youtube.com/channel/UC123456789)')
+            '[Mock Artist](https://www.youtube.com/channel/UC123456789)')
 
     @patch('youtube_utils.fetchTrack')
     def test_getYouTubeParts_no_track_found(self, mock_fetch_track):
