@@ -77,7 +77,7 @@ def getYouTubeParts(embed):
                 'Artist'] = f'[{author}](https://music.youtube.com/channel/{channelId})'
         else:
             youtubeParts[
-                'Channel'] = f'[{embed.author.name}]({embed.author.url})'
+                'Channel'] = f'[{author}](https://www.youtube.com/channel/{channelId})'
 
         #Duration
         videoDuration = getVideoDisplayDuration(track)
