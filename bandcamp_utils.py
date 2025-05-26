@@ -38,10 +38,13 @@ class Track:
             'name': pageData['byArtist']['name'],
             'url': pageData['byArtist'].get('@id')
         }
+
         albumArtist = pageData['inAlbum'].get('byArtist')
-        if albumArtist:
+        if albumArtist and 'name' in albumArtist and albumArtist['name']:
             artistName = albumArtist.get('name')
-            if artistName != self.artist['name'] and artistName not in ['Various', 'Various Artists']:
+            if artistName != self.artist['name'] and artistName not in [
+                    'Various', 'Various Artists'
+            ]:
                 self.artist = {
                     'name': artistName,
                     'url': albumArtist.get('@id')
