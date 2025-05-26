@@ -488,18 +488,19 @@ On any track link from Soundcloud, Spotify, Bandcamp or YouTube:
     await interaction.response.send_message(help_text, ephemeral=True)
 
 
-try:
-    token = os.getenv("BOT_TOKEN") or ""
-    if token == "":
-        raise Exception("Please add your token to the Secrets pane.")
-    bot.run(token)
-except discord.HTTPException as e:
-    if e.status == 429:
-        print(
-            "The Discord servers denied the connection for making too many requests"
-        )
-        print(
-            "Get help from https://stackoverflow.com/questions/66724687/in-discord-py-how-to-solve-the-error-for-toomanyrequests"
-        )
-    else:
-        raise e
+if __name__ == "__main__":
+    try:
+        token = os.getenv("BOT_TOKEN") or ""
+        if token == "":
+            raise Exception("Please add your token to the Secrets pane.")
+        bot.run(token)
+    except discord.HTTPException as e:
+        if e.status == 429:
+            print(
+                "The Discord servers denied the connection for making too many requests"
+            )
+            print(
+                "Get help from https://stackoverflow.com/questions/66724687/in-discord-py-how-to-solve-the-error-for-toomanyrequests"
+            )
+        else:
+            raise e
