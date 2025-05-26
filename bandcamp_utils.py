@@ -40,7 +40,7 @@ class Track:
         }
 
         albumArtist = pageData['inAlbum'].get('byArtist')
-        if albumArtist and 'name' in albumArtist and albumArtist['name']:
+        if albumArtist and 'name' in albumArtist and albumArtist.get('name'):
             artistName = albumArtist.get('name')
             if artistName != self.artist['name'] and artistName not in [
                     'Various', 'Various Artists'
@@ -62,8 +62,10 @@ class Track:
             }
 
         #change the artist if the track is from a different artist
-        if self.publisher and self.publisher['name'] in self.artist[
-                'name'] and checkTrackTitle(self.title):
+        if (self.publisher and self.publisher.get('name') and 
+            self.artist and self.artist.get('name') and 
+            self.publisher['name'] in self.artist['name'] and 
+            checkTrackTitle(self.title)):
             setTrackTitle(self)
 
         #extra data from API
