@@ -62,12 +62,14 @@ class Track:
             }
 
         #change the artist if the track is from a different artist
-        if (self.publisher and self.publisher.get('name') and 
-            self.artist and self.artist.get('name') and 
-            self.publisher['name'] in self.artist['name'] and 
-            checkTrackTitle(self.title)):
-            setTrackTitle(self)
-
+        if checkTrackTitle(self.title) and self.artist and self.artist.get('name'):
+            if (self.publisher and self.publisher.get('name') and 
+            self.publisher['name'] in self.artist['name']):
+                setTrackTitle(self)
+            else:
+                trackTitleParts = getTrackTitleParts(self.title)
+                if trackTitleParts and trackTitleParts.group(1) == self.artist['name']:
+                    self.title = trackTitleParts.group(2)
         #extra data from API
         if trackData:
             self.is_purchasable = trackData['is_purchasable']
