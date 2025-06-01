@@ -8,7 +8,7 @@ from discord.ext import commands
 
 from bandcamp_utils import getBandcampParts
 from general_utils import find_and_categorize_links, remove_trailing_slash
-from object_types import LinkTuple, link_types
+from object_types import CategorizedLink, link_types
 from reactions import PaginatedSelect, fetch_animated_emotes
 from soundcloud_utils import getSoundcloudParts
 from spotify_utils import getSpotifyParts
@@ -254,7 +254,7 @@ async def fetchEmbed(message, isInteraction=False, isDM=False):
         await message.reply(referencedUser.mention, mention_author=False)
 
 
-def getDescriptionParts(link: LinkTuple):
+def getDescriptionParts(link: CategorizedLink):
     linkType = link[1]
     if linkType == link_types.soundcloud:
         return getSoundcloudParts(link)

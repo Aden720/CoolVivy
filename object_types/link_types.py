@@ -6,7 +6,7 @@ from dotmap import DotMap
 PlatformType = Literal['soundcloud', 'youtube', 'spotify', 'bandcamp']
 
 # Define the tuple type for categorized links
-LinkTuple = Tuple[str, PlatformType]
+CategorizedLink = Tuple[str, PlatformType]
 
 # Export link types for different platforms
 link_types = DotMap(
