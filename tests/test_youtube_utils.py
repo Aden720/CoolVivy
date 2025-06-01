@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from mockData.youtube_mock_scenarios import setupBasicEmbed, setupBasicVideo
+from mockData.youtube_mock_scenarios import setupBasicVideo
 
 from youtube_utils import getYouTubeParts, isYoutubeMusic
 
@@ -21,7 +21,7 @@ class TestYoutubeUtils(unittest.TestCase):
         mock_fetch_track.return_value = (mock_video, 1)  # 1 is types.track
 
         # Act
-        result = getYouTubeParts(setupBasicEmbed())
+        result = getYouTubeParts('https://www.youtube.com/watch?v=123456789')
 
         # Assert
         self.assertEqual(result['title'], 'Mock Video Title')
@@ -40,7 +40,7 @@ class TestYoutubeUtils(unittest.TestCase):
         mock_fetch_track.return_value = (mock_video, 1)
 
         # Act
-        result = getYouTubeParts(setupBasicEmbed())
+        result = getYouTubeParts('https://www.youtube.com/watch?v=123456789')
 
         # Assert
         self.assertEqual(result['title'], 'Mock Video Title')
@@ -56,7 +56,7 @@ class TestYoutubeUtils(unittest.TestCase):
         mock_fetch_track.return_value = (mock_video, 1)
 
         # Act
-        result = getYouTubeParts(setupBasicEmbed())
+        result = getYouTubeParts('https://www.youtube.com/watch?v=123456789')
 
         # Assert
         self.assertEqual(result['embedPlatformType'], 'youtube')
@@ -70,7 +70,7 @@ class TestYoutubeUtils(unittest.TestCase):
         mock_fetch_track.return_value = (None, None)
 
         # Act
-        result = getYouTubeParts(setupBasicEmbed())
+        result = getYouTubeParts('https://www.youtube.com/watch?v=123456789')
 
         # Assert
         self.assertEqual(result['embedPlatformType'], 'youtube')

@@ -1,4 +1,3 @@
-
 def setupBasicVideo():
     return {
         'videoDetails': {
@@ -20,7 +19,8 @@ def setupBasicVideo():
                 'pageOwnerDetails': {
                     'name': 'Mock Artist - Topic'
                 },
-                'description': 'Video description\n\nProvided to YouTube by Mock\nMock Artist · Mock Title\n\nMock Album\n\nReleased on: 2024-01-01\n',
+                'description':
+                'Video description\n\nProvided to YouTube by Mock\nMock Artist · Mock Title\n\nMock Album\n\nReleased on: 2024-01-01\n',
                 'uploadDate': '2024-01-01',
                 'thumbnail': {
                     'thumbnails': [{
@@ -30,17 +30,3 @@ def setupBasicVideo():
             }
         }
     }
-
-def setupBasicEmbed():
-    class Author:
-        def __init__(self):
-            self.name = "Mock Channel"
-            self.url = "https://youtube.com/channel/UC123456789"
-
-    class Embed:
-        def __init__(self):
-            self.url = "https://www.youtube.com/watch?v=123456789"
-            self.description = "Video description\n\nProvided to YouTube by Mock\nMock Artist · Mock Title\n\nMock Album\n\nReleased on: 2024-01-01\n"
-            self.author = Author()
-
-    return Embed()

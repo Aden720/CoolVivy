@@ -50,7 +50,10 @@ def getYouTubeParts(url: str):
 
     track, type = fetchTrack(url)
 
-    if track and type is types.track:
+    if not track:
+        raise Exception('An error occurred while fetching Youtube details: no track')
+
+    if type is types.track:
         #Title
         videoTitle = track['videoDetails']['title']
         if videoTitle:
@@ -90,7 +93,7 @@ def getYouTubeParts(url: str):
         youtubeParts['thumbnailUrl'] = (
             videoThumbnail['url'] if videoThumbnail['width']
             == videoThumbnail['height'] else videoThumnailAlt['url'])
-    elif track and type is types.album:
+    elif type is types.album:
         #youtube music playlist
         youtubeParts['embedPlatformType'] = 'youtubemusic'
         #Title
@@ -152,7 +155,7 @@ def getYouTubeParts(url: str):
 
         #Square Thumbnail
         youtubeParts['thumbnailUrl'] = track['thumbnails'][-1]['url']
-    elif track and type is types.playlist:
+    elif type is types.playlist:
         totalVideos = track["trackCount"]
         youtubeParts['title'] = track['title']
         youtubeParts['description'] = f'Playlist ({totalVideos} videos)'
@@ -201,6 +204,8 @@ def getYouTubeParts(url: str):
             youtubeParts['Videos'] += (
                 f'\n...and {totalVideos - len(trackStrings)} more')
 
+    #description check
+    description = track['microformat']['microformatDataRenderer'].get('description')
     if description:
         descriptionMatch = re.search('.+?\n\n(.+?)\n.*Released on: (.*?)\n',
                                      description, re.S)

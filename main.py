@@ -148,6 +148,7 @@ async def fetchWebhook(message):
 async def fetchEmbed(message, isInteraction=False, isDM=False):
     webhook = None
     referencedUser = None
+    embeds = []
     sentReplyMessage = False
     if not isInteraction and not isDM:
         webhook = await fetchWebhook(message)
@@ -167,86 +168,84 @@ async def fetchEmbed(message, isInteraction=False, isDM=False):
         if not fieldParts:
             raise Exception('No data found')
 
-    #     #create a new embed
-    #     embedVar = discord.Embed(title=fieldParts.get('title', embed.title),
-    #                              description=fieldParts.get('description'),
-    #                              color=fieldParts.get('embedColour', 0x00dcff),
-    #                              url=remove_trailing_slash(embed.url))
+        #create a new embed
+        embedVar = discord.Embed(title=fieldParts.get('title'),
+                                 description=fieldParts.get('description'),
+                                 color=fieldParts.get('embedColour', 0x00dcff),
+                                 url=remove_trailing_slash(link[0]))
 
-    #     #add platform link if applicable
-    #     setAuthorLink(embedVar, fieldParts.get('embedPlatformType'))
+        #add platform link if applicable
+        setAuthorLink(embedVar, fieldParts.get('embedPlatformType'))
 
-    #     #thumbnail
-    #     thumbnailUrl = fieldParts.get('thumbnailUrl')
-    #     if thumbnailUrl:
-    #         embedVar.set_thumbnail(url=thumbnailUrl)
-    #     elif embed.thumbnail:
-    #         embedVar.set_thumbnail(url=embed.thumbnail.url)
+        #thumbnail
+        thumbnailUrl = fieldParts.get('thumbnailUrl')
+        if thumbnailUrl:
+            embedVar.set_thumbnail(url=thumbnailUrl)
 
-    #     #populate embed fields
-    #     for key, value in fieldParts.items():
-    #         if key not in [
-    #                 'description', 'title', 'thumbnailUrl',
-    #                 'embedPlatformType', 'embedColour'
-    #         ]:
-    #             inline = key not in ['Tags', 'Description', 'Tracks', 'Videos']
-    #             embedVar.add_field(name=key, value=value, inline=inline)
+        #populate embed fields
+        for key, value in fieldParts.items():
+            if key not in [
+                    'description', 'title', 'thumbnailUrl',
+                    'embedPlatformType', 'embedColour'
+            ]:
+                inline = key not in ['Tags', 'Description', 'Tracks', 'Videos']
+                embedVar.add_field(name=key, value=value, inline=inline)
 
-    #     #remove embed from original message
-    #     if not isInteraction and fieldParts.get(
-    #             'embedPlatformType') == 'bandcamp':
-    #         await message.edit(suppress=True)
+        #remove embed from original message
+        if not isInteraction and fieldParts.get(
+                'embedPlatformType') == 'bandcamp':
+            await message.edit(suppress=True)
 
-    #     #react to message
-    #     if isInteraction:
-    #         emoji_id = os.getenv("EMOJI_ID")
-    #         emoji = bot.get_emoji(int(emoji_id)) if emoji_id else '🔗'
-    #         await message.add_reaction(emoji)
+        #react to message
+        if isInteraction:
+            emoji_id = os.getenv("EMOJI_ID")
+            emoji = bot.get_emoji(int(emoji_id)) if emoji_id else '🔗'
+            await message.add_reaction(emoji)
 
-    #     #send embed
-    #     if isInteraction:
-    #         return embedVar
-    #     else:
-    #         if canUseWebhook:
-    #             embeds.append(embedVar)
-    #             continue
-    #         if referencedUser:
-    #             await message.reference.resolved.reply(embed=embedVar)
-    #             sentReplyMessage = True
-    #         else:
-    #             await message.reply(embed=embedVar)
+        #send embed
+        if isInteraction:
+            return embedVar
+        else:
+            if canUseWebhook:
+                embeds.append(embedVar)
+                continue
+            if referencedUser:
+                await message.reference.resolved.reply(embed=embedVar)
+                sentReplyMessage = True
+            else:
+                await message.reply(embed=embedVar)
 
-    # if canUseWebhook and len(embeds) > 0:
-    #     # replace message content if the message is a reply
-    #     if message.reference:
-    #         jump_url = (message.reference.resolved.jump_url
-    #                     if message.reference.resolved else
-    #                     message.reference.jump_url)
-    #         # try to mention the non-bot user
-    #         if (not referencedUser and message.reference.resolved
-    #                 and not message.reference.resolved.author.bot):
-    #             referencedUser = message.reference.resolved.author
-    #         message.content = (
-    #             f'{referencedUser.mention if referencedUser else ""} {jump_url}\n'
-    #             f'{message.content}')
-    #     embeds[-1].set_footer(
-    #         text='Powered by CoolVivy',
-    #         icon_url=
-    #         f'{message.channel.guild.me.avatar.url}#{message.author.id}')
-    #     if hasattr(message.channel, 'parent'):
-    #         await webhook.send(content=message.content,
-    #                            embeds=embeds,
-    #                            username=message.author.display_name,
-    #                            avatar_url=message.author.avatar.url,
-    #                            thread=message.channel)
-    #     else:
-    #         await webhook.send(
-    #             content=message.content,
-    #             embeds=embeds,
-    #             username=message.author.display_name,
-    #             avatar_url=message.author.avatar.url,
-    #         )
-    #     sentReplyMessage = True
+    if canUseWebhook and len(embeds) > 0:
+        # replace message content if the message is a reply
+        if message.reference:
+            jump_url = (message.reference.resolved.jump_url
+                        if message.reference.resolved else
+                        message.reference.jump_url)
+            # try to mention the non-bot user
+            if (not referencedUser and message.reference.resolved
+                    and not message.reference.resolved.author.bot):
+                referencedUser = message.reference.resolved.author
+            message.content = (
+                f'{referencedUser.mention if referencedUser else ""} {jump_url}\n'
+                f'{message.content}')
+        embeds[-1].set_footer(
+            text='Powered by CoolVivy',
+            icon_url=
+            f'{message.channel.guild.me.avatar.url}#{message.author.id}')
+        if hasattr(message.channel, 'parent'):
+            await webhook.send(content=message.content,
+                               embeds=embeds,
+                               username=message.author.display_name,
+                               avatar_url=message.author.avatar.url,
+                               thread=message.channel)
+        else:
+            await webhook.send(
+                content=message.content,
+                embeds=embeds,
+                username=message.author.display_name,
+                avatar_url=message.author.avatar.url,
+            )
+        sentReplyMessage = True
         #remove original message
         await message.delete()
     if not sentReplyMessage and referencedUser:
