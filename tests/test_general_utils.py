@@ -3,6 +3,7 @@ import unittest
 
 from general_utils import (
     cleanLinks,
+    find_and_categorize_links,
     formatMillisecondsToDurationString,
     formatTimeToDisplay,
     formatTimeToTimestamp,
@@ -66,24 +67,38 @@ class TestGeneralUtils(unittest.TestCase):
         )
         self.assertEqual(
             cleanLinks(
-                'check out https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj on spotify'
-            ),
-            'check out <https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj> on spotify'
-        )
+                "check out https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj"
+                " on spotify"),
+            "check out <https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj>"
+            " on spotify")
 
     def test_cleanLinks_multiple(self):
         self.assertEqual(
             cleanLinks('''
-                https://www.youtube.com/watch?v=dQw4w9WgXcQ
-                https://soundcloud.com/hexagon/steve-hartz-like-home
-                check out https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj on spotify
-                instagram: https://www.instagram.com/p/Cj2J8k0n1fC/
-                '''), '''
-                <https://www.youtube.com/watch?v=dQw4w9WgXcQ>
-                <https://soundcloud.com/hexagon/steve-hartz-like-home>
-                check out <https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj> on spotify
-                instagram: <https://www.instagram.com/p/Cj2J8k0n1fC/>
-                ''')
+            https://www.youtube.com/watch?v=dQw4w9WgXcQ
+            https://soundcloud.com/hexagon/steve-hartz-like-home
+            check out https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj on spotify
+            instagram: https://www.instagram.com/p/Cj2J8k0n1fC/
+            '''), '''
+            <https://www.youtube.com/watch?v=dQw4w9WgXcQ>
+            <https://soundcloud.com/hexagon/steve-hartz-like-home>
+            check out <https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj> on spotify
+            instagram: <https://www.instagram.com/p/Cj2J8k0n1fC/>
+            ''')
 
+    def test_find_and_categorize_links(self):
+        message_content = ("""
+            Check out this new release on SoundCloud https://on.soundcloud.com/someTrack
+            and this music video on YouTube Music https://music.youtube.com/watch?v=dQw4w9WgXcQ.
+            Also, listen to this album https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj
+            and track https://artist.bandcamp.com/track/sample-track")
+            """)
 
-
+        categorized_links = find_and_categorize_links(message_content)
+        self.assertEqual(
+            categorized_links,
+            [('https://on.soundcloud.com/someTrack', 'soundcloud'),
+             ('https://music.youtube.com/watch?v=dQw4w9WgXcQ', 'youtube'),
+             ('https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj',
+              'spotify'),
+             ('https://artist.bandcamp.com/track/sample-track', 'bandcamp')])
