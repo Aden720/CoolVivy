@@ -82,7 +82,7 @@ class Track:
             self.duration = trackData['tracks'][0]['duration']
             self.release_date = trackData['release_date']
             if trackData.get('tags') and len(trackData.get('tags')) > 0:
-                self.tags = trackData['tags']
+                self.tags = map(lambda tag: tag['name'], trackData['tags'])
 
     def mapToParts(self):
         parts = {}
@@ -139,7 +139,8 @@ class Album:
         self.tracksData = albumData['tracks']
         self.release_date = formatTimeToDisplay(pageData['datePublished'],
                                                 '%d %b %Y %H:%M:%S GMT')
-        # self.tags = pageData['keywords']
+        if pageData.get('keywords') and len(pageData.get('keywords')) > 3:
+            self.tags = pageData['keywords'][1:-1]
 
         self.artist = {
             'name': pageData['byArtist']['name'],
@@ -156,7 +157,8 @@ class Album:
             self.free_download = albumData['free_download']
             self.price = albumData['price']
             self.currency = albumData['currency']
-            self.tags = albumData['tags']
+            if albumData.get('tags') and len(albumData.get('tags')) > 0:
+                self.tags = map(lambda tag: tag['name'], albumData['tags'])
             release_date = datetime.fromtimestamp(albumData['release_date'],
                                                   tz=timezone.utc)
             self.release_date = formatTimeToDisplay(
@@ -423,7 +425,7 @@ def setTrackTitle(track: Track):
 
 def getFormattedTags(track):
     if hasattr(track, 'tags'):
-        formatted_tags = [f'`{tag["name"] if type(tag) is dict else tag}`' for tag in track.tags]
+        formatted_tags = [f'`{tag}`' for tag in track.tags]
         return ', '.join(formatted_tags)
 
 
