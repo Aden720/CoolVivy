@@ -32,7 +32,8 @@ class Track:
     def __init__(self, pageData, trackData):
         self.trackUrl = pageData['@id']
         self.title = pageData['name']
-        # self.tags = pageData['keywords']
+        if pageData.get('keywords') and len(pageData.get('keywords')) > 3:
+            self.tags = pageData['keywords'][1:-1]
         self.thumbnail = pageData['image']
         self.artist = {
             'name': pageData['byArtist']['name'],
@@ -80,7 +81,8 @@ class Track:
             self.currency = trackData['currency']
             self.duration = trackData['tracks'][0]['duration']
             self.release_date = trackData['release_date']
-            self.tags = trackData['tags']
+            if trackData.get('tags') and len(trackData.get('tags')) > 0:
+                self.tags = trackData['tags']
 
     def mapToParts(self):
         parts = {}
@@ -420,8 +422,8 @@ def setTrackTitle(track: Track):
 
 
 def getFormattedTags(track):
-    if hasattr(track, 'tags') and len(track.tags) > 0:
-        formatted_tags = [f'`{tag["name"]}`' for tag in track.tags]
+    if hasattr(track, 'tags'):
+        formatted_tags = [f'`{tag["name"] if type(tag) is dict else tag}`' for tag in track.tags]
         return ', '.join(formatted_tags)
 
 
