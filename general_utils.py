@@ -1,8 +1,11 @@
 import math
 import re
 from datetime import datetime
+from typing import List
 
-import discord
+from bs4 import Tag
+
+from object_types import CategorizedLink, link_types
 
 
 def formatMillisecondsToDurationString(milliseconds):
@@ -32,11 +35,11 @@ def cleanLinks(description):
     return re.sub(r'(https?:\/\/[a-zA-Z0-9\-\.]*[^\s]*)', r'<\1>', description)
 
 
-def remove_trailing_slash(url):
+def remove_trailing_slash(url: str):
     return re.sub(r'/$', '', url)
 
 
-def find_and_categorize_links(message_content: str):
+def find_and_categorize_links(message_content: str) -> List[CategorizedLink]:
     # Define patterns for each platform including additional domains
     soundcloud_pattern = re.compile(
         r'https?://(?:www\.|on\.)?soundcloud\.com/[^\s]+')
@@ -56,12 +59,62 @@ def find_and_categorize_links(message_content: str):
     # Determine the platform for each URL and maintain order
     for url in cleaned_links:
         if soundcloud_pattern.match(url):
-            categorized_links.append((url, 'soundcloud'))
+            categorized_links.append((url, link_types.soundcloud))
         elif youtube_pattern.match(url):
-            categorized_links.append((url, 'youtube'))
+            categorized_links.append((url, link_types.youtube))
         elif spotify_pattern.match(url):
-            categorized_links.append((url, 'spotify'))
+            categorized_links.append((url, link_types.spotify))
         elif bandcamp_pattern.match(url):
-            categorized_links.append((url, 'bandcamp'))
+            categorized_links.append((url, link_types.bandcamp))
 
     return categorized_links
+
+
+def get_tag(soup,
+            id=None,
+            tag_name=None,
+            attrs=None,
+            property=None) -> Tag | None:
+    """
+    Safely get content from a BeautifulSoup tag with proper type checking.
+
+    Args:
+        soup: BeautifulSoup object
+        tag_name: HTML tag name to find
+        attrs: Dictionary of attributes to match
+        property: Property attribute value (shorthand for {'property': value})
+
+    Returns:
+        str or None: The content attribute value if found and valid, None otherwise
+    """
+    # Build search parameters
+    search_params = {}
+    if id:
+        search_params['id'] = id
+    if tag_name:
+        search_params['name'] = tag_name
+    if property:
+        search_params['property'] = property
+    if attrs:
+        search_params['attrs'] = attrs
+
+    # Find the tag
+    tag = soup.find(**search_params)
+
+    # Check if tag exists and is a valid Tag instance
+    if tag and isinstance(tag, Tag):
+        return tag
+    return None
+
+
+def get_tag_content(soup,
+                    id=None,
+                    tag_name=None,
+                    attrs=None,
+                    property=None,
+                    asString=False,
+                   valueToGrab='content') -> str | None:
+    tag = get_tag(soup, id, tag_name, attrs, property)
+    if tag:
+        return tag.string if asString else str(tag.get(valueToGrab))
+    return None

@@ -8,6 +8,7 @@ from general_utils import (
     formatTimeToDisplay,
     formatTimeToTimestamp,
 )
+from object_types import link_types
 
 
 class TestGeneralUtils(unittest.TestCase):
@@ -97,8 +98,8 @@ class TestGeneralUtils(unittest.TestCase):
         categorized_links = find_and_categorize_links(message_content)
         self.assertEqual(
             categorized_links,
-            [('https://on.soundcloud.com/someTrack', 'soundcloud'),
-             ('https://music.youtube.com/watch?v=dQw4w9WgXcQ', 'youtube'),
+            [('https://on.soundcloud.com/someTrack', link_types.soundcloud),
+             ('https://music.youtube.com/watch?v=dQw4w9WgXcQ', link_types.youtube),
              ('https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj',
-              'spotify'),
-             ('https://artist.bandcamp.com/track/sample-track', 'bandcamp')])
+              link_types.spotify),
+             ('https://artist.bandcamp.com/track/sample-track', link_types.bandcamp)])

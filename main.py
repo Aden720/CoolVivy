@@ -1,4 +1,3 @@
-import asyncio
 import json
 import os
 import re
@@ -7,7 +6,8 @@ import discord
 from discord.ext import commands
 
 from bandcamp_utils import getBandcampParts
-from general_utils import remove_trailing_slash
+from general_utils import find_and_categorize_links, remove_trailing_slash
+from object_types import CategorizedLink, link_types
 from reactions import PaginatedSelect, fetch_animated_emotes
 from soundcloud_utils import getSoundcloudParts
 from spotify_utils import getSpotifyParts
@@ -94,7 +94,6 @@ async def on_message(message):
                 f'Ask <@{ownerUser}> for help.'
                 if ownerUser else 'Use **/help** for help.')
     elif message.guild and str(message.guild.id) in server_whitelist:
-        await asyncio.sleep(3)
         try:
             await fetchEmbed(message, False)
         except Exception as e:
@@ -147,81 +146,75 @@ async def fetchWebhook(message):
 
 
 async def fetchEmbed(message, isInteraction=False, isDM=False):
-    newMessage = await message.channel.fetch_message(message.id)
-    embeds = []
     webhook = None
     referencedUser = None
+    embeds = []
     sentReplyMessage = False
     if not isInteraction and not isDM:
         webhook = await fetchWebhook(message)
         referencedUser = await getReferencedUser(message)
     canUseWebhook = webhook is not None
 
-    for embed in newMessage.embeds:
-        if any(
-                word in embed.url for word in
-            ['soundcloud.com', 'youtube.com', 'spotify.com', 'bandcamp.com']):
-            #get all embed fields
-            fieldParts = getDescriptionParts(embed)
-            if not fieldParts:
-                raise Exception('No data found')
+    allMusicUrls = find_and_categorize_links(message.content)
 
-            #create a new embed
-            embedVar = discord.Embed(
-                title=fieldParts.get('title', embed.title),
-                description=fieldParts.get('description'),
-                color=fieldParts.get('embedColour', 0x00dcff),
-                url=remove_trailing_slash(embed.url))
+    if isInteraction and len(allMusicUrls) == 0:
+        raise Exception(
+            "This message doesn't seem to contain a supported URL.\nCurrently only "
+            "Bandcamp, SoundCloud, Spotify and YouTube links are supported.")
 
-            #add platform link if applicable
-            setAuthorLink(embedVar, fieldParts.get('embedPlatformType'))
+    for link in allMusicUrls:
+        #get all embed fields
+        fieldParts = getDescriptionParts(link)
+        if not fieldParts:
+            raise Exception('No data found')
 
-            #thumbnail
-            thumbnailUrl = fieldParts.get('thumbnailUrl')
-            if thumbnailUrl:
-                embedVar.set_thumbnail(url=thumbnailUrl)
-            elif embed.thumbnail:
-                embedVar.set_thumbnail(url=embed.thumbnail.url)
+        #create a new embed
+        embedVar = discord.Embed(title=fieldParts.get('title'),
+                                 description=fieldParts.get('description'),
+                                 color=fieldParts.get('embedColour', 0x00dcff),
+                                 url=remove_trailing_slash(link[0]))
 
-            #populate embed fields
-            for key, value in fieldParts.items():
-                if key not in [
-                        'description', 'title', 'thumbnailUrl',
-                        'embedPlatformType', 'embedColour'
-                ]:
-                    inline = key not in [
-                        'Tags', 'Description', 'Tracks', 'Videos'
-                    ]
-                    embedVar.add_field(name=key, value=value, inline=inline)
+        #add platform link if applicable
+        setAuthorLink(embedVar, fieldParts.get('embedPlatformType'))
 
-            #remove embed from original message
-            if not isInteraction and fieldParts.get(
-                    'embedPlatformType') == 'bandcamp':
-                await message.edit(suppress=True)
+        #thumbnail
+        thumbnailUrl = fieldParts.get('thumbnailUrl')
+        if thumbnailUrl:
+            embedVar.set_thumbnail(url=thumbnailUrl)
 
-            #react to message
-            if isInteraction:
-                emoji_id = os.getenv("EMOJI_ID")
-                emoji = bot.get_emoji(int(emoji_id)) if emoji_id else '🔗'
-                await message.add_reaction(emoji)
+        #populate embed fields
+        for key, value in fieldParts.items():
+            if key not in [
+                    'description', 'title', 'thumbnailUrl',
+                    'embedPlatformType', 'embedColour'
+            ]:
+                inline = key not in ['Tags', 'Description', 'Tracks', 'Videos']
+                embedVar.add_field(name=key, value=value, inline=inline)
 
-            #send embed
-            if isInteraction:
-                return embedVar
-            else:
-                if canUseWebhook:
-                    embeds.append(embedVar)
-                    continue
-                if referencedUser:
-                    await message.reference.resolved.reply(embed=embedVar)
-                    sentReplyMessage = True
-                else:
-                    await message.reply(embed=embedVar)
+        #remove embed from original message
+        if not isInteraction and fieldParts.get(
+                'embedPlatformType') == 'bandcamp':
+            await message.edit(suppress=True)
+
+        #react to message
+        if isInteraction:
+            emoji_id = os.getenv("EMOJI_ID")
+            emoji = bot.get_emoji(int(emoji_id)) if emoji_id else '🔗'
+            await message.add_reaction(emoji)
+
+        #send embed
+        if isInteraction:
+            return embedVar
         else:
-            if isInteraction:
-                raise Exception(
-                    "This doesn't seem to be a supported URL.\nCurrently only "
-                    "Bandcamp, SoundCloud, Spotify and YouTube are supported.")
+            if canUseWebhook:
+                embeds.append(embedVar)
+                continue
+            if referencedUser:
+                await message.reference.resolved.reply(embed=embedVar)
+                sentReplyMessage = True
+            else:
+                await message.reply(embed=embedVar)
+
     if canUseWebhook and len(embeds) > 0:
         # replace message content if the message is a reply
         if message.reference:
@@ -259,17 +252,19 @@ async def fetchEmbed(message, isInteraction=False, isDM=False):
         await message.reply(referencedUser.mention, mention_author=False)
 
 
-def getDescriptionParts(embed):
-    if 'soundcloud.com' in embed.url:
-        return getSoundcloudParts(embed)
-    elif 'youtube.com' in embed.url:
-        return getYouTubeParts(embed)
-    elif 'spotify.com' in embed.url:
-        return getSpotifyParts(embed)
+def getDescriptionParts(link: CategorizedLink):
+    linkType = link[1]
+    linkUrl = link[0]
+    if linkType == link_types.soundcloud:
+        return getSoundcloudParts(linkUrl)
+    elif linkType == link_types.youtube:
+        return getYouTubeParts(linkUrl)
+    elif linkType == link_types.spotify:
+        return getSpotifyParts(linkUrl)
     else:  #Bandcamp
-        if re.match('https?://bandcamp.com.+', embed.url):
+        if re.match('https?://bandcamp.com.+', linkUrl):
             return None
-        return getBandcampParts(embed)
+        return getBandcampParts(linkUrl)
 
 
 def setAuthorLink(embedMessage, embedType):

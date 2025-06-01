@@ -2,6 +2,7 @@ import os
 import re
 
 from dotmap import DotMap
+from googleapiclient.discovery import build
 from ytmusicapi import OAuthCredentials, YTMusic
 
 from general_utils import (
@@ -14,6 +15,11 @@ types = DotMap(track=1, album=2, playlist=3)
 
 youtubeClientId = os.getenv("YOUTUBE_CLIENT_ID", 'default_value')
 youtubeClientSecret = os.getenv("YOUTUBE_CLIENT_SECRET", 'default_value')
+
+# YouTube Data API configuration
+DEVELOPER_KEY = os.getenv("YOUTUBE_API_KEY")
+youtube_api = build("youtube", "v3",
+                    developerKey=DEVELOPER_KEY) if DEVELOPER_KEY else None
 
 
 def fetchTrack(track_url):
@@ -45,13 +51,16 @@ def fetchTrack(track_url):
     return track, trackType
 
 
-def getYouTubeParts(embed):
+def getYouTubeParts(url: str):
     youtubeParts = {'embedPlatformType': 'youtube', 'embedColour': 0xff0000}
-    description = embed.description
 
-    track, type = fetchTrack(embed.url)
+    track, type = fetchTrack(url)
 
-    if track and type is types.track:
+    if not track:
+        raise Exception(
+            'An error occurred while fetching Youtube details: no track')
+
+    if type is types.track:
         #Title
         videoTitle = track['videoDetails']['title']
         if videoTitle:
@@ -84,13 +93,6 @@ def getYouTubeParts(embed):
         if videoDuration:
             youtubeParts['Duration'] = videoDuration
 
-        #Description
-        # videoDescription = track['microformat']['microformatDataRenderer'][
-        #     'description']
-        # if videoDescription:
-        #     description = track['microformat']['microformatDataRenderer'][
-        #         'description']
-
         #Square Thumbnail
         videoThumbnail = track['videoDetails']['thumbnail']['thumbnails'][-1]
         videoThumnailAlt = track['microformat']['microformatDataRenderer'][
@@ -98,7 +100,7 @@ def getYouTubeParts(embed):
         youtubeParts['thumbnailUrl'] = (
             videoThumbnail['url'] if videoThumbnail['width']
             == videoThumbnail['height'] else videoThumnailAlt['url'])
-    elif track and type is types.album:
+    elif type is types.album:
         #youtube music playlist
         youtubeParts['embedPlatformType'] = 'youtubemusic'
         #Title
@@ -160,7 +162,7 @@ def getYouTubeParts(embed):
 
         #Square Thumbnail
         youtubeParts['thumbnailUrl'] = track['thumbnails'][-1]['url']
-    elif track and type is types.playlist:
+    elif type is types.playlist:
         totalVideos = track["trackCount"]
         youtubeParts['title'] = track['title']
         youtubeParts['description'] = f'Playlist ({totalVideos} videos)'
@@ -209,6 +211,8 @@ def getYouTubeParts(embed):
             youtubeParts['Videos'] += (
                 f'\n...and {totalVideos - len(trackStrings)} more')
 
+    #description check
+    description = fetchVideoDescription(track['videoDetails']['videoId'])
     if description:
         descriptionMatch = re.search('.+?\n\n(.+?)\n.*Released on: (.*?)\n',
                                      description, re.S)
@@ -256,3 +260,24 @@ def formatArtistNames(artists):
     if len(artists) == 2:
         return f"{artists[0]} & {artists[1]}"
     return f"{', '.join(artists[:-1])} & {artists[-1]}"
+
+
+def fetchVideoDescription(video_id):
+    """Fetch video description using YouTube Data API v3"""
+    if not youtube_api:
+        print("YouTube API key not configured")
+        return None
+
+    try:
+        request = youtube_api.videos().list(part="snippet", id=video_id)
+        response = request.execute()
+
+        if response.get('items'):
+            return response['items'][0]['snippet']['description']
+        else:
+            print(f"No video found with ID: {video_id}")
+            return None
+
+    except Exception as e:
+        print(f"Error fetching video description: {e}")
+        return None

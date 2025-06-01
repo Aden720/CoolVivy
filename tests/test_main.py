@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import discord
 
 from main import fetchEmbed, getDescriptionParts, getUserIdFromFooter, setAuthorLink
+from object_types import CategorizedLink, link_types
 
 
 class TestMainBot(unittest.IsolatedAsyncioTestCase):
@@ -31,71 +32,71 @@ class TestMainBot(unittest.IsolatedAsyncioTestCase):
 
     def test_getDescriptionParts_soundcloud(self):
         # Arrange
-        mock_embed = MagicMock()
-        mock_embed.url = "https://soundcloud.com/artist/track"
+        link: CategorizedLink = ("https://soundcloud.com/artist/track",
+                                 link_types.soundcloud)
 
         with patch('main.getSoundcloudParts') as mock_get_soundcloud:
             mock_get_soundcloud.return_value = {'title': 'Test Track'}
 
             # Act
-            result = getDescriptionParts(mock_embed)
+            result = getDescriptionParts(link)
 
             # Assert
             self.assertEqual(result, {'title': 'Test Track'})
-            mock_get_soundcloud.assert_called_once_with(mock_embed)
+            mock_get_soundcloud.assert_called_once_with(link[0])
 
     def test_getDescriptionParts_youtube(self):
         # Arrange
-        mock_embed = MagicMock()
-        mock_embed.url = "https://youtube.com/watch?v=test"
+        link: CategorizedLink = ("https://youtube.com/watch?v=test",
+                                 link_types.youtube)
 
         with patch('main.getYouTubeParts') as mock_get_youtube:
             mock_get_youtube.return_value = {'title': 'Test Video'}
 
             # Act
-            result = getDescriptionParts(mock_embed)
+            result = getDescriptionParts(link)
 
             # Assert
             self.assertEqual(result, {'title': 'Test Video'})
-            mock_get_youtube.assert_called_once_with(mock_embed)
+            mock_get_youtube.assert_called_once_with(link[0])
 
     def test_getDescriptionParts_spotify(self):
         # Arrange
-        mock_embed = MagicMock()
-        mock_embed.url = "https://spotify.com/track/test"
+        link: CategorizedLink = ("https://spotify.com/track/test",
+                                 link_types.spotify)
 
         with patch('main.getSpotifyParts') as mock_get_spotify:
             mock_get_spotify.return_value = {'title': 'Test Song'}
 
             # Act
-            result = getDescriptionParts(mock_embed)
+            result = getDescriptionParts(link)
 
             # Assert
             self.assertEqual(result, {'title': 'Test Song'})
-            mock_get_spotify.assert_called_once_with(mock_embed)
+            mock_get_spotify.assert_called_once_with(link[0])
 
     def test_getDescriptionParts_bandcamp(self):
         # Arrange
-        mock_embed = MagicMock()
-        mock_embed.url = "https://artist.bandcamp.com/track/test"
+        link: CategorizedLink = ("https://artist.bandcamp.com/track/test",
+                                 link_types.bandcamp)
 
         with patch('main.getBandcampParts') as mock_get_bandcamp:
             mock_get_bandcamp.return_value = {'title': 'Test Album'}
 
             # Act
-            result = getDescriptionParts(mock_embed)
+            result = getDescriptionParts(link)
 
             # Assert
             self.assertEqual(result, {'title': 'Test Album'})
-            mock_get_bandcamp.assert_called_once_with(mock_embed)
+            mock_get_bandcamp.assert_called_once_with(link[0])
 
     def test_getDescriptionParts_bandcamp_main_site_returns_none(self):
         # Arrange
-        mock_embed = MagicMock()
-        mock_embed.url = "https://bandcamp.com/some-page"
+        link: CategorizedLink = ("https://bandcamp.com/some-page",
+                                 link_types.bandcamp)
 
         # Act
-        result = getDescriptionParts(mock_embed)
+        result = getDescriptionParts(link)
 
         # Assert
         self.assertIsNone(result)
@@ -225,14 +226,9 @@ class TestMainBot(unittest.IsolatedAsyncioTestCase):
 
     @patch.dict('os.environ', {'EMOJI_ID': '123456789'})
     async def test_fetchEmbed_interaction_mode(self):
-        # Arrange
-        mock_embed = MagicMock()
-        mock_embed.url = "https://soundcloud.com/artist/track"
-        mock_embed.thumbnail = None
-
-        mock_new_message = MagicMock()
-        mock_new_message.embeds = [mock_embed]
-        self.mock_message.channel.fetch_message.return_value = mock_new_message
+        # Mocking the message to contain a valid URL
+        self.mock_message = AsyncMock()
+        self.mock_message.content = "Check this out: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 
         mock_bot = MagicMock()
         mock_bot.get_emoji.return_value = MagicMock()
@@ -251,23 +247,21 @@ class TestMainBot(unittest.IsolatedAsyncioTestCase):
 
             # Assert
             self.assertIsInstance(result, discord.Embed)
-            self.assertEqual(result.title, 'Test Track')
+            self.assertEqual(result and result.title, 'Test Track')
             self.mock_message.add_reaction.assert_called_once()
 
     async def test_fetchEmbed_no_supported_embeds(self):
         # Arrange
-        mock_embed = MagicMock()
-        mock_embed.url = "https://example.com/not-supported"
+        mock_message = MagicMock()
+        mock_message.content = "https://example.com/not-supported"
 
-        mock_new_message = MagicMock()
-        mock_new_message.embeds = [mock_embed]
-        self.mock_message.channel.fetch_message.return_value = mock_new_message
+        self.mock_message.channel.fetch_message.return_value = mock_message
 
         # Act & Assert
         with self.assertRaises(Exception) as context:
             await fetchEmbed(self.mock_message, isInteraction=True)
 
-        self.assertIn("doesn't seem to be a supported URL",
+        self.assertIn("This message doesn't seem to contain a supported URL",
                       str(context.exception))
 
 

@@ -9,9 +9,11 @@ from .spotify_types import (
     SpotifyTrack,
     SpotifyTracks,
 )
+from .link_types import CategorizedLink, PlatformType, link_types
 
 __all__ = [
     'SpotifyImage', 'SpotifyArtist', 'SpotifyAlbum', 'SpotifyTrack',
     'SpotifyPlaylistOwner', 'SpotifyTracks', 'SpotifyPlaylist',
-    'SpotifyPlaylistTrack', 'SpotifyPlaylistTracks'
+    'SpotifyPlaylistTrack', 'SpotifyPlaylistTracks',
+    'CategorizedLink', 'PlatformType', 'link_types'
 ]

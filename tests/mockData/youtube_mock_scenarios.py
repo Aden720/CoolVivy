@@ -1,4 +1,3 @@
-
 def setupBasicVideo():
     return {
         'videoDetails': {
@@ -13,15 +12,21 @@ def setupBasicVideo():
                     'height': 120
                 }]
             },
-            'musicVideoType': 'MUSIC_VIDEO_TYPE_ATV'
+            'musicVideoType': 'MUSIC_VIDEO_TYPE_ATV',
+            'videoId': '123456789'
         },
         'microformat': {
             'microformatDataRenderer': {
                 'pageOwnerDetails': {
                     'name': 'Mock Artist - Topic'
                 },
-                'description': 'Video description\n\nProvided to YouTube by Mock\nMock Artist · Mock Title\n\nMock Album\n\nReleased on: 2024-01-01\n',
-                'uploadDate': '2024-01-01',
+                'description': ('Video description\n\n'
+                                'Provided to YouTube by Mock\n'
+                                'Mock Artist · Mock Title\n\n'
+                                'Mock Album\n\n'
+                                'Released on: 2024-01-01\n'),
+                'uploadDate':
+                '2020-10-29T03:07:04-07:00',
                 'thumbnail': {
                     'thumbnails': [{
                         'url': 'https://example.com/thumb_alt.jpg'
@@ -30,17 +35,3 @@ def setupBasicVideo():
             }
         }
     }
-
-def setupBasicEmbed():
-    class Author:
-        def __init__(self):
-            self.name = "Mock Channel"
-            self.url = "https://youtube.com/channel/UC123456789"
-
-    class Embed:
-        def __init__(self):
-            self.url = "https://www.youtube.com/watch?v=123456789"
-            self.description = "Video description\n\nProvided to YouTube by Mock\nMock Artist · Mock Title\n\nMock Album\n\nReleased on: 2024-01-01\n"
-            self.author = Author()
-
-    return Embed()

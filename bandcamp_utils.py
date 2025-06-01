@@ -5,12 +5,14 @@ from datetime import datetime, timezone
 
 import requests
 from babel.numbers import format_currency
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from dotmap import DotMap
 
 from general_utils import (
     formatMillisecondsToDurationString,
     formatTimeToDisplay,
+    get_tag,
+    get_tag_content,
     remove_trailing_slash,
 )
 
@@ -24,7 +26,7 @@ album_url_pattern = re.compile(
     r'https://[A-Za-z0-9_-]+\.bandcamp\.com/album/[A-Za-z0-9_-]+')
 discography_page_pattern = re.compile(
     r'https://[A-Za-z0-9_-]+\.bandcamp\.com/music')
-types = DotMap(album='a', track='t')
+types = DotMap(album='a', track='t', discography='d')
 
 
 class Track:
@@ -242,23 +244,43 @@ class Album:
         return parts
 
 
+class Discography:
+    #map to album fields
+    def __init__(self, properties):
+        self.title = properties.get('title')
+        self.thumbnail = properties.get('imageUrl')
+        self.description = properties.get('description')
+        self.location = properties.get('location')
+
+    def mapToParts(self):
+        parts = {}
+        parts['title'] = self.title
+        parts[
+            'description'] = f'Discography\n\n{self.description if self.description else ""}'
+        parts['thumbnailUrl'] = self.thumbnail
+        if self.location:
+            parts['Location'] = self.location
+        return parts
+
+
 class BandcampScraper:
 
-    def __init__(self, url):
-        data = self._fetch_data(url)
+    def __init__(self, url: str):
+
+        isDiscography = bool(re.match(discography_page_pattern, url))
+        data = self._fetch_data(url, isDiscography)
         if data is None:
             raise Exception("No data found")
 
-        if re.match(track_url_pattern, url):
-            self.track = self._parse_track(data)
-            self.isTrack = True
-            self.isAlbum = False
-            # return Track(data)
+        if isDiscography:
+            self.dataClass = self._parse_discography(data)
+            self.dataType = types.discography
+        elif re.match(track_url_pattern, url):
+            self.dataClass = self._parse_track(data)
+            self.dataType = types.track
         elif re.match(album_url_pattern, url):
-            self.album = self._parse_album(data)
-            self.isTrack = False
-            self.isAlbum = True
-            #return Album(data)
+            self.dataClass = self._parse_album(data)
+            self.dataType = types.album
 
     @staticmethod
     def _parse_track(pageData):
@@ -282,7 +304,24 @@ class BandcampScraper:
         albumData = callAPI(artistId, albumId, types.album)
         return Album(pageData, albumData)
 
-    def _fetch_data(self, url):
+    @staticmethod
+    def _parse_discography(soup: BeautifulSoup):
+        imageUrl = get_tag_content(soup, property='og:image')
+        title = get_tag_content(soup, attrs={'name': 'title'})
+        description = get_tag_content(soup, property='og:description')
+        band_name_location = get_tag(soup, id='band-name-location')
+        location = (get_tag_content(
+            band_name_location, attrs={'class': 'location'}, asString=True)
+                    if band_name_location else None)
+        properties = {
+            'title': title,
+            'imageUrl': imageUrl,
+            'description': description,
+            'location': location
+        }
+        return Discography(properties)
+
+    def _fetch_data(self, url, pageData=False):
         try:
             response = requests.get(url)
             if response.status_code != 200 and endpoint:
@@ -295,13 +334,16 @@ class BandcampScraper:
                 return None
             else:
                 soup = BeautifulSoup(response.content, 'html.parser')
-                script_tag = soup.find('script',
-                                       {'type': 'application/ld+json'})
-                if script_tag is None:
-                    return None
+                if pageData:
+                    return soup
                 else:
-                    songData = json.loads(script_tag.text)
-                    return songData
+                    script_tag = soup.find('script',
+                                           {'type': 'application/ld+json'})
+                    if script_tag is None:
+                        return None
+                    else:
+                        songData = json.loads(script_tag.text)
+                        return songData
         except requests.exceptions.RequestException as e:
             print(f"Network error occurred: {e}")
             return None
@@ -313,77 +355,20 @@ class BandcampScraper:
             return None
 
 
-def getBandcampParts(embed):
+def getBandcampParts(url: str):
     bandcampParts = {'embedPlatformType': 'bandcamp', 'embedColour': 0x1da0c3}
-
-    if re.match(discography_page_pattern, embed.url):
-        bandcampParts['title'] = embed.provider.name
-        bandcampParts['description'] = 'Discography'
-        return bandcampParts
 
     #fetches the data from the bandcamp url
     try:
         # raise Exception('bypassing until mapping is complete')
-        scraper = BandcampScraper(remove_trailing_slash(embed.url))
-        if scraper.isTrack:
-            track = scraper.track
-            bandcampParts.update(track.mapToParts())
-        elif scraper.isAlbum:
-            album = scraper.album
-            bandcampParts.update(album.mapToParts())
+        scraper = BandcampScraper(remove_trailing_slash(url))
+        if scraper.dataClass:
+            bandcampParts.update(scraper.dataClass.mapToParts())
     except Exception as e:
         #fallback method from embed
-        print(f"An error occurred: {e}")
-        bandcampParts.update(getPartsFromEmbed(embed))
+        print(f"An error occurred while fetching Bandcamp details: {e}")
 
     return bandcampParts
-
-
-#get track details from embed
-def getPartsFromEmbed(embed):
-    trackParts = {}
-    channelUrl = re.sub(r'(https?://[a-zA-Z0-9\-]*\.bandcamp\.com).*', r'\1',
-                        embed.url)
-    artist = ''
-
-    if embed.title:
-        title, artist = embed.title.split(', by ')
-        if artist != 'Various Artists' and artist not in title:
-            title_artist_match = getTrackTitleParts(title)
-            #channel name may not always be artist
-            if title_artist_match:
-                artist = title_artist_match.group(1)
-                title = title_artist_match.group(2)
-            trackParts['title'] = f'{artist} - {title}'
-        else:
-            trackParts['title'] = title
-
-        if artistIsMultipleArtists(artist):
-            trackParts['Artists'] = artist
-        else:
-            trackParts['Artist'] = artist
-
-    if embed.description:
-        if embed.description.startswith('from the album'):
-            trackParts['Album'] = embed.description.split(
-                'from the album ')[-1]
-        elif embed.description.startswith('track by'):
-            trackParts['description'] = 'Single'
-        else:
-            trackParts['title'] = trackParts['title'].split(' - ')[-1]
-            trackParts['description'] = embed.description
-
-    if embed.provider and embed.provider.name != artist:
-        trackParts['Channel'] = (f'[{embed.provider.name}]'
-                                 f'({embed.provider.url or channelUrl})')
-    else:
-        artistLink = f'[{artist}]({channelUrl})'
-        if 'Artist' in trackParts:
-            trackParts['Artist'] = artistLink
-        elif 'Artists' in trackParts:
-            trackParts['Artists'] = artistLink
-
-    return trackParts
 
 
 def callAPI(artistId, itemId, type):
