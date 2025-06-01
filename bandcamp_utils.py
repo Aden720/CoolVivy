@@ -62,13 +62,15 @@ class Track:
             }
 
         #change the artist if the track is from a different artist
-        if checkTrackTitle(self.title) and self.artist and self.artist.get('name'):
-            if (self.publisher and self.publisher.get('name') and 
-            self.publisher['name'] in self.artist['name']):
+        if checkTrackTitle(
+                self.title) and self.artist and self.artist.get('name'):
+            if (self.publisher and self.publisher.get('name')
+                    and self.publisher['name'] in self.artist['name']):
                 setTrackTitle(self)
             else:
                 trackTitleParts = getTrackTitleParts(self.title)
-                if trackTitleParts and trackTitleParts.group(1) == self.artist['name']:
+                if trackTitleParts and trackTitleParts.group(
+                        1) == self.artist['name']:
                     self.title = trackTitleParts.group(2)
         #extra data from API
         if trackData:
@@ -84,7 +86,9 @@ class Track:
         parts = {}
         if self.thumbnail:
             parts['thumbnailUrl'] = self.thumbnail
-        parts['title'] = self.artist['name'] + ' - ' + self.title
+        parts['title'] = (self.title if self.artist['name'].lower()
+                          in self.title.lower() else self.artist['name'] +
+                          ' - ' + self.title)
         parts['Duration'] = formatMillisecondsToDurationString(self.duration *
                                                                1000)
         if self.is_purchasable:
