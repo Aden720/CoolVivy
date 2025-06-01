@@ -1,16 +1,9 @@
 import math
 import re
 from datetime import datetime
+from typing import List
 
-from dotmap import DotMap
-
-# Define link types for different platforms
-link_types = DotMap(
-    soundcloud='soundcloud',
-    youtube='youtube', 
-    spotify='spotify',
-    bandcamp='bandcamp'
-)
+from object_types import LinkTuple, link_types
 
 
 def formatMillisecondsToDurationString(milliseconds):
@@ -44,7 +37,7 @@ def remove_trailing_slash(url):
     return re.sub(r'/$', '', url)
 
 
-def find_and_categorize_links(message_content: str):
+def find_and_categorize_links(message_content: str) -> List[LinkTuple]:
     # Define patterns for each platform including additional domains
     soundcloud_pattern = re.compile(
         r'https?://(?:www\.|on\.)?soundcloud\.com/[^\s]+')
