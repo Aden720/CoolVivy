@@ -11,6 +11,7 @@ from dotmap import DotMap
 from general_utils import (
     formatMillisecondsToDurationString,
     formatTimeToDisplay,
+    get_tag_content,
     remove_trailing_slash,
 )
 
@@ -299,19 +300,18 @@ class BandcampScraper:
 
     @staticmethod
     def _parse_discography(soup: BeautifulSoup):
-        image_tag = soup.find('meta', property='og:image')
-        title_tag = soup.find('meta', attrs={'name': 'title'})
-        if image_tag and isinstance(image_tag, Tag):
-            image = image_tag.get('content')
-            
-        title = soup.find('meta', attrs={'name': 'title'}).get('content')
+        image = get_tag_content(soup, property='og:image')
+        title = get_tag_content(soup, attrs={'name': 'title'})
+        
         band_name_location = soup.find(id='band-name-location')
         if band_name_location and isinstance(band_name_location, Tag):
-            location = band_name_location.find(attrs={'class': 'location'})
-            if location and isinstance(location, Tag):
-                location = location.text.strip()
+            location_tag = band_name_location.find(attrs={'class': 'location'})
+            if location_tag and isinstance(location_tag, Tag):
+                location = location_tag.text.strip()
+            else:
+                location = None
         else:
-            location = None  # or some default value or handle the missing element case
+            location = None
         properties = {}
         # properties = {
         #     item['name']: item['value']
