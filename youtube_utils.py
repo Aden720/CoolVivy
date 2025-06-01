@@ -3,6 +3,7 @@ import re
 
 from dotmap import DotMap
 from ytmusicapi import OAuthCredentials, YTMusic
+from googleapiclient.discovery import build
 
 from general_utils import (
     formatMillisecondsToDurationString,
@@ -14,6 +15,10 @@ types = DotMap(track=1, album=2, playlist=3)
 
 youtubeClientId = os.getenv("YOUTUBE_CLIENT_ID", 'default_value')
 youtubeClientSecret = os.getenv("YOUTUBE_CLIENT_SECRET", 'default_value')
+
+# YouTube Data API configuration
+DEVELOPER_KEY = os.getenv("YOUTUBE_API_KEY")
+youtube_api = build("youtube", "v3", developerKey=DEVELOPER_KEY) if DEVELOPER_KEY else None
 
 
 def fetchTrack(track_url):
@@ -253,3 +258,27 @@ def formatArtistNames(artists):
     if len(artists) == 2:
         return f"{artists[0]} & {artists[1]}"
     return f"{', '.join(artists[:-1])} & {artists[-1]}"
+
+
+def fetchVideoDescription(video_id):
+    """Fetch video description using YouTube Data API v3"""
+    if not youtube_api:
+        print("YouTube API key not configured")
+        return None
+    
+    try:
+        request = youtube_api.videos().list(
+            part="snippet",
+            id=video_id
+        )
+        response = request.execute()
+        
+        if response.get('items'):
+            return response['items'][0]['snippet']['description']
+        else:
+            print(f"No video found with ID: {video_id}")
+            return None
+            
+    except Exception as e:
+        print(f"Error fetching video description: {e}")
+        return None
