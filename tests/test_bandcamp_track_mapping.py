@@ -189,6 +189,132 @@ class TestTrackMapping(unittest.TestCase):
         self.assertEqual(track.artist['url'],
                          'https://testartist.bandcamp.com')
 
+    def test_tags_mapping_from_page_data_keywords(self):
+        """Test tags mapping from page data keywords (excludes first and last)"""
+        # Arrange
+        page_data = self.create_base_page_data()
+        page_data['keywords'] = ['first', 'electronic', 'ambient', 'experimental', 'last']
+        
+        track_data = self.base_track_data.copy()
+        del track_data['tags']  # Remove track data tags to test only page data
+
+        # Act
+        track = Track(page_data, track_data)
+
+        # Assert - Should have tags from middle of keywords array
+        self.assertEqual(track.tags, ['electronic', 'ambient', 'experimental'])
+
+    def test_tags_mapping_from_page_data_keywords_short_array(self):
+        """Test tags mapping when keywords array has 3 or fewer items"""
+        # Arrange
+        page_data = self.create_base_page_data()
+        page_data['keywords'] = ['first', 'middle', 'last']  # Only 3 items
+        
+        track_data = self.base_track_data.copy()
+        del track_data['tags']  # Remove track data tags
+
+        # Act
+        track = Track(page_data, track_data)
+
+        # Assert - Should not have tags from page data when array is too short
+        self.assertFalse(hasattr(track, 'tags'))
+
+    def test_tags_mapping_from_page_data_no_keywords(self):
+        """Test tags mapping when no keywords in page data"""
+        # Arrange
+        page_data = self.create_base_page_data()
+        # No keywords field in page data
+        
+        track_data = self.base_track_data.copy()
+        del track_data['tags']  # Remove track data tags
+
+        # Act
+        track = Track(page_data, track_data)
+
+        # Assert - Should not have tags
+        self.assertFalse(hasattr(track, 'tags'))
+
+    def test_tags_mapping_from_track_data(self):
+        """Test tags mapping from track data API response"""
+        # Arrange
+        page_data = self.create_base_page_data()
+        # No keywords in page data
+        
+        track_data = self.base_track_data.copy()
+        track_data['tags'] = [
+            {'name': 'electronic'},
+            {'name': 'ambient'},
+            {'name': 'experimental'}
+        ]
+
+        # Act
+        track = Track(page_data, track_data)
+
+        # Assert - Should have tags from track data
+        expected_tags = ['electronic', 'ambient', 'experimental']
+        self.assertEqual(list(track.tags), expected_tags)
+
+    def test_tags_mapping_from_track_data_empty_tags(self):
+        """Test tags mapping when track data has empty tags array"""
+        # Arrange
+        page_data = self.create_base_page_data()
+        
+        track_data = self.base_track_data.copy()
+        track_data['tags'] = []  # Empty tags array
+
+        # Act
+        track = Track(page_data, track_data)
+
+        # Assert - Should use tags from page data instead
+        expected_tags = ['tag1', 'tag2']  # From base_track_data
+        self.assertEqual(list(track.tags), expected_tags)
+
+    def test_tags_mapping_track_data_overrides_page_data(self):
+        """Test that track data tags override page data keywords when both exist"""
+        # Arrange
+        page_data = self.create_base_page_data()
+        page_data['keywords'] = ['first', 'page_tag1', 'page_tag2', 'last']
+        
+        track_data = self.base_track_data.copy()
+        track_data['tags'] = [
+            {'name': 'track_tag1'},
+            {'name': 'track_tag2'}
+        ]
+
+        # Act
+        track = Track(page_data, track_data)
+
+        # Assert - Should use track data tags, not page data keywords
+        expected_tags = ['track_tag1', 'track_tag2']
+        self.assertEqual(list(track.tags), expected_tags)
+
+    def test_tags_mapping_no_track_data(self):
+        """Test tags mapping when track data is None"""
+        # Arrange
+        page_data = self.create_base_page_data()
+        page_data['keywords'] = ['first', 'electronic', 'ambient', 'last']
+
+        # Act
+        track = Track(page_data, None)  # No track data
+
+        # Assert - Should use tags from page data
+        self.assertEqual(track.tags, ['electronic', 'ambient'])
+
+    def test_tags_mapping_track_data_no_tags_field(self):
+        """Test tags mapping when track data exists but has no tags field"""
+        # Arrange
+        page_data = self.create_base_page_data()
+        page_data['keywords'] = ['first', 'electronic', 'ambient', 'last']
+        
+        track_data = self.base_track_data.copy()
+        del track_data['tags']  # Remove tags field entirely
+
+        # Act
+        track = Track(page_data, track_data)
+
+        # Assert - Should use tags from page data
+        self.assertEqual(track.tags, ['electronic', 'ambient'])
+
 
 if __name__ == '__main__':
     unittest.main()
