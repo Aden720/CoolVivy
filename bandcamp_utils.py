@@ -82,7 +82,7 @@ class Track:
             self.duration = trackData['tracks'][0]['duration']
             self.release_date = trackData['release_date']
             if trackData.get('tags') and len(trackData.get('tags')) > 0:
-                self.tags = map(lambda tag: tag['name'], trackData['tags'])
+                self.tags = (tag['name'] for tag in trackData['tags'])
 
     def mapToParts(self):
         parts = {}
@@ -158,7 +158,7 @@ class Album:
             self.price = albumData['price']
             self.currency = albumData['currency']
             if albumData.get('tags') and len(albumData.get('tags')) > 0:
-                self.tags = map(lambda tag: tag['name'], albumData['tags'])
+                self.tags = (tag['name'] for tag in albumData['tags'])
             release_date = datetime.fromtimestamp(albumData['release_date'],
                                                   tz=timezone.utc)
             self.release_date = formatTimeToDisplay(
