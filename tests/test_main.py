@@ -228,7 +228,7 @@ class TestMainBot(unittest.IsolatedAsyncioTestCase):
     async def test_fetchEmbed_interaction_mode(self):
         # Mocking the message to contain a valid URL
         self.mock_message = AsyncMock()
-        self.mock_message.content = "Check this out: https://www.youtube.com/watch?v=dQw4w9WgXcQ"  # Example YouTube URL
+        self.mock_message.content = "Check this out: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 
         mock_bot = MagicMock()
         mock_bot.get_emoji.return_value = MagicMock()

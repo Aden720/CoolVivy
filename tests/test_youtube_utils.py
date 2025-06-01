@@ -16,7 +16,8 @@ class TestYoutubeUtils(unittest.TestCase):
 
     @patch('youtube_utils.fetchVideoDescription')
     @patch('youtube_utils.fetchTrack')
-    def test_getYouTubeParts_topic_channel(self, mock_fetch_track, mock_fetch_description):
+    def test_getYouTubeParts_topic_channel(self, mock_fetch_track,
+                                           mock_fetch_description):
         # Arrange
         mock_video = setupBasicVideo()
         mock_fetch_track.return_value = (mock_video, 1)  # 1 is types.track
@@ -35,7 +36,8 @@ class TestYoutubeUtils(unittest.TestCase):
 
     @patch('youtube_utils.fetchVideoDescription')
     @patch('youtube_utils.fetchTrack')
-    def test_getYouTubeParts_release_topic(self, mock_fetch_track, mock_fetch_description):
+    def test_getYouTubeParts_release_topic(self, mock_fetch_track,
+                                           mock_fetch_description):
         # Arrange
         mock_video = setupBasicVideo()
         mock_video['microformat']['microformatDataRenderer'][
@@ -54,7 +56,8 @@ class TestYoutubeUtils(unittest.TestCase):
 
     @patch('youtube_utils.fetchVideoDescription')
     @patch('youtube_utils.fetchTrack')
-    def test_getYouTubeParts_non_music_video(self, mock_fetch_track, mock_fetch_description):
+    def test_getYouTubeParts_non_music_video(self, mock_fetch_track,
+                                             mock_fetch_description):
         # Arrange
         mock_video = setupBasicVideo()
         mock_video['videoDetails']['musicVideoType'] = 'MUSIC_VIDEO_TYPE_UGC'
@@ -72,7 +75,8 @@ class TestYoutubeUtils(unittest.TestCase):
 
     @patch('youtube_utils.fetchVideoDescription')
     @patch('youtube_utils.fetchTrack')
-    def test_getYouTubeParts_no_track_found(self, mock_fetch_track, mock_fetch_description):
+    def test_getYouTubeParts_no_track_found(self, mock_fetch_track,
+                                            mock_fetch_description):
         # Arrange
         mock_fetch_track.return_value = (None, None)
         mock_fetch_description.return_value = None
@@ -83,8 +87,9 @@ class TestYoutubeUtils(unittest.TestCase):
             getYouTubeParts('https://www.youtube.com/watch?v=123456789')
 
         # Assert
-        self.assertIn("An error occurred while fetching Youtube details: no track",
-                      str(context.exception))
+        self.assertIn(
+            "An error occurred while fetching Youtube details: no track",
+            str(context.exception))
 
     @patch('youtube_utils.youtube_api')
     def test_fetchVideoDescription_success(self, mock_youtube_api):
@@ -93,50 +98,62 @@ class TestYoutubeUtils(unittest.TestCase):
         mock_request.execute.return_value = {
             'items': [{
                 'snippet': {
-                    'description': 'Test video description\n\nProvided to YouTube by Mock\nMock Artist · Mock Title\n\nMock Album\n\nReleased on: 2024-01-01\n'
+                    'description':
+                    'Test video description\n\nProvided to YouTube by Mock\n'
+                    'Mock Artist · Mock Title\n\nMock Album\n\nReleased on: 2024-01-01'
                 }
             }]
         }
-        
+
         # Act
         result = fetchVideoDescription('test_video_id')
-        
-        # Assert
-        self.assertEqual(result, 'Test video description\n\nProvided to YouTube by Mock\nMock Artist · Mock Title\n\nMock Album\n\nReleased on: 2024-01-01\n')
-        mock_youtube_api.videos.return_value.list.assert_called_once_with(part="snippet", id="test_video_id")
 
-    @patch('youtube_utils.youtube_api')
-    def test_fetchVideoDescription_no_video_found(self, mock_youtube_api):
-        # Arrange
-        mock_request = mock_youtube_api.videos.return_value.list.return_value
-        mock_request.execute.return_value = {'items': []}
-        
-        # Act
-        result = fetchVideoDescription('nonexistent_video_id')
-        
         # Assert
-        self.assertIsNone(result)
+        self.assertEqual(result, (
+            'Test video description\n\nProvided to YouTube by Mock\n'
+            'Mock Artist · Mock Title\n\nMock Album\n\nReleased on: 2024-01-01'
+        ))
+        mock_youtube_api.videos.return_value.list.assert_called_once_with(
+            part="snippet", id="test_video_id")
 
     @patch('youtube_utils.youtube_api')
     @patch('builtins.print')  # Suppress print statements during test
-    def test_fetchVideoDescription_api_exception(self, mock_print, mock_youtube_api):
+    def test_fetchVideoDescription_no_video_found(self, mock_print,
+                                                  mock_youtube_api):
+        # Arrange
+        mock_request = mock_youtube_api.videos.return_value.list.return_value
+        mock_request.execute.return_value = {'items': []}
+
+        # Act
+        result = fetchVideoDescription('nonexistent_video_id')
+
+        # Assert
+        self.assertIsNone(result)
+        mock_print.assert_called_with(
+            "No video found with ID: nonexistent_video_id")
+
+    @patch('youtube_utils.youtube_api')
+    @patch('builtins.print')  # Suppress print statements during test
+    def test_fetchVideoDescription_api_exception(self, mock_print,
+                                                 mock_youtube_api):
         # Arrange
         mock_request = mock_youtube_api.videos.return_value.list.return_value
         mock_request.execute.side_effect = Exception("API Error")
-        
+
         # Act
         result = fetchVideoDescription('test_video_id')
-        
+
         # Assert
         self.assertIsNone(result)
-        mock_print.assert_called_with("Error fetching video description: API Error")
+        mock_print.assert_called_with(
+            "Error fetching video description: API Error")
 
     @patch('youtube_utils.youtube_api', None)
     @patch('builtins.print')  # Suppress print statements during test
     def test_fetchVideoDescription_no_api_key_configured(self, mock_print):
         # Act
         result = fetchVideoDescription('test_video_id')
-        
+
         # Assert
         self.assertIsNone(result)
         mock_print.assert_called_with("YouTube API key not configured")
