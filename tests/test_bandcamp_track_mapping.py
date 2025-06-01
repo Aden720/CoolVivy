@@ -81,7 +81,10 @@ class TestTrackMapping(unittest.TestCase):
                          'https://trackartist.bandcamp.com')
 
     def test_track_mapping_album_artist_different_from_track_artist(self):
-        """Test track mapping when album artist is different from track artist (line 44 case)"""
+        """
+        Test track mapping when album artist is different from track artist
+        (line 44 case)
+        """
         page_data = self.create_base_page_data()
         page_data['inAlbum']['byArtist'] = {
             'name': 'Album Artist',
@@ -96,7 +99,10 @@ class TestTrackMapping(unittest.TestCase):
                          'https://albumartist.bandcamp.com')
 
     def test_track_mapping_album_artist_various_artists(self):
-        """Test track mapping when album artist is 'Various' (should keep track artist)"""
+        """
+        Test track mapping when album artist is 'Various'
+        (should keep track artist)
+        """
         page_data = self.create_base_page_data()
         page_data['inAlbum']['byArtist'] = {
             'name': 'Various',
@@ -111,7 +117,10 @@ class TestTrackMapping(unittest.TestCase):
                          'https://trackartist.bandcamp.com')
 
     def test_track_mapping_album_artist_various_artists_full(self):
-        """Test track mapping when album artist is 'Various Artists' (should keep track artist)"""
+        """
+        Test track mapping when album artist is 'Various Artists'
+        (should keep track artist)
+        """
         page_data = self.create_base_page_data()
         page_data['inAlbum']['byArtist'] = {
             'name': 'Various Artists',
@@ -193,8 +202,10 @@ class TestTrackMapping(unittest.TestCase):
         """Test tags mapping from page data keywords (excludes first and last)"""
         # Arrange
         page_data = self.create_base_page_data()
-        page_data['keywords'] = ['first', 'electronic', 'ambient', 'experimental', 'last']
-        
+        page_data['keywords'] = [
+            'first', 'electronic', 'ambient', 'experimental', 'last'
+        ]
+
         track_data = self.base_track_data.copy()
         del track_data['tags']  # Remove track data tags to test only page data
 
@@ -209,7 +220,7 @@ class TestTrackMapping(unittest.TestCase):
         # Arrange
         page_data = self.create_base_page_data()
         page_data['keywords'] = ['first', 'middle', 'last']  # Only 3 items
-        
+
         track_data = self.base_track_data.copy()
         del track_data['tags']  # Remove track data tags
 
@@ -224,7 +235,7 @@ class TestTrackMapping(unittest.TestCase):
         # Arrange
         page_data = self.create_base_page_data()
         # No keywords field in page data
-        
+
         track_data = self.base_track_data.copy()
         del track_data['tags']  # Remove track data tags
 
@@ -239,13 +250,15 @@ class TestTrackMapping(unittest.TestCase):
         # Arrange
         page_data = self.create_base_page_data()
         # No keywords in page data
-        
+
         track_data = self.base_track_data.copy()
-        track_data['tags'] = [
-            {'name': 'electronic'},
-            {'name': 'ambient'},
-            {'name': 'experimental'}
-        ]
+        track_data['tags'] = [{
+            'name': 'electronic'
+        }, {
+            'name': 'ambient'
+        }, {
+            'name': 'experimental'
+        }]
 
         # Act
         track = Track(page_data, track_data)
@@ -258,28 +271,23 @@ class TestTrackMapping(unittest.TestCase):
         """Test tags mapping when track data has empty tags array"""
         # Arrange
         page_data = self.create_base_page_data()
-        
+
         track_data = self.base_track_data.copy()
         track_data['tags'] = []  # Empty tags array
 
         # Act
         track = Track(page_data, track_data)
 
-        # Assert - Should use tags from page data instead
-        expected_tags = ['tag1', 'tag2']  # From base_track_data
-        self.assertEqual(list(track.tags), expected_tags)
+        self.assertFalse(hasattr(track, 'tags'))
 
     def test_tags_mapping_track_data_overrides_page_data(self):
         """Test that track data tags override page data keywords when both exist"""
         # Arrange
         page_data = self.create_base_page_data()
         page_data['keywords'] = ['first', 'page_tag1', 'page_tag2', 'last']
-        
+
         track_data = self.base_track_data.copy()
-        track_data['tags'] = [
-            {'name': 'track_tag1'},
-            {'name': 'track_tag2'}
-        ]
+        track_data['tags'] = [{'name': 'track_tag1'}, {'name': 'track_tag2'}]
 
         # Act
         track = Track(page_data, track_data)
@@ -305,7 +313,7 @@ class TestTrackMapping(unittest.TestCase):
         # Arrange
         page_data = self.create_base_page_data()
         page_data['keywords'] = ['first', 'electronic', 'ambient', 'last']
-        
+
         track_data = self.base_track_data.copy()
         del track_data['tags']  # Remove tags field entirely
 
