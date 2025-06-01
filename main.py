@@ -8,7 +8,7 @@ from discord.ext import commands
 
 from bandcamp_utils import getBandcampParts
 from general_utils import find_and_categorize_links, remove_trailing_slash
-from object_types import link_types, LinkTuple
+from object_types import LinkTuple, link_types
 from reactions import PaginatedSelect, fetch_animated_emotes
 from soundcloud_utils import getSoundcloudParts
 from spotify_utils import getSpotifyParts
