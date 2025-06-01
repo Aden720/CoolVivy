@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from mockData.youtube_mock_scenarios import setupBasicVideo
 
-from youtube_utils import getYouTubeParts, isYoutubeMusic
+from youtube_utils import fetchVideoDescription, getYouTubeParts, isYoutubeMusic
 
 
 class TestYoutubeUtils(unittest.TestCase):
@@ -85,3 +85,54 @@ class TestYoutubeUtils(unittest.TestCase):
         # Assert
         self.assertIn("An error occurred while fetching Youtube details: no track",
                       str(context.exception))
+
+    @patch('youtube_utils.youtube_api')
+    def test_fetchVideoDescription_success(self, mock_youtube_api):
+        # Arrange
+        mock_request = mock_youtube_api.videos.return_value.list.return_value
+        mock_request.execute.return_value = {
+            'items': [{
+                'snippet': {
+                    'description': 'Test video description\n\nProvided to YouTube by Mock\nMock Artist · Mock Title\n\nMock Album\n\nReleased on: 2024-01-01\n'
+                }
+            }]
+        }
+        
+        # Act
+        result = fetchVideoDescription('test_video_id')
+        
+        # Assert
+        self.assertEqual(result, 'Test video description\n\nProvided to YouTube by Mock\nMock Artist · Mock Title\n\nMock Album\n\nReleased on: 2024-01-01\n')
+        mock_youtube_api.videos.return_value.list.assert_called_once_with(part="snippet", id="test_video_id")
+
+    @patch('youtube_utils.youtube_api')
+    def test_fetchVideoDescription_no_video_found(self, mock_youtube_api):
+        # Arrange
+        mock_request = mock_youtube_api.videos.return_value.list.return_value
+        mock_request.execute.return_value = {'items': []}
+        
+        # Act
+        result = fetchVideoDescription('nonexistent_video_id')
+        
+        # Assert
+        self.assertIsNone(result)
+
+    @patch('youtube_utils.youtube_api')
+    def test_fetchVideoDescription_api_exception(self, mock_youtube_api):
+        # Arrange
+        mock_request = mock_youtube_api.videos.return_value.list.return_value
+        mock_request.execute.side_effect = Exception("API Error")
+        
+        # Act
+        result = fetchVideoDescription('test_video_id')
+        
+        # Assert
+        self.assertIsNone(result)
+
+    @patch('youtube_utils.youtube_api', None)
+    def test_fetchVideoDescription_no_api_key_configured(self):
+        # Act
+        result = fetchVideoDescription('test_video_id')
+        
+        # Assert
+        self.assertIsNone(result)
