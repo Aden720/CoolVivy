@@ -171,6 +171,18 @@ class TestBandcampUtils(unittest.TestCase):
                          '[Various Artists](http://test.com)')
         self.assertNotIn('Artist', parts)
 
+    def test_track_artist_in_title(self):
+        # Arrange
+        track = MockTrack()
+        track.title = 'Test Track (Test Artist - Edit)'
+
+        # Act
+        parts = track.mapToParts()
+
+        # Assert
+        self.assertEqual(parts['title'], 'Test Track (Test Artist - Edit)')
+        self.assertEqual(parts['Artist'], '[Test Artist](http://test.com)')
+
     def test_getBandcampParts_discography(self):
         # Arrange
         embed = setupDiscographyEmbed()
