@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from bandcamp_utils import getBandcampParts
-from general_utils import find_and_categorize_links, remove_trailing_slash
+from general_utils import find_and_categorize_links, remove_trailing_slash, link_types
 from reactions import PaginatedSelect, fetch_animated_emotes
 from soundcloud_utils import getSoundcloudParts
 from spotify_utils import getSpotifyParts
@@ -156,71 +156,66 @@ async def fetchEmbed(message, isInteraction=False, isDM=False):
 
     allMusicUrls = find_and_categorize_links(message.content)
 
-    for links in allMusicUrls:
-        if any(
-                word in embed.url for word in
-            ['soundcloud.com', 'youtube.com', 'spotify.com', 'bandcamp.com']):
-            #get all embed fields
-            fieldParts = getDescriptionParts(embed)
-            if not fieldParts:
-                raise Exception('No data found')
+    if isInteraction and len(allMusicUrls) == 0:
+        raise Exception(
+            "This message doesn't seem to contain a supported URL.\nCurrently only "
+            "Bandcamp, SoundCloud, Spotify and YouTube links are supported.")
 
-            #create a new embed
-            embedVar = discord.Embed(
-                title=fieldParts.get('title', embed.title),
-                description=fieldParts.get('description'),
-                color=fieldParts.get('embedColour', 0x00dcff),
-                url=remove_trailing_slash(embed.url))
+    for link in allMusicUrls:
+        #get all embed fields
+        fieldParts = getDescriptionParts(link)
+        if not fieldParts:
+            raise Exception('No data found')
 
-            #add platform link if applicable
-            setAuthorLink(embedVar, fieldParts.get('embedPlatformType'))
+        #create a new embed
+        embedVar = discord.Embed(title=fieldParts.get('title', embed.title),
+                                 description=fieldParts.get('description'),
+                                 color=fieldParts.get('embedColour', 0x00dcff),
+                                 url=remove_trailing_slash(embed.url))
 
-            #thumbnail
-            thumbnailUrl = fieldParts.get('thumbnailUrl')
-            if thumbnailUrl:
-                embedVar.set_thumbnail(url=thumbnailUrl)
-            elif embed.thumbnail:
-                embedVar.set_thumbnail(url=embed.thumbnail.url)
+        #add platform link if applicable
+        setAuthorLink(embedVar, fieldParts.get('embedPlatformType'))
 
-            #populate embed fields
-            for key, value in fieldParts.items():
-                if key not in [
-                        'description', 'title', 'thumbnailUrl',
-                        'embedPlatformType', 'embedColour'
-                ]:
-                    inline = key not in [
-                        'Tags', 'Description', 'Tracks', 'Videos'
-                    ]
-                    embedVar.add_field(name=key, value=value, inline=inline)
+        #thumbnail
+        thumbnailUrl = fieldParts.get('thumbnailUrl')
+        if thumbnailUrl:
+            embedVar.set_thumbnail(url=thumbnailUrl)
+        elif embed.thumbnail:
+            embedVar.set_thumbnail(url=embed.thumbnail.url)
 
-            #remove embed from original message
-            if not isInteraction and fieldParts.get(
-                    'embedPlatformType') == 'bandcamp':
-                await message.edit(suppress=True)
+        #populate embed fields
+        for key, value in fieldParts.items():
+            if key not in [
+                    'description', 'title', 'thumbnailUrl',
+                    'embedPlatformType', 'embedColour'
+            ]:
+                inline = key not in ['Tags', 'Description', 'Tracks', 'Videos']
+                embedVar.add_field(name=key, value=value, inline=inline)
 
-            #react to message
-            if isInteraction:
-                emoji_id = os.getenv("EMOJI_ID")
-                emoji = bot.get_emoji(int(emoji_id)) if emoji_id else '🔗'
-                await message.add_reaction(emoji)
+        #remove embed from original message
+        if not isInteraction and fieldParts.get(
+                'embedPlatformType') == 'bandcamp':
+            await message.edit(suppress=True)
 
-            #send embed
-            if isInteraction:
-                return embedVar
-            else:
-                if canUseWebhook:
-                    embeds.append(embedVar)
-                    continue
-                if referencedUser:
-                    await message.reference.resolved.reply(embed=embedVar)
-                    sentReplyMessage = True
-                else:
-                    await message.reply(embed=embedVar)
+        #react to message
+        if isInteraction:
+            emoji_id = os.getenv("EMOJI_ID")
+            emoji = bot.get_emoji(int(emoji_id)) if emoji_id else '🔗'
+            await message.add_reaction(emoji)
+
+        #send embed
+        if isInteraction:
+            return embedVar
         else:
-            if isInteraction:
-                raise Exception(
-                    "This doesn't seem to be a supported URL.\nCurrently only "
-                    "Bandcamp, SoundCloud, Spotify and YouTube are supported.")
+            if canUseWebhook:
+                embeds.append(embedVar)
+                continue
+            if referencedUser:
+                await message.reference.resolved.reply(embed=embedVar)
+                sentReplyMessage = True
+            else:
+                await message.reply(embed=embedVar)
+
     if canUseWebhook and len(embeds) > 0:
         # replace message content if the message is a reply
         if message.reference:
@@ -258,17 +253,18 @@ async def fetchEmbed(message, isInteraction=False, isDM=False):
         await message.reply(referencedUser.mention, mention_author=False)
 
 
-def getDescriptionParts(embed):
-    if 'soundcloud.com' in embed.url:
-        return getSoundcloudParts(embed)
-    elif 'youtube.com' in embed.url:
-        return getYouTubeParts(embed)
-    elif 'spotify.com' in embed.url:
-        return getSpotifyParts(embed)
+def getDescriptionParts(link):
+    linkType = link[1]
+    if linkType == link_types.soundcloud:
+        return getSoundcloudParts(link)
+    elif linkType == link_types.youtube:
+        return getYouTubeParts(link)
+    elif linkType == link_types.spotify:
+        return getSpotifyParts(link)
     else:  #Bandcamp
-        if re.match('https?://bandcamp.com.+', embed.url):
+        if re.match('https?://bandcamp.com.+', link[0]):
             return None
-        return getBandcampParts(embed)
+        return getBandcampParts(link)
 
 
 def setAuthorLink(embedMessage, embedType):
