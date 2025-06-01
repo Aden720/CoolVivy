@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 import requests
 from babel.numbers import format_currency
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from dotmap import DotMap
 
 from general_utils import (
@@ -242,9 +242,24 @@ class Album:
         return parts
 
 
+class Discography:
+    #map to album fields
+    def __init__(self, pageData):
+        self.title = ''
+
+    def mapToParts(self):
+        parts = {}
+        return parts
+
+
 class BandcampScraper:
 
-    def __init__(self, url):
+    def __init__(self, url: str):
+        if re.match(discography_page_pattern, url):
+            data = self._fetch_data(url, True)
+            self.discography = self._parse_discography(data)
+            self.isDiscography = True
+
         data = self._fetch_data(url)
         if data is None:
             raise Exception("No data found")
@@ -282,7 +297,29 @@ class BandcampScraper:
         albumData = callAPI(artistId, albumId, types.album)
         return Album(pageData, albumData)
 
-    def _fetch_data(self, url):
+    @staticmethod
+    def _parse_discography(soup: BeautifulSoup):
+        image_tag = soup.find('meta', property='og:image')
+        title_tag = soup.find('meta', attrs={'name': 'title'})
+        if image_tag and isinstance(image_tag, Tag):
+            image = image_tag.get('content')
+            
+        title = soup.find('meta', attrs={'name': 'title'}).get('content')
+        band_name_location = soup.find(id='band-name-location')
+        if band_name_location and isinstance(band_name_location, Tag):
+            location = band_name_location.find(attrs={'class': 'location'})
+            if location and isinstance(location, Tag):
+                location = location.text.strip()
+        else:
+            location = None  # or some default value or handle the missing element case
+        properties = {}
+        # properties = {
+        #     item['name']: item['value']
+        #     for item in pageData['albumRelease'][0]['additionalProperty']
+        # }
+        return Discography(properties)
+
+    def _fetch_data(self, url, pageData=False):
         try:
             response = requests.get(url)
             if response.status_code != 200 and endpoint:
@@ -295,13 +332,16 @@ class BandcampScraper:
                 return None
             else:
                 soup = BeautifulSoup(response.content, 'html.parser')
-                script_tag = soup.find('script',
-                                       {'type': 'application/ld+json'})
-                if script_tag is None:
-                    return None
+                if pageData:
+                    return soup
                 else:
-                    songData = json.loads(script_tag.text)
-                    return songData
+                    script_tag = soup.find('script',
+                                           {'type': 'application/ld+json'})
+                    if script_tag is None:
+                        return None
+                    else:
+                        songData = json.loads(script_tag.text)
+                        return songData
         except requests.exceptions.RequestException as e:
             print(f"Network error occurred: {e}")
             return None
@@ -313,28 +353,25 @@ class BandcampScraper:
             return None
 
 
-def getBandcampParts(embed):
+def getBandcampParts(url: str):
     bandcampParts = {'embedPlatformType': 'bandcamp', 'embedColour': 0x1da0c3}
-
-    if re.match(discography_page_pattern, embed.url):
-        bandcampParts['title'] = embed.provider.name
-        bandcampParts['description'] = 'Discography'
-        return bandcampParts
 
     #fetches the data from the bandcamp url
     try:
         # raise Exception('bypassing until mapping is complete')
-        scraper = BandcampScraper(remove_trailing_slash(embed.url))
+        scraper = BandcampScraper(remove_trailing_slash(url))
         if scraper.isTrack:
             track = scraper.track
             bandcampParts.update(track.mapToParts())
         elif scraper.isAlbum:
             album = scraper.album
             bandcampParts.update(album.mapToParts())
+        elif scraper.isDiscography:
+            discography = scraper.discography
+            bandcampParts.update(discography.mapToParts())
     except Exception as e:
         #fallback method from embed
-        print(f"An error occurred: {e}")
-        bandcampParts.update(getPartsFromEmbed(embed))
+        print(f"An error occurred while fetching Bandcamp details: {e}")
 
     return bandcampParts
 

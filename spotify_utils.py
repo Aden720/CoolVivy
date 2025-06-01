@@ -16,7 +16,7 @@ spotifyClientId = os.getenv("SPOTIFY_CLIENT_ID")
 spotifyClientSecret = os.getenv("SPOTIFY_CLIENT_SECRET")
 
 
-def getSpotifyParts(embed):
+def getSpotifyParts(url: str):
     spotifyParts = {'embedPlatformType': 'spotify', 'embedColour': 0x1db954}
 
     try:
@@ -24,8 +24,8 @@ def getSpotifyParts(embed):
         sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
             client_id=spotifyClientId, client_secret=spotifyClientSecret))
 
-        if embed.url.startswith('https://open.spotify.com/track'):
-            track = sp.track(embed.url)
+        if url.startswith('https://open.spotify.com/track'):
+            track = sp.track(url)
             if not track:
                 raise Exception('Spotify track data not found')
 
@@ -63,8 +63,8 @@ def getSpotifyParts(embed):
             title = reformatTitle(title)
             spotifyParts['title'] = (f'{titleArtists} - {title}'
                                      if titleArtists else title)
-        elif embed.url.startswith('https://open.spotify.com/album'):
-            data = sp.album(embed.url)
+        elif url.startswith('https://open.spotify.com/album'):
+            data = sp.album(url)
             if not data:
                 raise Exception('Spotify album data not found')
             album: SpotifyAlbum = data
@@ -143,8 +143,8 @@ def getSpotifyParts(embed):
                 f'{titleArtists} - {title}' if titleArtists
                 and titleArtists != 'Various Artists' else title)
 
-        elif embed.url.startswith('https://open.spotify.com/playlist'):
-            data = sp.playlist(embed.url)
+        elif url.startswith('https://open.spotify.com/playlist'):
+            data = sp.playlist(url)
             if not data:
                 raise Exception('Spotify playlist data not found')
             playlist: SpotifyPlaylist = data
@@ -215,43 +215,8 @@ def getSpotifyParts(embed):
                     f'\n...and {totalTracks - len(trackStrings)} more')
 
     except Exception as e:
-        print(f"Error occurred: {e}")
+        print(f"Error occurred while fetching Spotify details: {e}")
         #fallback method from embed
-        attributes = ['Artist', 'Type', 'Released']
-        parts = embed.description.split(' · ')
-        if parts[1] == 'Single' or parts[1] == 'Album' or parts[1] == 'EP':
-            attributes = ['Artist', 'Type', 'Released']
-            if len(parts) > 3 and parts[1] != 'Single':
-                parts[1] = f'{parts[1]} - {parts[3]}'  #Type - Track num
-                parts.pop(3)
-        elif parts[0] == 'Playlist':
-            attributes = ['Artist', 'Type', 'Saves :green_heart:']
-            parts[0], parts[1] = parts[1], parts[0]
-            if len(parts) > 3:
-                parts[1] = f'{parts[1]} - {parts[2]}'  #Playlist - num items
-                parts.pop(2)
-        else:
-            attributes = ['Artist', 'Album', 'Type', 'Released']
-
-        for index, attribute in enumerate(attributes):
-            spotifyParts[f'{attribute}'] = parts[index]
-
-        #remove album field because embed doesn't look great
-        spotifyParts.pop('Album', None)
-
-        artist_parts_comma = spotifyParts['Artist'].split(', ')
-        if len(artist_parts_comma) > 1:
-            spotifyParts['Artists'] = spotifyParts['Artist']
-            spotifyParts.pop('Artist', None)
-
-        # Reorder keys: 'Type' and 'Released' should follow 'Artists' or 'Artist'
-        if 'Artists' in spotifyParts:
-            order = ['Artists'
-                     ] + [key for key in spotifyParts if key != 'Artists']
-            spotifyParts = {
-                key: spotifyParts[key]
-                for key in order if key in spotifyParts
-            }
 
     return spotifyParts
 

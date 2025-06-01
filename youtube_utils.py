@@ -45,11 +45,10 @@ def fetchTrack(track_url):
     return track, trackType
 
 
-def getYouTubeParts(embed):
+def getYouTubeParts(url: str):
     youtubeParts = {'embedPlatformType': 'youtube', 'embedColour': 0xff0000}
-    description = embed.description
 
-    track, type = fetchTrack(embed.url)
+    track, type = fetchTrack(url)
 
     if track and type is types.track:
         #Title
@@ -83,13 +82,6 @@ def getYouTubeParts(embed):
         videoDuration = getVideoDisplayDuration(track)
         if videoDuration:
             youtubeParts['Duration'] = videoDuration
-
-        #Description
-        # videoDescription = track['microformat']['microformatDataRenderer'][
-        #     'description']
-        # if videoDescription:
-        #     description = track['microformat']['microformatDataRenderer'][
-        #         'description']
 
         #Square Thumbnail
         videoThumbnail = track['videoDetails']['thumbnail']['thumbnails'][-1]

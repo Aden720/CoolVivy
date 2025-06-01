@@ -33,13 +33,13 @@ def fetchTrack(track_url):
     return track
 
 
-def getSoundcloudParts(embed):
+def getSoundcloudParts(url: str):
     soundcloudParts = {
         'embedPlatformType': 'soundcloud',
         'embedColour': 0xff5500
     }
 
-    track = fetchTrack(remove_trailing_slash(embed.url))
+    track = fetchTrack(remove_trailing_slash(url))
 
     if isinstance(track, Track):
         if checkTrackTitle(track.title):
@@ -156,8 +156,6 @@ def getSoundcloudParts(embed):
         #     soundcloudParts['Description'] = cleanLinks(track.description)
     else:
         soundcloudParts['Metadata'] = 'No data available.'
-        if embed.description:
-            soundcloudParts['Description'] = cleanLinks(embed.description)
     return soundcloudParts
 
 
