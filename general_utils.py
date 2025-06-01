@@ -2,8 +2,6 @@ import math
 import re
 from datetime import datetime
 
-import discord
-
 
 def formatMillisecondsToDurationString(milliseconds):
     (hours, seconds) = divmod(milliseconds / 1000, 3600)

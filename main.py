@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from bandcamp_utils import getBandcampParts
-from general_utils import remove_trailing_slash
+from general_utils import find_and_categorize_links, remove_trailing_slash
 from reactions import PaginatedSelect, fetch_animated_emotes
 from soundcloud_utils import getSoundcloudParts
 from spotify_utils import getSpotifyParts
@@ -94,7 +94,6 @@ async def on_message(message):
                 f'Ask <@{ownerUser}> for help.'
                 if ownerUser else 'Use **/help** for help.')
     elif message.guild and str(message.guild.id) in server_whitelist:
-        await asyncio.sleep(3)
         try:
             await fetchEmbed(message, False)
         except Exception as e:
@@ -147,8 +146,6 @@ async def fetchWebhook(message):
 
 
 async def fetchEmbed(message, isInteraction=False, isDM=False):
-    newMessage = await message.channel.fetch_message(message.id)
-    embeds = []
     webhook = None
     referencedUser = None
     sentReplyMessage = False
@@ -157,7 +154,9 @@ async def fetchEmbed(message, isInteraction=False, isDM=False):
         referencedUser = await getReferencedUser(message)
     canUseWebhook = webhook is not None
 
-    for embed in newMessage.embeds:
+    allMusicUrls = find_and_categorize_links(message.content)
+
+    for links in allMusicUrls:
         if any(
                 word in embed.url for word in
             ['soundcloud.com', 'youtube.com', 'spotify.com', 'bandcamp.com']):
