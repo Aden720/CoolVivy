@@ -58,42 +58,6 @@ def find_and_categorize_links(message_content: str) -> List[CategorizedLink]:
     for url in cleaned_links:
         if soundcloud_pattern.match(url):
             categorized_links.append((url, link_types.soundcloud))
-
-
-
-def get_tag_content(soup, tag_name=None, attrs=None, property=None):
-    """
-    Safely get content from a BeautifulSoup tag with proper type checking.
-    
-    Args:
-        soup: BeautifulSoup object
-        tag_name: HTML tag name to find
-        attrs: Dictionary of attributes to match
-        property: Property attribute value (shorthand for {'property': value})
-    
-    Returns:
-        str or None: The content attribute value if found and valid, None otherwise
-    """
-    from bs4 import Tag
-    
-    # Build search parameters
-    search_params = {}
-    if tag_name:
-        search_params['name'] = tag_name
-    if property:
-        search_params['property'] = property
-    if attrs:
-        search_params['attrs'] = attrs
-    
-    # Find the tag
-    tag = soup.find(**search_params)
-    
-    # Check if tag exists and is a valid Tag instance
-    if tag and isinstance(tag, Tag):
-        return tag.get('content')
-    
-    return None
-
         elif youtube_pattern.match(url):
             categorized_links.append((url, link_types.youtube))
         elif spotify_pattern.match(url):
