@@ -65,15 +65,19 @@ async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
     if user.bot or not bot.user:
         return
 
-    # Check if the bot has reacted to this message
     message = reaction.message
-    bot_reactions = [react for react in message.reactions if react.me]
+    if (message.author.id == bot.user.id and user in message.mentions
+            and message.reference):
+        await message.delete()
+    else:
+        # Check if the bot has reacted to this message
+        bot_reactions = [react for react in message.reactions if react.me]
 
-    # If bot has reacted, check if the current reaction matches any bot reaction
-    for bot_reaction in bot_reactions:
-        if str(bot_reaction.emoji) == str(reaction.emoji):
-            await bot_reaction.remove(bot.user)
-            break
+        # If bot has reacted, check if the current reaction matches any bot reaction
+        for bot_reaction in bot_reactions:
+            if str(bot_reaction.emoji) == str(reaction.emoji):
+                await bot_reaction.remove(bot.user)
+                break
 
 
 @bot.event
@@ -104,7 +108,8 @@ async def on_message(message):
 # If the message is a reply to the bot's message,
 # get the replied message and fetch the original user
 async def getReferencedUser(message):
-    if message.reference and message.reference.resolved and message.reference.resolved.author.bot:
+    if (message.reference and message.reference.resolved
+            and message.reference.resolved.author.bot):
         referencedUserId = getUserIdFromFooter(message.reference.resolved)
         if referencedUserId and referencedUserId != message.author.id:
             referencedUser = await message.guild.fetch_member(referencedUserId)
@@ -220,9 +225,12 @@ async def fetchEmbed(message, isInteraction=False, isDM=False):
     if canUseWebhook and len(embeds) > 0:
         # replace message content if the message is a reply
         if message.reference:
-            jump_url = message.reference.resolved.jump_url if message.reference.resolved else message.reference.jump_url
+            jump_url = (message.reference.resolved.jump_url
+                        if message.reference.resolved else
+                        message.reference.jump_url)
             # try to mention the non-bot user
-            if not referencedUser and message.reference.resolved and not message.reference.resolved.author.bot:
+            if (not referencedUser and message.reference.resolved
+                    and not message.reference.resolved.author.bot):
                 referencedUser = message.reference.resolved.author
             message.content = (
                 f'{referencedUser.mention if referencedUser else ""} {jump_url}\n'
