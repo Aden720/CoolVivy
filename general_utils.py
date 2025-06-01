@@ -2,6 +2,16 @@ import math
 import re
 from datetime import datetime
 
+from dotmap import DotMap
+
+# Define link types for different platforms
+link_types = DotMap(
+    soundcloud='soundcloud',
+    youtube='youtube', 
+    spotify='spotify',
+    bandcamp='bandcamp'
+)
+
 
 def formatMillisecondsToDurationString(milliseconds):
     (hours, seconds) = divmod(milliseconds / 1000, 3600)
@@ -54,12 +64,12 @@ def find_and_categorize_links(message_content: str):
     # Determine the platform for each URL and maintain order
     for url in cleaned_links:
         if soundcloud_pattern.match(url):
-            categorized_links.append((url, 'soundcloud'))
+            categorized_links.append((url, link_types.soundcloud))
         elif youtube_pattern.match(url):
-            categorized_links.append((url, 'youtube'))
+            categorized_links.append((url, link_types.youtube))
         elif spotify_pattern.match(url):
-            categorized_links.append((url, 'spotify'))
+            categorized_links.append((url, link_types.spotify))
         elif bandcamp_pattern.match(url):
-            categorized_links.append((url, 'bandcamp'))
+            categorized_links.append((url, link_types.bandcamp))
 
     return categorized_links
