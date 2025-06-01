@@ -70,7 +70,10 @@ class TestYoutubeUtils(unittest.TestCase):
         mock_fetch_track.return_value = (None, None)
 
         # Act
-        result = getYouTubeParts('https://www.youtube.com/watch?v=123456789')
+        # Act & Assert
+        with self.assertRaises(Exception) as context:
+            getYouTubeParts('https://www.youtube.com/watch?v=123456789')
 
         # Assert
-        self.assertEqual(result['embedPlatformType'], 'youtube')
+        self.assertIn("An error occurred while fetching Youtube details: no track",
+                      str(context.exception))

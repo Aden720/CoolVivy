@@ -2,8 +2,8 @@ import os
 import re
 
 from dotmap import DotMap
-from ytmusicapi import OAuthCredentials, YTMusic
 from googleapiclient.discovery import build
+from ytmusicapi import OAuthCredentials, YTMusic
 
 from general_utils import (
     formatMillisecondsToDurationString,
@@ -18,7 +18,8 @@ youtubeClientSecret = os.getenv("YOUTUBE_CLIENT_SECRET", 'default_value')
 
 # YouTube Data API configuration
 DEVELOPER_KEY = os.getenv("YOUTUBE_API_KEY")
-youtube_api = build("youtube", "v3", developerKey=DEVELOPER_KEY) if DEVELOPER_KEY else None
+youtube_api = build("youtube", "v3",
+                    developerKey=DEVELOPER_KEY) if DEVELOPER_KEY else None
 
 
 def fetchTrack(track_url):
@@ -56,7 +57,8 @@ def getYouTubeParts(url: str):
     track, type = fetchTrack(url)
 
     if not track:
-        raise Exception('An error occurred while fetching Youtube details: no track')
+        raise Exception(
+            'An error occurred while fetching Youtube details: no track')
 
     if type is types.track:
         #Title
@@ -210,7 +212,7 @@ def getYouTubeParts(url: str):
                 f'\n...and {totalVideos - len(trackStrings)} more')
 
     #description check
-    description = track['microformat']['microformatDataRenderer'].get('description')
+    description = fetchVideoDescription(track['videoDetails']['videoId'])
     if description:
         descriptionMatch = re.search('.+?\n\n(.+?)\n.*Released on: (.*?)\n',
                                      description, re.S)
@@ -265,20 +267,17 @@ def fetchVideoDescription(video_id):
     if not youtube_api:
         print("YouTube API key not configured")
         return None
-    
+
     try:
-        request = youtube_api.videos().list(
-            part="snippet",
-            id=video_id
-        )
+        request = youtube_api.videos().list(part="snippet", id=video_id)
         response = request.execute()
-        
+
         if response.get('items'):
             return response['items'][0]['snippet']['description']
         else:
             print(f"No video found with ID: {video_id}")
             return None
-            
+
     except Exception as e:
         print(f"Error fetching video description: {e}")
         return None

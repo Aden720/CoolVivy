@@ -3,12 +3,6 @@ from unittest.mock import MagicMock
 from sclib import Track
 
 
-def setupBasicEmbed():
-    embed = MagicMock()
-    embed.url = 'https://soundcloud.com/someTrack'
-    return embed
-
-
 def setupBasicTrack():
     mock_track = MagicMock(spec=Track)
     mock_track.artist = 'Mock Artist'

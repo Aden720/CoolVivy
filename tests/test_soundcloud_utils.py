@@ -3,7 +3,6 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from mockData.soundcloud_mock_scenarios import (
-    setupBasicEmbed,
     setupBasicTrack,
     setupBasicTrackWithBuyLinkBuy,
     setupBasicTrackWithBuyLinkDownload,
@@ -110,7 +109,7 @@ class TestSoundcloudUtils(unittest.TestCase):
         mock_fetch_track.return_value = mock_track
 
         # Act
-        result = getSoundcloudParts(setupBasicEmbed())
+        result = getSoundcloudParts('https://soundcloud.com/someTrack')
 
         # Assert
         expected_parts = {
@@ -134,7 +133,7 @@ class TestSoundcloudUtils(unittest.TestCase):
         mock_fetch_track.return_value = mock_track
 
         # Act
-        result = getSoundcloudParts(setupBasicEmbed())
+        result = getSoundcloudParts('https://soundcloud.com/someTrack')
 
         # Assert
         expected_parts = {
@@ -159,7 +158,7 @@ class TestSoundcloudUtils(unittest.TestCase):
         mock_fetch_track.return_value = mock_track
 
         # Act
-        result = getSoundcloudParts(setupBasicEmbed())
+        result = getSoundcloudParts('https://soundcloud.com/someTrack')
 
         # Assert
         expected_parts = {
@@ -184,7 +183,7 @@ class TestSoundcloudUtils(unittest.TestCase):
         mock_fetch_track.return_value = mock_track
 
         # Act
-        result = getSoundcloudParts(setupBasicEmbed())
+        result = getSoundcloudParts('https://soundcloud.com/someTrack')
 
         # Assert
         expected_parts = {
@@ -212,7 +211,7 @@ class TestSoundcloudUtils(unittest.TestCase):
         mock_fetch_track.return_value = mock_track
 
         # Act
-        result = getSoundcloudParts(setupBasicEmbed())
+        result = getSoundcloudParts('https://soundcloud.com/someTrack')
 
         # Assert
 
@@ -231,7 +230,7 @@ class TestSoundcloudUtils(unittest.TestCase):
         mock_fetch_track.return_value = mock_track
 
         # Act
-        result = getSoundcloudParts(setupBasicEmbed())
+        result = getSoundcloudParts('https://soundcloud.com/someTrack')
 
         # Assert
         expected_title = f'Mock Artist - Mock Track Title ({customArtist} Remix)'
@@ -247,7 +246,7 @@ class TestSoundcloudUtils(unittest.TestCase):
         mock_fetch_track.return_value = mock_track
 
         # Act
-        result = getSoundcloudParts(setupBasicEmbed())
+        result = getSoundcloudParts('https://soundcloud.com/someTrack')
 
         # Assert
         expected_title = 'Mock Track Title (Mock Artist Remix)'
@@ -267,7 +266,7 @@ class TestSoundcloudUtils(unittest.TestCase):
         mock_fetch_track.return_value = mock_track
 
         # Act
-        result = getSoundcloudParts(setupBasicEmbed())
+        result = getSoundcloudParts('https://soundcloud.com/someTrack')
 
         # Assert
         expected_title = 'Mock Artist - Mock Track Title'
@@ -287,7 +286,7 @@ class TestSoundcloudUtils(unittest.TestCase):
         mock_fetch_track.return_value = mock_track
 
         # Act
-        result = getSoundcloudParts(setupBasicEmbed())
+        result = getSoundcloudParts('https://soundcloud.com/someTrack')
 
         # Assert
         expected_title = 'Featured Artist - Mock Track Title'
@@ -303,7 +302,7 @@ class TestSoundcloudUtils(unittest.TestCase):
         mock_fetch_track.return_value = mock_track
 
         # Act
-        result = getSoundcloudParts(setupBasicEmbed())
+        result = getSoundcloudParts('https://soundcloud.com/someTrack')
 
         # Assert
         expected_title = 'dis-joint - Mock Track Title'
