@@ -118,7 +118,8 @@ class TestYoutubeUtils(unittest.TestCase):
         self.assertIsNone(result)
 
     @patch('youtube_utils.youtube_api')
-    def test_fetchVideoDescription_api_exception(self, mock_youtube_api):
+    @patch('builtins.print')  # Suppress print statements during test
+    def test_fetchVideoDescription_api_exception(self, mock_print, mock_youtube_api):
         # Arrange
         mock_request = mock_youtube_api.videos.return_value.list.return_value
         mock_request.execute.side_effect = Exception("API Error")
@@ -128,11 +129,14 @@ class TestYoutubeUtils(unittest.TestCase):
         
         # Assert
         self.assertIsNone(result)
+        mock_print.assert_called_with("Error fetching video description: API Error")
 
     @patch('youtube_utils.youtube_api', None)
-    def test_fetchVideoDescription_no_api_key_configured(self):
+    @patch('builtins.print')  # Suppress print statements during test
+    def test_fetchVideoDescription_no_api_key_configured(self, mock_print):
         # Act
         result = fetchVideoDescription('test_video_id')
         
         # Assert
         self.assertIsNone(result)
+        mock_print.assert_called_with("YouTube API key not configured")
