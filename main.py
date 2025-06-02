@@ -145,7 +145,10 @@ async def fetchWebhook(message):
     return webhook
 
 
-async def fetchEmbed(message, isInteraction=False, isDM=False, isContext=False):
+async def fetchEmbed(message,
+                     isInteraction=False,
+                     isDM=False,
+                     isContext=False):
     webhook = None
     referencedUser = None
     embeds = []
@@ -157,7 +160,7 @@ async def fetchEmbed(message, isInteraction=False, isDM=False, isContext=False):
 
     allMusicUrls = find_and_categorize_links(message.content, isContext)
 
-    if isInteraction and len(allMusicUrls) == 0:
+    if isContext and len(allMusicUrls) == 0:
         raise Exception(
             "This message doesn't seem to contain a supported URL.\nCurrently only "
             "Bandcamp, SoundCloud, Spotify and YouTube links are supported.")
@@ -362,7 +365,9 @@ async def fetch_embed_message(interaction: discord.Interaction,
                 message, False,
                 isinstance(interaction.channel, discord.DMChannel), True)
         else:
-            trackEmbed = await fetchEmbed(message, isInteraction=True, isContext=True)
+            trackEmbed = await fetchEmbed(message,
+                                          isInteraction=True,
+                                          isContext=True)
             if trackEmbed:
                 await interaction.followup.send(
                     content=interaction.user.mention, embed=trackEmbed)
