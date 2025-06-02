@@ -56,8 +56,10 @@ def find_and_categorize_links(message_content: str,
     # Filter out links enclosed in <> and content in backticks when isInteraction is False
     filtered_content = message_content
     # Remove content enclosed in backticks (both single and triple backticks)
-    filtered_content = re.sub(r'```[\s\S]*?```', '', filtered_content)  # Triple backticks
-    filtered_content = re.sub(r'`[^`]*`', '', filtered_content)  # Single backticks
+    filtered_content = re.sub(r'```[\s\S]*?```', '',
+                              filtered_content)  # Triple backticks
+    filtered_content = re.sub(r'`[^`]*`', '',
+                              filtered_content)  # Single backticks
     if not isContextMenu:
         # Remove links that are enclosed in angle brackets
         filtered_content = re.sub(r'<https?://[^\s>]+>', '', filtered_content)

@@ -255,6 +255,18 @@ async def fetchEmbed(message,
         await message.reply(referencedUser.mention, mention_author=False)
 
 
+async def deleteOriginalInteractionMessage(interaction: discord.Interaction):
+    # Delete the interaction response first
+    try:
+        await interaction.delete_original_response()
+    except discord.NotFound:
+        # Response was already deleted
+        pass
+    except discord.Forbidden:
+        # Bot doesn't have permission to delete
+        pass
+
+
 def getDescriptionParts(link: CategorizedLink):
     linkType = link[1]
     linkUrl = link[0]
@@ -372,6 +384,7 @@ async def fetch_embed_message(interaction: discord.Interaction,
                 await interaction.followup.send(
                     content=interaction.user.mention, embed=trackEmbed)
     except Exception as e:
+        await deleteOriginalInteractionMessage(interaction)
         await interaction.followup.send(content=str(e), ephemeral=True)
 
 
