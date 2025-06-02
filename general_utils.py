@@ -39,7 +39,8 @@ def remove_trailing_slash(url: str):
     return re.sub(r'/$', '', url)
 
 
-def find_and_categorize_links(message_content: str) -> List[CategorizedLink]:
+def find_and_categorize_links(message_content: str,
+                              isInteraction=False) -> List[CategorizedLink]:
     # Define patterns for each platform including additional domains
     soundcloud_pattern = re.compile(
         r'https?://(?:www\.|on\.)?soundcloud\.com/[^\s]+')
@@ -52,9 +53,15 @@ def find_and_categorize_links(message_content: str) -> List[CategorizedLink]:
     # Initialize a list to store URLs with their platform types
     categorized_links = []
 
-    # Find all URLs in the message
-    urls = re.findall(r'https?://[^\s]+', message_content)
-    cleaned_links = (link.rstrip('.")') for link in urls)
+    # Filter out links enclosed in <> when isInteraction is False
+    filtered_content = message_content
+    if not isInteraction:
+        # Remove links that are enclosed in angle brackets
+        filtered_content = re.sub(r'<https?://[^\s>]+>', '', message_content)
+
+    # Find all URLs in the filtered message
+    urls = re.findall(r'https?://[^\s]+', filtered_content)
+    cleaned_links = (link.rstrip('.">)') for link in urls)
 
     # Determine the platform for each URL and maintain order
     for url in cleaned_links:
@@ -113,7 +120,7 @@ def get_tag_content(soup,
                     attrs=None,
                     property=None,
                     asString=False,
-                   valueToGrab='content') -> str | None:
+                    valueToGrab='content') -> str | None:
     tag = get_tag(soup, id, tag_name, attrs, property)
     if tag:
         return tag.string if asString else str(tag.get(valueToGrab))

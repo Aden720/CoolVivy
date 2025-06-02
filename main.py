@@ -155,7 +155,7 @@ async def fetchEmbed(message, isInteraction=False, isDM=False):
         referencedUser = await getReferencedUser(message)
     canUseWebhook = webhook is not None
 
-    allMusicUrls = find_and_categorize_links(message.content)
+    allMusicUrls = find_and_categorize_links(message.content, isInteraction)
 
     if isInteraction and len(allMusicUrls) == 0:
         raise Exception(

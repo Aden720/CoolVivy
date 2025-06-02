@@ -95,11 +95,66 @@ class TestGeneralUtils(unittest.TestCase):
             and track https://artist.bandcamp.com/track/sample-track")
             """)
 
-        categorized_links = find_and_categorize_links(message_content)
+        categorized_links = find_and_categorize_links(message_content, True)
         self.assertEqual(
             categorized_links,
             [('https://on.soundcloud.com/someTrack', link_types.soundcloud),
-             ('https://music.youtube.com/watch?v=dQw4w9WgXcQ', link_types.youtube),
+             ('https://music.youtube.com/watch?v=dQw4w9WgXcQ',
+              link_types.youtube),
              ('https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj',
               link_types.spotify),
-             ('https://artist.bandcamp.com/track/sample-track', link_types.bandcamp)])
+             ('https://artist.bandcamp.com/track/sample-track',
+              link_types.bandcamp)])
+
+    def test_find_and_categorize_links_ignore_angle_brackets_when_not_interaction(
+            self):
+        message_content = ("""
+            Check out this new release on SoundCloud https://on.soundcloud.com/someTrack
+            and this music video <https://music.youtube.com/watch?v=dQw4w9WgXcQ>.
+            Also, listen to this album https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj
+            and track <https://artist.bandcamp.com/track/sample-track>
+            """)
+
+        # When isInteraction is False, links in <> should be ignored
+        categorized_links = find_and_categorize_links(message_content, False)
+        self.assertEqual(
+            categorized_links,
+            [('https://on.soundcloud.com/someTrack', link_types.soundcloud),
+             ('https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj',
+              link_types.spotify)])
+
+    def test_find_and_categorize_links_include_angle_brackets_when_interaction(
+            self):
+        message_content = ("""
+            Check out this new release on SoundCloud https://on.soundcloud.com/someTrack
+            and this music video <https://music.youtube.com/watch?v=dQw4w9WgXcQ>.
+            Also, listen to this album https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj
+            and track <https://artist.bandcamp.com/track/sample-track>
+            """)
+
+        # When isInteraction is True, all links should be included
+        categorized_links = find_and_categorize_links(message_content, True)
+        self.assertEqual(
+            categorized_links,
+            [('https://on.soundcloud.com/someTrack', link_types.soundcloud),
+             ('https://music.youtube.com/watch?v=dQw4w9WgXcQ',
+              link_types.youtube),
+             ('https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj',
+              link_types.spotify),
+             ('https://artist.bandcamp.com/track/sample-track',
+              link_types.bandcamp)])
+
+    def test_find_and_categorize_links_mixed_angle_brackets(self):
+        message_content = ("""
+            Regular link: https://soundcloud.com/artist/track
+            Link in brackets: <https://youtube.com/watch?v=test>
+            Another regular: https://spotify.com/track/123
+            Another in brackets: <https://bandcamp.com/album/test>
+            """)
+
+        # When isInteraction is False, only regular links should be found
+        categorized_links = find_and_categorize_links(message_content, False)
+        self.assertEqual(
+            categorized_links,
+            [('https://soundcloud.com/artist/track', link_types.soundcloud),
+             ('https://spotify.com/track/123', link_types.spotify)])
