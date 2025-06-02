@@ -106,7 +106,7 @@ class TestGeneralUtils(unittest.TestCase):
              ('https://artist.bandcamp.com/track/sample-track',
               link_types.bandcamp)])
 
-    def test_find_and_categorize_links_ignore_angle_brackets_when_not_interaction(
+    def test_find_and_categorize_links_ignore_angle_brackets_when_not_context_menu(
             self):
         message_content = ("""
             Check out this new release on SoundCloud https://on.soundcloud.com/someTrack
@@ -115,7 +115,7 @@ class TestGeneralUtils(unittest.TestCase):
             and track <https://artist.bandcamp.com/track/sample-track>
             """)
 
-        # When isInteraction is False, links in <> should be ignored
+        # When isContextMenu is False, links in <> should be ignored
         categorized_links = find_and_categorize_links(message_content, False)
         self.assertEqual(
             categorized_links,
@@ -123,7 +123,7 @@ class TestGeneralUtils(unittest.TestCase):
              ('https://open.spotify.com/album/37hp4WQU5PP4z5YclBFLdj',
               link_types.spotify)])
 
-    def test_find_and_categorize_links_include_angle_brackets_when_interaction(
+    def test_find_and_categorize_links_include_angle_brackets_when_is_context_menu(
             self):
         message_content = ("""
             Check out this new release on SoundCloud https://on.soundcloud.com/someTrack
@@ -132,7 +132,7 @@ class TestGeneralUtils(unittest.TestCase):
             and track <https://artist.bandcamp.com/track/sample-track>
             """)
 
-        # When isInteraction is True, all links should be included
+        # When isContextMenu is True, all links should be included
         categorized_links = find_and_categorize_links(message_content, True)
         self.assertEqual(
             categorized_links,
@@ -152,9 +152,68 @@ class TestGeneralUtils(unittest.TestCase):
             Another in brackets: <https://bandcamp.com/album/test>
             """)
 
-        # When isInteraction is False, only regular links should be found
+        # When isContextMenu is False, only regular links should be found
         categorized_links = find_and_categorize_links(message_content, False)
         self.assertEqual(
             categorized_links,
             [('https://soundcloud.com/artist/track', link_types.soundcloud),
              ('https://spotify.com/track/123', link_types.spotify)])
+
+    def test_find_and_categorize_links_ignore_backticks_when_not_context_menu(
+            self):
+        message_content = ("""
+            Check out this track: https://soundcloud.com/artist/regular-track
+            Here's some code: `https://youtube.com/watch?v=code-example`
+            And this album: https://spotify.com/album/regular-album
+            ```
+            Some code block with link:
+            https://bandcamp.com/album/in-code-block
+            ```
+            """)
+
+        # When isContextMenu is False, links in backticks should be ignored
+        categorized_links = find_and_categorize_links(message_content, False)
+        self.assertEqual(
+            categorized_links,
+            [('https://soundcloud.com/artist/regular-track',
+              link_types.soundcloud),
+             ('https://spotify.com/album/regular-album', link_types.spotify)])
+
+    def test_find_and_categorize_links_include_backticks_when_is_context_menu(
+            self):
+        message_content = ("""
+            Check out this track: https://soundcloud.com/artist/regular-track
+            Here's some code: `https://youtube.com/watch?v=code-example`
+            And this album: https://spotify.com/album/regular-album
+            ```
+            Some code block with link:
+            https://bandcamp.com/album/in-code-block
+            ```
+            """)
+
+        # When isContextMenu is True, all links should be included
+        categorized_links = find_and_categorize_links(message_content, True)
+        self.assertEqual(
+            categorized_links,
+            [('https://soundcloud.com/artist/regular-track',
+              link_types.soundcloud),
+             ('https://spotify.com/album/regular-album', link_types.spotify)])
+
+    def test_find_and_categorize_links_mixed_filtering(self):
+        message_content = ("""
+            Regular: https://soundcloud.com/regular
+            In angle brackets: <https://youtube.com/in-brackets>
+            In backticks: `https://spotify.com/in-backticks`
+            In code block:
+            ```
+            https://bandcamp.com/in-code-block
+            ```
+            Another regular: https://soundcloud.com/another-regular
+            """)
+
+        # When isContextMenu is False, only regular links should be found
+        categorized_links = find_and_categorize_links(message_content, False)
+        self.assertEqual(categorized_links, [
+            ('https://soundcloud.com/regular', link_types.soundcloud),
+            ('https://soundcloud.com/another-regular', link_types.soundcloud)
+        ])

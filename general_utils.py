@@ -40,7 +40,7 @@ def remove_trailing_slash(url: str):
 
 
 def find_and_categorize_links(message_content: str,
-                              isInteraction=False) -> List[CategorizedLink]:
+                              isContextMenu=False) -> List[CategorizedLink]:
     # Define patterns for each platform including additional domains
     soundcloud_pattern = re.compile(
         r'https?://(?:www\.|on\.)?soundcloud\.com/[^\s]+')
@@ -53,11 +53,14 @@ def find_and_categorize_links(message_content: str,
     # Initialize a list to store URLs with their platform types
     categorized_links = []
 
-    # Filter out links enclosed in <> when isInteraction is False
+    # Filter out links enclosed in <> and content in backticks when isInteraction is False
     filtered_content = message_content
-    if not isInteraction:
+    # Remove content enclosed in backticks (both single and triple backticks)
+    filtered_content = re.sub(r'```[\s\S]*?```', '', filtered_content)  # Triple backticks
+    filtered_content = re.sub(r'`[^`]*`', '', filtered_content)  # Single backticks
+    if not isContextMenu:
         # Remove links that are enclosed in angle brackets
-        filtered_content = re.sub(r'<https?://[^\s>]+>', '', message_content)
+        filtered_content = re.sub(r'<https?://[^\s>]+>', '', filtered_content)
 
     # Find all URLs in the filtered message
     urls = re.findall(r'https?://[^\s]+', filtered_content)

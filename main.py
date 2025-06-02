@@ -145,7 +145,7 @@ async def fetchWebhook(message):
     return webhook
 
 
-async def fetchEmbed(message, isInteraction=False, isDM=False):
+async def fetchEmbed(message, isInteraction=False, isDM=False, isContext=False):
     webhook = None
     referencedUser = None
     embeds = []
@@ -360,9 +360,9 @@ async def fetch_embed_message(interaction: discord.Interaction,
         if message.author.id == interaction.user.id:
             await fetchEmbed(
                 message, False,
-                isinstance(interaction.channel, discord.DMChannel))
+                isinstance(interaction.channel, discord.DMChannel), True)
         else:
-            trackEmbed = await fetchEmbed(message, True)
+            trackEmbed = await fetchEmbed(message, isInteraction=True, isContext=True)
             if trackEmbed:
                 await interaction.followup.send(
                     content=interaction.user.mention, embed=trackEmbed)
