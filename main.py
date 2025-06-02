@@ -384,8 +384,9 @@ async def fetch_embed_message(interaction: discord.Interaction,
                 await interaction.followup.send(
                     content=interaction.user.mention, embed=trackEmbed)
     except Exception as e:
-        await deleteOriginalInteractionMessage(interaction)
         await interaction.followup.send(content=str(e), ephemeral=True)
+    finally:
+        await deleteOriginalInteractionMessage(interaction)
 
 
 @bot.tree.context_menu(name="remove react")
