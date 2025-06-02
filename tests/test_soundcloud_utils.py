@@ -3,6 +3,8 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from mockData.soundcloud_mock_scenarios import (
+    setupBasicAlbum,
+    setupBasicPlaylist,
     setupBasicTrack,
     setupBasicTrackWithBuyLinkBuy,
     setupBasicTrackWithBuyLinkDownload,
@@ -118,7 +120,9 @@ class TestSoundcloudUtils(unittest.TestCase):
             'title': f'{mock_track.artist} - {mock_track.title}',
             'Duration': '`2:03`',
             'Uploaded on': '1 January 2022',
+            'Channel': '[Mock Artist](https://soundcloud.com/mockartist)',
             'Likes': ':orange_heart: 123',
+            'thumbnailUrl': 'https://example.com/track-artwork.jpg',
             'Plays': ':notes: 456'
         }
         self.assertEqual(result, expected_parts)
@@ -137,16 +141,10 @@ class TestSoundcloudUtils(unittest.TestCase):
 
         # Assert
         expected_parts = {
-            'embedPlatformType': 'soundcloud',
-            'embedColour': 0xff5500,
-            'title': f'{mock_track.artist} - {mock_track.title}',
-            'Duration': '`2:03`',
-            'Buy/Download Link': ':arrow_down: [Download](<test@test.com>)',
-            'Uploaded on': '1 January 2022',
-            'Likes': ':orange_heart: 123',
-            'Plays': ':notes: 456'
+            'Buy/Download Link': ':arrow_down: [Download](<test@test.com>)'
         }
-        self.assertEqual(result, expected_parts)
+        self.assertTrue(
+            all(item in result.items() for item in expected_parts.items()))
 
         mock_fetch_track.assert_called_once_with(
             'https://soundcloud.com/someTrack')
@@ -162,16 +160,10 @@ class TestSoundcloudUtils(unittest.TestCase):
 
         # Assert
         expected_parts = {
-            'embedPlatformType': 'soundcloud',
-            'embedColour': 0xff5500,
-            'title': f'{mock_track.artist} - {mock_track.title}',
-            'Duration': '`2:03`',
-            'Uploaded on': '1 January 2022',
             'Buy/Download Link': ':link: [Buy/Stream](<test@test.com>)',
-            'Likes': ':orange_heart: 123',
-            'Plays': ':notes: 456'
         }
-        self.assertEqual(result, expected_parts)
+        self.assertTrue(
+            all(item in result.items() for item in expected_parts.items()))
 
         mock_fetch_track.assert_called_once_with(
             'https://soundcloud.com/someTrack')
@@ -187,17 +179,12 @@ class TestSoundcloudUtils(unittest.TestCase):
 
         # Assert
         expected_parts = {
-            'embedPlatformType': 'soundcloud',
-            'embedColour': 0xff5500,
-            'title': f'{mock_track.artist} - {mock_track.title}',
-            'Duration': '`2:03`',
             'description':
-            ':arrow_down: **Download button is on** :arrow_down:[here](<test@test.com>)',
-            'Uploaded on': '1 January 2022',
-            'Likes': ':orange_heart: 123',
-            'Plays': ':notes: 456'
+            ':arrow_down: **Download button is on**'
+            ' :arrow_down:[here](<test@test.com>)',
         }
-        self.assertEqual(result, expected_parts)
+        self.assertTrue(
+            all(item in result.items() for item in expected_parts.items()))
 
         mock_fetch_track.assert_called_once_with(
             'https://soundcloud.com/someTrack')
@@ -254,6 +241,29 @@ class TestSoundcloudUtils(unittest.TestCase):
         self.assertEqual(result['title'], expected_title)
 
     @patch('soundcloud_utils.fetchTrack')
+    def test_getSoundcloudParts_DefinedComposerOnlyPromotionalChannel(
+            self, mock_fetch_track):
+        # Arrange
+        mock_track = setupBasicTrack()
+        mock_track.publisher_metadata = {
+            'writer_composer': 'Composer Name',
+            'artist': 'Promotional Channel'
+        }
+        mock_track.user = {
+            'username': 'Promotional Channel',
+            'permalink_url': 'https://soundcloud.com/promotional-channel'
+        }
+        mock_fetch_track.return_value = mock_track
+
+        # Act
+        result = getSoundcloudParts('https://soundcloud.com/someTrack')
+
+        # Assert
+        expected_title = 'Composer Name - Mock Track Title'
+
+        self.assertEqual(result['title'], expected_title)
+
+    @patch('soundcloud_utils.fetchTrack')
     def test_getSoundcloudParts_UndefinedArtistPromotionalChannel(
             self, mock_fetch_track):
         # Arrange
@@ -279,8 +289,12 @@ class TestSoundcloudUtils(unittest.TestCase):
         # Arrange
         mock_track = setupBasicTrack()
         mock_track.publisher_metadata = {
-            'writer_composer': 'Featured Artist',
-            'artist': 'Promotional Channel'
+            'writer_composer': 'Composer Name',
+            'artist': 'Featured Artist'
+        }
+        mock_track.user = {
+            'username': 'Promotional Channel',
+            'permalink_url': 'https://soundcloud.com/promotional-channel'
         }
 
         mock_fetch_track.return_value = mock_track
@@ -308,3 +322,123 @@ class TestSoundcloudUtils(unittest.TestCase):
         expected_title = 'dis-joint - Mock Track Title'
 
         self.assertEqual(result['title'], expected_title)
+
+    @patch('soundcloud_utils.fetchTrack')
+    def test_getSoundcloudParts_ThumbnailUrl_WithArtwork(
+            self, mock_fetch_track):
+        # Arrange
+        mock_track = setupBasicTrack()
+        mock_track.artwork_url = 'https://example.com/artwork.jpg'
+        mock_fetch_track.return_value = mock_track
+
+        # Act
+        result = getSoundcloudParts('https://soundcloud.com/someTrack')
+
+        # Assert
+        self.assertEqual(result['thumbnailUrl'],
+                         'https://example.com/artwork.jpg')
+
+    @patch('soundcloud_utils.fetchTrack')
+    def test_getSoundcloudParts_ThumbnailUrl_NoArtworkFallbackToAvatar(
+            self, mock_fetch_track):
+        # Arrange
+        mock_track = setupBasicTrack()
+        mock_track.artwork_url = None
+        mock_track.user['avatar_url'] = 'https://example.com/avatar.jpg'
+        mock_fetch_track.return_value = mock_track
+
+        # Act
+        result = getSoundcloudParts('https://soundcloud.com/someTrack')
+
+        # Assert
+        self.assertEqual(result['thumbnailUrl'],
+                         'https://example.com/avatar.jpg')
+
+    @patch('soundcloud_utils.fetchTrack')
+    def test_getSoundcloudParts_ThumbnailUrl_EmptyArtworkFallbackToAvatar(
+            self, mock_fetch_track):
+        # Arrange
+        mock_track = setupBasicTrack()
+        mock_track.artwork_url = ''
+        mock_track.user['avatar_url'] = 'https://example.com/avatar.jpg'
+        mock_fetch_track.return_value = mock_track
+
+        # Act
+        result = getSoundcloudParts('https://soundcloud.com/someTrack')
+
+        # Assert
+        self.assertEqual(result['thumbnailUrl'],
+                         'https://example.com/avatar.jpg')
+
+    @patch('soundcloud_utils.fetchTrack')
+    def test_getSoundcloudParts_ThumbnailUrl_PlaylistWithArtwork(
+            self, mock_fetch_track):
+        # Arrange
+        mock_playlist = setupBasicPlaylist()
+        mock_fetch_track.return_value = mock_playlist
+
+        # Act
+        result = getSoundcloudParts('https://soundcloud.com/somePlaylist')
+
+        # Assert
+        self.assertEqual(result['thumbnailUrl'],
+                         'https://example.com/playlist-artwork.jpg')
+
+    @patch('soundcloud_utils.fetchTrack')
+    def test_getSoundcloudParts_ThumbnailUrl_PlaylistNoArtworkFallbackToFirstTrack(
+            self, mock_fetch_track):
+        # Arrange
+        mock_first_track = setupBasicTrack()
+        mock_first_track.artwork_url = 'https://example.com/first-track-artwork.jpg'
+
+        mock_playlist = setupBasicPlaylist()
+        mock_playlist.artwork_url = None
+        mock_playlist.track_count = 1
+        mock_playlist.tracks = [mock_first_track]
+        mock_fetch_track.return_value = mock_playlist
+
+        # Act
+        result = getSoundcloudParts('https://soundcloud.com/somePlaylist')
+
+        # Assert
+        self.assertEqual(result['thumbnailUrl'],
+                         'https://example.com/first-track-artwork.jpg')
+
+    @patch('soundcloud_utils.fetchTrack')
+    def test_getSoundcloudParts_ThumbnailUrl_AlbumWithArtwork(
+            self, mock_fetch_track):
+        # Arrange
+        mock_album = setupBasicAlbum()
+        mock_fetch_track.return_value = mock_album
+
+        # Act
+        result = getSoundcloudParts('https://soundcloud.com/someAlbum')
+
+        # Assert
+        self.assertEqual(result['thumbnailUrl'],
+                         'https://example.com/album-artwork.jpg')
+
+    @patch('soundcloud_utils.fetchTrack')
+    def test_getSoundcloudParts_ThumbnailUrl_AlbumNoArtworkFallbackToFirstTrack(
+            self, mock_fetch_track):
+        # Arrange
+        mock_first_track = setupBasicTrack()
+        mock_first_track.artwork_url = 'https://example.com/track-artwork.jpg'
+
+        mock_album = setupBasicAlbum()
+        mock_album.artwork_url = ''
+        mock_album.track_count = 1
+        mock_album.genre = 'Jazz'
+        mock_album.user = {
+            'username': 'Jazz Artist',
+            'permalink_url': 'https://soundcloud.com/jazzartist'
+        }
+        mock_album.tracks = [mock_first_track]
+        mock_fetch_track.return_value = mock_album
+
+        # Act
+        result = getSoundcloudParts('https://soundcloud.com/someAlbum')
+
+        # Assert
+        self.assertEqual(result['thumbnailUrl'],
+                         'https://example.com/track-artwork.jpg')

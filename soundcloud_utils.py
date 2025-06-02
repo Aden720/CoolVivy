@@ -137,10 +137,11 @@ def getSoundcloudParts(url: str):
                 'description'] = f'Playlist ({track.track_count} tracks)'
 
         #Artwork
-        if track.artwork_url or len(track.tracks) > 0:
-            soundcloudParts['thumbnailUrl'] = (track.artwork_url
-                                               if track.artwork_url else
-                                               track.tracks[0].artwork_url)
+        if track.artwork_url or track.track_count > 0:
+            soundcloudParts['thumbnailUrl'] = (
+                track.artwork_url if track.artwork_url else
+                track.tracks[0].artwork_url if track.tracks[0].artwork_url else
+                track.tracks[0].user['avatar_url'])
 
         #Genre
         if track.genre:
