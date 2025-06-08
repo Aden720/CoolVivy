@@ -4,7 +4,6 @@ import requests
 from sclib import Playlist, SoundcloudAPI, Track
 
 from general_utils import (
-    cleanLinks,
     formatMillisecondsToDurationString,
     formatTimeToDisplay,
     remove_trailing_slash,

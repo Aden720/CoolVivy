@@ -2,10 +2,11 @@ import json
 import os
 import re
 from datetime import datetime, timezone
+from time import strftime
 
 import requests
 from babel.numbers import format_currency
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 from dotmap import DotMap
 
 from general_utils import (
@@ -41,6 +42,9 @@ class Track:
             'name': pageData['byArtist']['name'],
             'url': pageData['byArtist'].get('@id')
         }
+        self.release_date = datetime.strptime(
+            pageData['datePublished'],
+            '%d %b %Y %H:%M:%S GMT').replace(tzinfo=timezone.utc)
 
         albumArtist = pageData['inAlbum'].get('byArtist')
         if albumArtist and 'name' in albumArtist and albumArtist.get('name'):
@@ -82,7 +86,8 @@ class Track:
             self.price = trackData['price']
             self.currency = trackData['currency']
             self.duration = trackData['tracks'][0]['duration']
-            self.release_date = trackData['release_date']
+            self.release_date = datetime.fromtimestamp(
+                trackData['release_date'], tz=timezone.utc)
             if trackData.get('tags') and len(trackData.get('tags')) > 0:
                 self.tags = (tag['name'] for tag in trackData['tags'])
 
@@ -103,11 +108,13 @@ class Track:
             parts['Price'] = f':arrow_down: [Free Download]({self.trackUrl})'
 
         if self.release_date:
-            release_date = datetime.fromtimestamp(self.release_date,
-                                                  tz=timezone.utc)
-            parts['Released on'] = formatTimeToDisplay(
-                release_date.strftime('%Y-%m-%dT%H:%M:%S'),
+            displayTime = formatTimeToDisplay(
+                self.release_date.strftime('%Y-%m-%dT%H:%M:%S'),
                 '%Y-%m-%dT%H:%M:%S')
+            if self.release_date > datetime.now(timezone.utc):
+                parts['Releases on'] = displayTime
+            else:
+                parts['Released on'] = displayTime
         if self.artist:
             parts['Artist'] = (f'[{self.artist["name"]}]({self.artist["url"]})'
                                if self.artist.get('url') else
@@ -139,8 +146,9 @@ class Album:
         self.num_tracks = pageData['numTracks']
         self.tracks = pageData['track']['itemListElement']
         self.tracksData = albumData['tracks']
-        self.release_date = formatTimeToDisplay(pageData['datePublished'],
-                                                '%d %b %Y %H:%M:%S GMT')
+        self.release_date = datetime.strptime(
+            pageData['datePublished'],
+            '%d %b %Y %H:%M:%S GMT').replace(tzinfo=timezone.utc)
         if pageData.get('keywords') and len(pageData.get('keywords')) > 3:
             self.tags = pageData['keywords'][1:-1]
 
@@ -153,6 +161,11 @@ class Album:
             'url': pageData['publisher'].get('@id')
         }
 
+        self.is_purchasable = None
+        self.price = None
+        self.currency = None
+        self.free_download = None
+
         #extra data from API
         if albumData:
             self.is_purchasable = albumData['is_purchasable']
@@ -161,11 +174,8 @@ class Album:
             self.currency = albumData['currency']
             if albumData.get('tags') and len(albumData.get('tags')) > 0:
                 self.tags = (tag['name'] for tag in albumData['tags'])
-            release_date = datetime.fromtimestamp(albumData['release_date'],
-                                                  tz=timezone.utc)
-            self.release_date = formatTimeToDisplay(
-                release_date.strftime('%Y-%m-%dT%H:%M:%S'),
-                '%Y-%m-%dT%H:%M:%S')
+            self.release_date = datetime.fromtimestamp(
+                albumData['release_date'], tz=timezone.utc)
 
     def mapToParts(self):
         parts = {}
@@ -207,14 +217,20 @@ class Album:
                 artists.add(trackData['band_name'])
 
         parts['Duration'] = formatMillisecondsToDurationString(totalDuration)
-        if self.is_purchasable:
+        if self.is_purchasable and self.price and self.currency:
             parts['Price'] = (
                 f'`{format_currency(self.price, self.currency, locale="en_US")}`'
                 if self.price > 0 else f'[Free]({self.albumUrl})')
         elif self.free_download:
             parts['Price'] = f':arrow_down: [Free Download]({self.albumUrl})'
         if self.release_date:
-            parts['Released on'] = self.release_date
+            displayTime = formatTimeToDisplay(
+                self.release_date.strftime('%Y-%m-%dT%H:%M:%S'),
+                '%Y-%m-%dT%H:%M:%S')
+            if self.release_date > datetime.now(timezone.utc):
+                parts['Releases on'] = displayTime
+            else:
+                parts['Released on'] = displayTime
         if len(artists) > 1 or self.artist['name'] == 'Various Artists':
             parts['title'] = self.title
             parts['Artist'] = 'Various Artists'
@@ -255,8 +271,9 @@ class Discography:
     def mapToParts(self):
         parts = {}
         parts['title'] = self.title
-        parts[
-            'description'] = f'Discography\n\n{self.description if self.description else ""}'
+        parts['description'] = (
+            'Discography\n\n'
+            f'{self.description if self.description else ""}')
         parts['thumbnailUrl'] = self.thumbnail
         if self.location:
             parts['Location'] = self.location
