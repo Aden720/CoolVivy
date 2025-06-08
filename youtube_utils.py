@@ -28,8 +28,7 @@ def fetchTrack(track_url):
                       oauth_credentials=OAuthCredentials(
                           client_id=youtubeClientId,
                           client_secret=youtubeClientSecret))
-    videoId = re.search(r'watch\?v=([^&]*)', track_url) or re.search(
-        'shorts/([^&]*)', track_url)
+    videoId = re.search(r'(?:v=|\/)([0-9A-Za-z_-]{11}).*', track_url)
     if videoId is not None:
         videoId = videoId.group(1)
         track = ytmusic.get_song(videoId)
