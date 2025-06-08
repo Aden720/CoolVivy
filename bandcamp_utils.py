@@ -2,7 +2,6 @@ import json
 import os
 import re
 from datetime import datetime, timezone
-from time import strftime
 
 import requests
 from babel.numbers import format_currency
