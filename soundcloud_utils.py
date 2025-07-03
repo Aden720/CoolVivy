@@ -124,6 +124,7 @@ def getSoundcloudParts(url: str):
                     outputStringLength = len(outputString) + 1
                     if trackSummaryCharLength + outputStringLength <= 1000:
                         trackStrings.append(outputString)
+                        trackSummaryCharLength += outputStringLength
                     else:
                         maxDisplayableTracksReached = True
 
