@@ -211,21 +211,22 @@ def getYouTubeParts(url: str):
                 f'\n...and {totalVideos - len(trackStrings)} more')
 
     #description check
-    description = fetchVideoDescription(track['videoDetails']['videoId'])
-    if description:
-        descriptionMatch = re.search('.+?\n\n(.+?)\n.*Released on: (.*?)\n',
-                                     description, re.S)
-        if descriptionMatch:
-            otherArtists = descriptionMatch.group(1).split(' · ')
-            if len(otherArtists) > 2:
-                otherArtists = otherArtists[2:]
-                youtubeParts['Other Artists'] = ', '.join(otherArtists)
-                #Reorder the fields
-                temp = youtubeParts.pop('Duration')
-                youtubeParts['Duration'] = temp
+    if 'videoDetails' in track:
+        description = fetchVideoDescription(track['videoDetails']['videoId'])
+        if description:
+            descriptionMatch = re.search('.+?\n\n(.+?)\n.*Released on: (.*?)\n',
+                                        description, re.S)
+            if descriptionMatch:
+                otherArtists = descriptionMatch.group(1).split(' · ')
+                if len(otherArtists) > 2:
+                    otherArtists = otherArtists[2:]
+                    youtubeParts['Other Artists'] = ', '.join(otherArtists)
+                    #Reorder the fields
+                    temp = youtubeParts.pop('Duration')
+                    youtubeParts['Duration'] = temp
 
-            youtubeParts['Released on'] = formatTimeToDisplay(
-                descriptionMatch.group(2), '%Y-%m-%d')
+                youtubeParts['Released on'] = formatTimeToDisplay(
+                    descriptionMatch.group(2), '%Y-%m-%d')
 
     if not (youtubeParts.get('Released on') or youtubeParts.get('Released')
             ) and track and type is not types.playlist:
