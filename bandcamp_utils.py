@@ -205,9 +205,9 @@ class Album:
                      if trackData['band_name'].lower() != self.artist['name'].
                      lower() else f'[{trackData["title"]}]') +
                     #map the url from page
-                    f'({track["item"].get("@id")})'
-                    f' `{formatMillisecondsToDurationString(durationMs) 
-                    if durationMs > 0 else "unknown length"}`'
+                    f'({track["item"].get("@id")})' +
+                    (f' `{formatMillisecondsToDurationString(durationMs) 
+                    if durationMs > 0 else "unknown length"}`')
                 )
                 trackStringLength = len(trackString) + 1
                 if trackSummaryCharLength + trackStringLength <= 1000:
