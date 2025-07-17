@@ -188,8 +188,10 @@ class Album:
         totalDuration = 0
         maxDisplayableTracksReached = False
         for track, trackData in zip(self.tracks, self.tracksData):
-            durationMs = trackData['duration'] * 1000
-            totalDuration += durationMs
+            durationMs = 0
+            if trackData['duration'] is not None:
+                durationMs = trackData['duration'] * 1000
+                totalDuration += durationMs
             if checkTrackTitle(trackData['title']):
                 trackNameRegex = r"(.+?)\s[-–]\s(.*)"
                 match = re.match(trackNameRegex, trackData['title'])
@@ -204,7 +206,9 @@ class Album:
                      lower() else f'[{trackData["title"]}]') +
                     #map the url from page
                     f'({track["item"].get("@id")})'
-                    f' `{formatMillisecondsToDurationString(durationMs)}`')
+                    f' `{formatMillisecondsToDurationString(durationMs) 
+                    if durationMs > 0 else "unknown length"}`'
+                )
                 trackStringLength = len(trackString) + 1
                 if trackSummaryCharLength + trackStringLength <= 1000:
                     trackStrings.append(trackString)
