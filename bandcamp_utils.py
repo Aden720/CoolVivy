@@ -206,9 +206,8 @@ class Album:
                      lower() else f'[{trackData["title"]}]') +
                     #map the url from page
                     f'({track["item"].get("@id")})' +
-                    (f' `{formatMillisecondsToDurationString(durationMs) 
-                    if durationMs > 0 else "unknown length"}`')
-                )
+                    (f'`{formatMillisecondsToDurationString(durationMs)}`'
+                     if durationMs > 0 else ""))
                 trackStringLength = len(trackString) + 1
                 if trackSummaryCharLength + trackStringLength <= 1000:
                     trackStrings.append(trackString)
