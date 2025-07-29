@@ -47,7 +47,8 @@ class TestTrackMapping(unittest.TestCase):
             'publisher': {
                 'name': publisher_name,
                 '@id': 'https://publisher.bandcamp.com'
-            }
+            },
+            'datePublished': '29 Jul 2025 00:00:00 GMT'
         }
 
     def test_track_mapping_no_album_artist(self):

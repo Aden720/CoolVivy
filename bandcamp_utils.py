@@ -41,9 +41,11 @@ class Track:
             'name': pageData['byArtist']['name'],
             'url': pageData['byArtist'].get('@id')
         }
-        self.release_date = datetime.strptime(
-            pageData['datePublished'],
-            '%d %b %Y %H:%M:%S GMT').replace(tzinfo=timezone.utc)
+        self.release_date = pageData.get('datePublished', None)
+        if self.release_date:
+            self.release_date = datetime.strptime(
+                self.release_date,
+                '%d %b %Y %H:%M:%S GMT').replace(tzinfo=timezone.utc)
 
         albumArtist = pageData['inAlbum'].get('byArtist')
         if albumArtist and 'name' in albumArtist and albumArtist.get('name'):
