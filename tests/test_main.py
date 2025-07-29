@@ -259,7 +259,9 @@ class TestMainBot(unittest.IsolatedAsyncioTestCase):
 
         # Act & Assert
         with self.assertRaises(Exception) as context:
-            await fetchEmbed(self.mock_message, isInteraction=True)
+            await fetchEmbed(self.mock_message,
+                             isInteraction=True,
+                             isContext=True)
 
         self.assertIn("This message doesn't seem to contain a supported URL",
                       str(context.exception))
