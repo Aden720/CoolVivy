@@ -37,6 +37,7 @@ class Track:
         if pageData.get('keywords') and len(pageData.get('keywords')) > 3:
             self.tags = pageData['keywords'][1:-1]
         self.thumbnail = pageData['image']
+        self.duration = None
         self.artist = {
             'name': pageData['byArtist']['name'],
             'url': pageData['byArtist'].get('@id')
@@ -86,7 +87,8 @@ class Track:
             self.free_download = trackData['free_download']
             self.price = trackData['price']
             self.currency = trackData['currency']
-            self.duration = trackData['tracks'][0]['duration']
+            if trackData.get('tracks') and len(trackData['tracks']) > 0:
+                self.duration = trackData['tracks'][0]['duration']
             self.release_date = datetime.fromtimestamp(
                 trackData['release_date'], tz=timezone.utc)
             if trackData.get('tags') and len(trackData.get('tags')) > 0:
@@ -99,7 +101,8 @@ class Track:
         parts['title'] = (self.title if self.artist['name'].lower()
                           in self.title.lower() else self.artist['name'] +
                           ' - ' + self.title)
-        parts['Duration'] = formatMillisecondsToDurationString(self.duration *
+        if self.duration:
+            parts['Duration'] = formatMillisecondsToDurationString(self.duration *
                                                                1000)
         if self.is_purchasable:
             parts['Price'] = (
