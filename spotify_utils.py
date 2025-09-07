@@ -92,7 +92,7 @@ def getSpotifyParts(url: str):
                         (f'[{trackArtists} - {trackTitle}]' if trackArtists and
                          trackArtists != titleArtists else f'[{trackTitle}]') +
                         f'({track["external_urls"]["spotify"]})' +
-                        f' `{formatMillisecondsToDurationString(track["duration_ms"])}`'
+                        f' {formatMillisecondsToDurationString(track["duration_ms"])}'
                     )
                     trackStringLength = len(trackString) + 1
                     if trackSummaryCharLength + trackStringLength <= 1000:
