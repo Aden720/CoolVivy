@@ -56,8 +56,7 @@ def getSpotifyParts(url: str):
 
             #album
             if album.get('total_tracks') > 1:
-                spotifyParts['Album'] = (f'[{album["name"]}](\
-                {album["external_urls"]["spotify"]})')
+                spotifyParts['Album'] = (f'[{album["name"]}]({album["external_urls"]["spotify"]})')
 
             #title
             title = reformatTitle(title)
