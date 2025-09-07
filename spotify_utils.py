@@ -24,7 +24,7 @@ def getSpotifyParts(url: str):
         sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
             client_id=spotifyClientId, client_secret=spotifyClientSecret))
 
-        if url.startswith('https://open.spotify.com/track'):
+        if '/track/' in url and 'open.spotify.com' in url:
             track = sp.track(url)
             if not track:
                 raise Exception('Spotify track data not found')
@@ -63,7 +63,7 @@ def getSpotifyParts(url: str):
             title = reformatTitle(title)
             spotifyParts['title'] = (f'{titleArtists} - {title}'
                                      if titleArtists else title)
-        elif url.startswith('https://open.spotify.com/album'):
+        elif '/album/' in url and 'open.spotify.com' in url:
             data = sp.album(url)
             if not data:
                 raise Exception('Spotify album data not found')
@@ -143,7 +143,7 @@ def getSpotifyParts(url: str):
                 f'{titleArtists} - {title}' if titleArtists
                 and titleArtists != 'Various Artists' else title)
 
-        elif url.startswith('https://open.spotify.com/playlist'):
+        elif '/playlist/' in url and 'open.spotify.com' in url:
             data = sp.playlist(url)
             if not data:
                 raise Exception('Spotify playlist data not found')
