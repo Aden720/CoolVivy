@@ -25,3 +25,14 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python main.py"
+
+[agent]
+expertMode = true
+
+[[ports]]
+localPort = 3249
+externalPort = 80
+
+[[ports]]
+localPort = 5416
+externalPort = 3000
