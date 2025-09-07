@@ -122,8 +122,7 @@ def getSpotifyParts(url: str):
 
             #Description
             if totalTracks > 1:
-                spotifyParts['description'] = f'{album["total_tracks"]} \
-                track album'
+                spotifyParts['description'] = f'{album["total_tracks"]} track album'
 
             else:
                 spotifyParts['Duration'] = (formatMillisecondsToDurationString(
