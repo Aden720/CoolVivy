@@ -341,6 +341,237 @@ class TestSpotifyUtils(unittest.TestCase):
         for key, value in expected_parts.items():
             self.assertEqual(result[key], value)
 
+    @patch('spotify_utils.spotipy.Spotify')
+    def test_getSpotifyParts_intl_track_basic(self, mock_spotify_class):
+        # Arrange
+        mock_spotify_class.return_value = self.mock_sp
+        
+        mock_track = {
+            'name': 'German Track',
+            'artists': [{'name': 'German Artist', 'external_urls': {'spotify': 'https://open.spotify.com/artist/german123'}}],
+            'album': {
+                'name': 'German Album',
+                'images': [{'url': 'https://example.com/german-art.jpg'}],
+                'release_date': '2023-10-15',
+                'release_date_precision': 'day',
+                'external_urls': {'spotify': 'https://open.spotify.com/album/german456'},
+                'total_tracks': 12
+            },
+            'duration_ms': 195000,
+            'external_urls': {'spotify': 'https://open.spotify.com/track/1QeliItLbS0fvWbJA2dxMX'}
+        }
+        
+        self.mock_sp.track.return_value = mock_track
+
+        # Act
+        result = getSpotifyParts('https://open.spotify.com/intl-de/track/1QeliItLbS0fvWbJA2dxMX')
+
+        # Assert
+        expected_parts = {
+            'embedPlatformType': 'spotify',
+            'embedColour': 0x1db954,
+            'Duration': '`3:15`',
+            'Released': '15 October 2023',
+            'thumbnailUrl': 'https://example.com/german-art.jpg',
+            'Artist': '[German Artist](https://open.spotify.com/artist/german123)',
+            'Album': '[German Album](https://open.spotify.com/album/german456)',
+            'title': 'German Artist - German Track'
+        }
+        
+        for key, value in expected_parts.items():
+            self.assertEqual(result[key], value)
+        
+        self.mock_sp.track.assert_called_once_with('https://open.spotify.com/intl-de/track/1QeliItLbS0fvWbJA2dxMX')
+
+    @patch('spotify_utils.spotipy.Spotify')
+    def test_getSpotifyParts_intl_album_basic(self, mock_spotify_class):
+        # Arrange
+        mock_spotify_class.return_value = self.mock_sp
+        
+        mock_album = {
+            'name': 'International Album',
+            'artists': [{'name': 'International Artist', 'external_urls': {'spotify': 'https://open.spotify.com/artist/intl'}}],
+            'images': [{'url': 'https://example.com/intl-album.jpg'}],
+            'release_date': '2023-08-20',
+            'release_date_precision': 'day',
+            'total_tracks': 4,
+            'label': 'International Records',
+            'tracks': {
+                'items': [
+                    {
+                        'name': 'Intl Track One',
+                        'artists': [{'name': 'International Artist'}],
+                        'duration_ms': 210000,
+                        'track_number': 1,
+                        'external_urls': {'spotify': 'https://open.spotify.com/track/intl1'}
+                    },
+                    {
+                        'name': 'Intl Track Two',
+                        'artists': [{'name': 'International Artist'}],
+                        'duration_ms': 185000,
+                        'track_number': 2,
+                        'external_urls': {'spotify': 'https://open.spotify.com/track/intl2'}
+                    }
+                ]
+            }
+        }
+        
+        self.mock_sp.album.return_value = mock_album
+
+        # Act
+        result = getSpotifyParts('https://open.spotify.com/intl-fr/album/test-intl-album')
+
+        # Assert
+        expected_parts = {
+            'embedPlatformType': 'spotify',
+            'embedColour': 0x1db954,
+            'Duration': '`6:35`',
+            'Artist': '[International Artist](https://open.spotify.com/artist/intl)',
+            'Label': 'International Records',
+            'thumbnailUrl': 'https://example.com/intl-album.jpg',
+            'description': '4 track album',
+            'Released': '20 August 2023',
+            'title': 'International Artist - International Album'
+        }
+        
+        for key, value in expected_parts.items():
+            self.assertEqual(result[key], value)
+        
+        self.assertIn('Tracks', result)
+        self.assertIn('1. [Intl Track One](https://open.spotify.com/track/intl1) `3:30`', result['Tracks'])
+
+    @patch('spotify_utils.spotipy.Spotify')
+    def test_getSpotifyParts_intl_playlist_basic(self, mock_spotify_class):
+        # Arrange
+        mock_spotify_class.return_value = self.mock_sp
+        
+        mock_playlist = {
+            'name': 'International Playlist',
+            'owner': {
+                'display_name': 'International User',
+                'external_urls': {'spotify': 'https://open.spotify.com/user/intluser'}
+            },
+            'followers': {'total': 500},
+            'images': [{'url': 'https://example.com/intl-playlist.jpg'}],
+            'description': 'A playlist with international music',
+            'tracks': {
+                'total': 3,
+                'items': [
+                    {
+                        'track': {
+                            'name': 'International Song 1',
+                            'artists': [{'name': 'Artist One'}],
+                            'duration_ms': 220000,
+                            'external_urls': {'spotify': 'https://open.spotify.com/track/intl-song1'}
+                        }
+                    },
+                    {
+                        'track': {
+                            'name': 'International Song 2',
+                            'artists': [{'name': 'Artist Two'}],
+                            'duration_ms': 195000,
+                            'external_urls': {'spotify': 'https://open.spotify.com/track/intl-song2'}
+                        }
+                    },
+                    {
+                        'track': {
+                            'name': 'International Song 3',
+                            'artists': [{'name': 'Artist Three'}],
+                            'duration_ms': 175000,
+                            'external_urls': {'spotify': 'https://open.spotify.com/track/intl-song3'}
+                        }
+                    }
+                ],
+                'next': None
+            }
+        }
+        
+        self.mock_sp.playlist.return_value = mock_playlist
+        self.mock_sp.next.return_value = None
+
+        # Act
+        result = getSpotifyParts('https://open.spotify.com/intl-es/playlist/test-intl-playlist')
+
+        # Assert
+        expected_parts = {
+            'embedPlatformType': 'spotify',
+            'embedColour': 0x1db954,
+            'title': 'International Playlist',
+            'Duration': '`9:50`',
+            'Created by': '[International User](https://open.spotify.com/user/intluser)',
+            'Saves': '`500`',
+            'thumbnailUrl': 'https://example.com/intl-playlist.jpg',
+            'Description': 'A playlist with international music',
+            'description': 'Playlist (3 songs)'
+        }
+        
+        for key, value in expected_parts.items():
+            self.assertEqual(result[key], value)
+        
+        self.assertIn('Tracks', result)
+        self.assertIn('1. [Artist One - International Song 1]', result['Tracks'])
+        self.assertIn('1. [Artist Two - International Song 2]', result['Tracks'])
+
+    @patch('spotify_utils.spotipy.Spotify')
+    def test_getSpotifyParts_various_intl_codes(self, mock_spotify_class):
+        # Test various international codes work properly
+        mock_spotify_class.return_value = self.mock_sp
+        
+        mock_track = {
+            'name': 'Test Track',
+            'artists': [{'name': 'Test Artist', 'external_urls': {'spotify': 'https://open.spotify.com/artist/test'}}],
+            'album': {
+                'name': 'Test Album',
+                'images': [{'url': 'https://example.com/test.jpg'}],
+                'release_date': '2023-01-01',
+                'release_date_precision': 'day',
+                'external_urls': {'spotify': 'https://open.spotify.com/album/test'},
+                'total_tracks': 1
+            },
+            'duration_ms': 180000
+        }
+        
+        self.mock_sp.track.return_value = mock_track
+
+        # Test different international codes
+        intl_urls = [
+            'https://open.spotify.com/intl-de/track/test',
+            'https://open.spotify.com/intl-fr/track/test',
+            'https://open.spotify.com/intl-es/track/test',
+            'https://open.spotify.com/intl-it/track/test',
+            'https://open.spotify.com/intl-pt/track/test',
+            'https://open.spotify.com/intl-ja/track/test',
+            'https://open.spotify.com/intl-ko/track/test'
+        ]
+
+        for url in intl_urls:
+            with self.subTest(url=url):
+                result = getSpotifyParts(url)
+                
+                # Should successfully process all international URLs
+                self.assertEqual(result['embedPlatformType'], 'spotify')
+                self.assertEqual(result['embedColour'], 0x1db954)
+                self.assertEqual(result['title'], 'Test Artist - Test Track')
+                self.assertEqual(result['Duration'], '`3:00`')
+
+    @patch('spotify_utils.spotipy.Spotify')
+    def test_getSpotifyParts_intl_url_edge_cases(self, mock_spotify_class):
+        # Test edge cases with international URLs
+        mock_spotify_class.return_value = self.mock_sp
+        self.mock_sp.track.side_effect = Exception('API Error')
+
+        # Test that international URLs still handle errors gracefully
+        result = getSpotifyParts('https://open.spotify.com/intl-unknown/track/error-track')
+
+        # Should still return basic structure on error
+        expected_parts = {
+            'embedPlatformType': 'spotify',
+            'embedColour': 0x1db954
+        }
+        
+        for key, value in expected_parts.items():
+            self.assertEqual(result[key], value)
+
 
 if __name__ == '__main__':
     unittest.main()
