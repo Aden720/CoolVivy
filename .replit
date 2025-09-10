@@ -30,6 +30,10 @@ args = "python main.py"
 expertMode = true
 
 [[ports]]
+localPort = 3155
+externalPort = 3001
+
+[[ports]]
 localPort = 3249
 externalPort = 80
 

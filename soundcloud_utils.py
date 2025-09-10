@@ -57,9 +57,9 @@ def getSoundcloudParts(url: str):
             soundcloudParts['Genre'] = f'`{track.genre}`'
 
         #Artwork
-        soundcloudParts['thumbnailUrl'] = formatArtworkUrl(track.artwork_url
-                                           if track.artwork_url else
-                                           track.user['avatar_url'])
+        soundcloudParts['thumbnailUrl'] = formatArtworkUrl(
+            track.artwork_url if track.artwork_url else track.
+            user['avatar_url'])
 
         #Duration
         soundcloudParts['Duration'] = formatMillisecondsToDurationString(
@@ -139,9 +139,9 @@ def getSoundcloudParts(url: str):
         #Artwork
         if track.artwork_url or track.track_count > 0:
             soundcloudParts['thumbnailUrl'] = formatArtworkUrl(
-                track.artwork_url if track.artwork_url else
-                track.tracks[0].artwork_url if track.tracks[0].artwork_url else
-                track.tracks[0].user['avatar_url'])
+                track.artwork_url if track.artwork_url else track.tracks[0].
+                artwork_url if track.tracks[0].artwork_url else track.
+                tracks[0].user['avatar_url'])
 
         #Genre
         if track.genre:
@@ -176,7 +176,7 @@ def checkTrackTitle(track_title):
 
 
 def setTrackTitle(track: Track):
-    trackNameRegex = r"(.+?)\s[-–]\s(.*)"
+    trackNameRegex = r"(.+?)\s[—-–]\s(.*)"
     fullTitle = f'{track.artist}-{track.title}' if track.artist != track.user.get(
         'username') else track.title
     match = re.match(trackNameRegex, fullTitle)
@@ -197,6 +197,7 @@ def getTrackArtist(track: Track):
         elif metaArtist:
             return metaArtist
     return track.artist
+
 
 def formatArtworkUrl(url: str):
     return url.replace('large', 't500x500')
