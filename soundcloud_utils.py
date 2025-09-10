@@ -172,7 +172,7 @@ def getSoundcloudParts(url: str):
 
 
 def checkTrackTitle(track_title):
-    return '-' in track_title or '–' in track_title
+    return '-' in track_title or '–' in track_title or '—' in track_title
 
 
 def setTrackTitle(track: Track):
