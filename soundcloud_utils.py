@@ -188,14 +188,16 @@ def setTrackTitle(track: Track):
 def getTrackArtist(track: Track):
     user = track.user.get('username')
     if track.publisher_metadata:
-        metaComposer = track.publisher_metadata.get('writer_composer')
+        # metaComposer = track.publisher_metadata.get('writer_composer')
         metaArtist = track.publisher_metadata.get('artist')
-        if metaArtist and user and metaArtist != user:
-            return metaArtist
-        elif metaComposer:
-            return metaComposer
-        elif metaArtist:
-            return metaArtist
+        if metaArtist is not None:
+            return metaArtist 
+        # if metaArtist and user and metaArtist != user:
+        #     return metaArtist
+        # elif metaComposer:
+        #     return metaComposer
+        # elif metaArtist:
+        #     return metaArtist
     return track.artist
 
 

@@ -240,28 +240,28 @@ class TestSoundcloudUtils(unittest.TestCase):
 
         self.assertEqual(result['title'], expected_title)
 
-    @patch('soundcloud_utils.fetchTrack')
-    def test_getSoundcloudParts_DefinedComposerOnlyPromotionalChannel(
-            self, mock_fetch_track):
-        # Arrange
-        mock_track = setupBasicTrack()
-        mock_track.publisher_metadata = {
-            'writer_composer': 'Composer Name',
-            'artist': 'Promotional Channel'
-        }
-        mock_track.user = {
-            'username': 'Promotional Channel',
-            'permalink_url': 'https://soundcloud.com/promotional-channel'
-        }
-        mock_fetch_track.return_value = mock_track
+    # @patch('soundcloud_utils.fetchTrack')
+    # def test_getSoundcloudParts_DefinedComposerOnlyPromotionalChannel(
+    #         self, mock_fetch_track):
+    #     # Arrange
+    #     mock_track = setupBasicTrack()
+    #     mock_track.publisher_metadata = {
+    #         'writer_composer': 'Composer Name',
+    #         'artist': 'Promotional Channel'
+    #     }
+    #     mock_track.user = {
+    #         'username': 'Promotional Channel',
+    #         'permalink_url': 'https://soundcloud.com/promotional-channel'
+    #     }
+    #     mock_fetch_track.return_value = mock_track
 
-        # Act
-        result = getSoundcloudParts('https://soundcloud.com/someTrack')
+    #     # Act
+    #     result = getSoundcloudParts('https://soundcloud.com/someTrack')
 
-        # Assert
-        expected_title = 'Composer Name - Mock Track Title'
+    #     # Assert
+    #     expected_title = 'Composer Name - Mock Track Title'
 
-        self.assertEqual(result['title'], expected_title)
+    #     self.assertEqual(result['title'], expected_title)
 
     @patch('soundcloud_utils.fetchTrack')
     def test_getSoundcloudParts_UndefinedArtistPromotionalChannel(

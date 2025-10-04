@@ -1,4 +1,5 @@
 # test_spotify_utils.py
+import logging
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -6,6 +7,11 @@ from spotify_utils import getSpotifyParts
 
 
 class TestSpotifyUtils(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Suppress logging output during tests
+        logging.getLogger('spotify_utils').setLevel(logging.CRITICAL)
 
     def setUp(self):
         self.mock_sp = MagicMock()

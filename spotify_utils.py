@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 from typing import Optional
@@ -11,6 +12,8 @@ from object_types.spotify_types import (
     SpotifyPlaylist,
     SpotifyPlaylistTracks,
 )
+
+logger = logging.getLogger(__name__)
 
 spotifyClientId = os.getenv("SPOTIFY_CLIENT_ID")
 spotifyClientSecret = os.getenv("SPOTIFY_CLIENT_SECRET")
@@ -213,7 +216,7 @@ def getSpotifyParts(url: str):
                     f'\n...and {totalTracks - len(trackStrings)} more')
 
     except Exception as e:
-        print(f"Error occurred while fetching Spotify details: {e}")
+        logger.error(f"Error occurred while fetching Spotify details: {e}")
         #fallback method from embed
 
     return spotifyParts
