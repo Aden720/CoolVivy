@@ -22,15 +22,11 @@ def split_tags(tag_string):
 
 def fetchTrack(track_url):
     api = SoundcloudAPI()
-    if track_url.startswith('https://on.soundcloud.com') or track_url.startswith('https://m.soundcloud.com'):
+    if track_url.startswith('https://on.soundcloud.com'):
         response = requests.get(track_url, allow_redirects=True)
         if response.status_code == 200:
             # For on.soundcloud.com, use redirect location from history
-            if track_url.startswith('https://on.soundcloud.com'):
-                track_url = response.history[0].headers['location']
-            # For m.soundcloud.com, use the final URL after redirects
-            else:
-                track_url = response.url
+            track_url = response.history[0].headers['location']
         else:
             raise Exception('Unable to fetch Soundcloud Mobile URL')
     track = api.resolve(track_url)

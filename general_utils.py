@@ -71,6 +71,10 @@ def find_and_categorize_links(message_content: str,
     # Determine the platform for each URL and maintain order
     for url in cleaned_links:
         if soundcloud_pattern.match(url):
+            if url.startswith('https://m.soundcloud.com'):
+                url = url.replace('m.', '')
+            elif url.startswith('https://www.soundcloud.com'):
+                url = url.replace('www.', '')
             categorized_links.append((url, link_types.soundcloud))
         elif youtube_pattern.match(url):
             categorized_links.append((url, link_types.youtube))
