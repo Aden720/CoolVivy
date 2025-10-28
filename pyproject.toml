@@ -18,7 +18,6 @@ babel = "^2.17.0"
 google-api-python-client = "^2.170.0"
 coverage = "^7.11.0"
 packaging = "^25.0"
-urllib3 = ">=2.0"
 
 [tool.pyright]
 # https://github.com/microsoft/pyright/blob/main/docs/configuration.md
