@@ -59,27 +59,21 @@ class TestSoundcloudUtils(unittest.TestCase):
         else:
             self.fail("This test is intentionally failing.")
 
-    @patch('soundcloud_utils.requests.get')
     @patch('soundcloud_utils.SoundcloudAPI')
-    def test_fetchTrack_mobile_url(self, mock_soundcloud_api,
-                                    mock_requests_get):
-        # Simulate the HTTP response from m.soundcloud.com with redirect
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.url = 'https://soundcloud.com/mosscaofficial/wax-motif-taiki-nulight-w-scrufizzer-skank-n-flex-mossca-flipexclusive'
-        mock_requests_get.return_value = mock_response
-        # Mock the SoundcloudAPI resolve method to return a track
+    def test_fetchTrack_standard_url(self, mock_soundcloud_api):
+        # Mobile URL normalization is now handled in general_utils.py
+        # This test verifies that fetchTrack works with standard URLs
         mock_track = setupBasicTrack()
         mock_soundcloud_api.return_value.resolve.return_value = mock_track
-        # URL to test
-        mock_track_url = 'https://m.soundcloud.com/mosscaofficial/wax-motif-taiki-nulight-w-scrufizzer-skank-n-flex-mossca-flipexclusive'
+        # URL to test - standard format after normalization
+        mock_track_url = 'https://soundcloud.com/mosscaofficial/wax-motif-taiki-nulight-w-scrufizzer-skank-n-flex-mossca-flipexclusive'
         # Call the fetchTrack function
         result = fetchTrack(mock_track_url)
         # Assertions
         if isinstance(result, Track):
             self.assertEqual(result.artist, 'Mock Artist')
             self.assertEqual(result.title, 'Mock Track Title')
-            mock_requests_get.assert_called_once_with(mock_track_url, allow_redirects=True)
+            # Standard URLs go directly to API resolve, no HTTP request needed
             mock_soundcloud_api.return_value.resolve.assert_called_once_with(
                 'https://soundcloud.com/mosscaofficial/wax-motif-taiki-nulight-w-scrufizzer-skank-n-flex-mossca-flipexclusive')
         else:
