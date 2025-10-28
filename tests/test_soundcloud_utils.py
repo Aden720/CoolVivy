@@ -53,7 +53,8 @@ class TestSoundcloudUtils(unittest.TestCase):
         if isinstance(result, Track):
             self.assertEqual(result.artist, 'Mock Artist')
             self.assertEqual(result.title, 'Mock Track Title')
-            mock_requests_get.assert_called_once_with(mock_track_url, allow_redirects=True)
+            mock_requests_get.assert_called_once_with(mock_track_url,
+                                                      allow_redirects=True)
             mock_soundcloud_api.return_value.resolve.assert_called_once_with(
                 'https://soundcloud.com/resolved-url')
         else:
@@ -75,7 +76,8 @@ class TestSoundcloudUtils(unittest.TestCase):
             self.assertEqual(result.title, 'Mock Track Title')
             # Standard URLs go directly to API resolve, no HTTP request needed
             mock_soundcloud_api.return_value.resolve.assert_called_once_with(
-                'https://soundcloud.com/mosscaofficial/wax-motif-taiki-nulight-w-scrufizzer-skank-n-flex-mossca-flipexclusive')
+                'https://soundcloud.com/mosscaofficial/wax-motif-taiki-nulight-w-scrufizzer-skank-n-flex-mossca-flipexclusive'
+            )
         else:
             self.fail("Expected Track object")
 
@@ -121,7 +123,8 @@ class TestSoundcloudUtils(unittest.TestCase):
             fetchTrack(mock_track_url)
         self.assertEqual(str(e.exception),
                          "Unable to fetch Soundcloud Mobile URL")
-        mock_requests_get.assert_called_once_with(mock_track_url, allow_redirects=True)
+        mock_requests_get.assert_called_once_with(mock_track_url,
+                                                  allow_redirects=True)
         mock_soundcloud_api.return_value.resolve.assert_not_called()
 
     @patch('soundcloud_utils.fetchTrack')
@@ -259,29 +262,6 @@ class TestSoundcloudUtils(unittest.TestCase):
         expected_title = 'Mock Track Title (Mock Artist Remix)'
 
         self.assertEqual(result['title'], expected_title)
-
-    # @patch('soundcloud_utils.fetchTrack')
-    # def test_getSoundcloudParts_DefinedComposerOnlyPromotionalChannel(
-    #         self, mock_fetch_track):
-    #     # Arrange
-    #     mock_track = setupBasicTrack()
-    #     mock_track.publisher_metadata = {
-    #         'writer_composer': 'Composer Name',
-    #         'artist': 'Promotional Channel'
-    #     }
-    #     mock_track.user = {
-    #         'username': 'Promotional Channel',
-    #         'permalink_url': 'https://soundcloud.com/promotional-channel'
-    #     }
-    #     mock_fetch_track.return_value = mock_track
-
-    #     # Act
-    #     result = getSoundcloudParts('https://soundcloud.com/someTrack')
-
-    #     # Assert
-    #     expected_title = 'Composer Name - Mock Track Title'
-
-    #     self.assertEqual(result['title'], expected_title)
 
     @patch('soundcloud_utils.fetchTrack')
     def test_getSoundcloudParts_UndefinedArtistPromotionalChannel(

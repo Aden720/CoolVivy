@@ -114,49 +114,39 @@ class TestGeneralUtils(unittest.TestCase):
 
         categorized_links = find_and_categorize_links(message_content, True)
         # Mobile URLs should be normalized to standard format
-        self.assertEqual(
-            categorized_links,
-            [('https://soundcloud.com/mosscaofficial/wax-motif-taiki-nulight-w-scrufizzer-skank-n-flex-mossca-flipexclusive',
-              link_types.soundcloud)])
+        self.assertEqual(categorized_links, [(
+            'https://soundcloud.com/mosscaofficial/wax-motif-taiki-nulight-w-scrufizzer-skank-n-flex-mossca-flipexclusive',
+            link_types.soundcloud)])
 
     def test_find_and_categorize_links_www_soundcloud(self):
-        message_content = (
-            "Check out this www link: "
-            "https://www.soundcloud.com/artist/track-name"
-        )
+        message_content = ("Check out this www link: "
+                           "https://www.soundcloud.com/artist/track-name")
 
         categorized_links = find_and_categorize_links(message_content, True)
         # WWW URLs should be normalized to standard format
-        self.assertEqual(
-            categorized_links,
-            [('https://soundcloud.com/artist/track-name',
-              link_types.soundcloud)])
+        self.assertEqual(categorized_links, [
+            ('https://soundcloud.com/artist/track-name', link_types.soundcloud)
+        ])
 
     def test_find_and_categorize_links_standard_soundcloud(self):
-        message_content = (
-            "Standard SoundCloud link: "
-            "https://soundcloud.com/artist/track-name"
-        )
+        message_content = ("Standard SoundCloud link: "
+                           "https://soundcloud.com/artist/track-name")
 
         categorized_links = find_and_categorize_links(message_content, True)
         # Standard URLs should remain unchanged
-        self.assertEqual(
-            categorized_links,
-            [('https://soundcloud.com/artist/track-name',
-              link_types.soundcloud)])
+        self.assertEqual(categorized_links, [
+            ('https://soundcloud.com/artist/track-name', link_types.soundcloud)
+        ])
 
     def test_find_and_categorize_links_on_soundcloud(self):
-        message_content = (
-            "Short link: "
-            "https://on.soundcloud.com/abc123"
-        )
+        message_content = ("Short link: "
+                           "https://on.soundcloud.com/abc123")
 
         categorized_links = find_and_categorize_links(message_content, True)
         # on.soundcloud.com URLs should remain unchanged
         self.assertEqual(
             categorized_links,
-            [('https://on.soundcloud.com/abc123',
-              link_types.soundcloud)])
+            [('https://on.soundcloud.com/abc123', link_types.soundcloud)])
 
     def test_find_and_categorize_links_soundcloud_url_normalization_comprehensive(
             self):
@@ -169,12 +159,12 @@ class TestGeneralUtils(unittest.TestCase):
 
         categorized_links = find_and_categorize_links(message_content, True)
         # Verify all variants are properly normalized or preserved
-        self.assertEqual(categorized_links, [
-            ('https://soundcloud.com/artist1/track1', link_types.soundcloud),
-            ('https://soundcloud.com/artist2/track2', link_types.soundcloud),
-            ('https://soundcloud.com/artist3/track3', link_types.soundcloud),
-            ('https://on.soundcloud.com/shortlink', link_types.soundcloud)
-        ])
+        self.assertEqual(
+            categorized_links,
+            [('https://soundcloud.com/artist1/track1', link_types.soundcloud),
+             ('https://soundcloud.com/artist2/track2', link_types.soundcloud),
+             ('https://soundcloud.com/artist3/track3', link_types.soundcloud),
+             ('https://on.soundcloud.com/shortlink', link_types.soundcloud)])
 
     def test_find_and_categorize_links_ignore_angle_brackets_when_not_context_menu(
             self):
