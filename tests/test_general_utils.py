@@ -106,6 +106,18 @@ class TestGeneralUtils(unittest.TestCase):
              ('https://artist.bandcamp.com/track/sample-track',
               link_types.bandcamp)])
 
+    def test_find_and_categorize_links_mobile_soundcloud(self):
+        message_content = (
+            "Check out this mobile link: "
+            "https://m.soundcloud.com/mosscaofficial/wax-motif-taiki-nulight-w-scrufizzer-skank-n-flex-mossca-flipexclusive"
+        )
+
+        categorized_links = find_and_categorize_links(message_content, True)
+        self.assertEqual(
+            categorized_links,
+            [('https://m.soundcloud.com/mosscaofficial/wax-motif-taiki-nulight-w-scrufizzer-skank-n-flex-mossca-flipexclusive',
+              link_types.soundcloud)])
+
     def test_find_and_categorize_links_ignore_angle_brackets_when_not_context_menu(
             self):
         message_content = ("""

@@ -43,7 +43,7 @@ def find_and_categorize_links(message_content: str,
                               isContextMenu=False) -> List[CategorizedLink]:
     # Define patterns for each platform including additional domains
     soundcloud_pattern = re.compile(
-        r'https?://(?:www\.|on\.)?soundcloud\.com/[^\s]+')
+        r'https?://(?:www\.|on\.|m\.)?soundcloud\.com/[^\s]+')
     youtube_pattern = re.compile(
         r'https?://(?:www\.|music\.)?(?:youtube\.com|youtu\.be)/[^\s]+')
     spotify_pattern = re.compile(r'https?://(?:open\.)?spotify\.com/[^\s]+')

@@ -53,11 +53,37 @@ class TestSoundcloudUtils(unittest.TestCase):
         if isinstance(result, Track):
             self.assertEqual(result.artist, 'Mock Artist')
             self.assertEqual(result.title, 'Mock Track Title')
-            mock_requests_get.assert_called_once_with(mock_track_url)
+            mock_requests_get.assert_called_once_with(mock_track_url, allow_redirects=True)
             mock_soundcloud_api.return_value.resolve.assert_called_once_with(
                 'https://soundcloud.com/resolved-url')
         else:
             self.fail("This test is intentionally failing.")
+
+    @patch('soundcloud_utils.requests.get')
+    @patch('soundcloud_utils.SoundcloudAPI')
+    def test_fetchTrack_mobile_url(self, mock_soundcloud_api,
+                                    mock_requests_get):
+        # Simulate the HTTP response from m.soundcloud.com with redirect
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.url = 'https://soundcloud.com/mosscaofficial/wax-motif-taiki-nulight-w-scrufizzer-skank-n-flex-mossca-flipexclusive'
+        mock_requests_get.return_value = mock_response
+        # Mock the SoundcloudAPI resolve method to return a track
+        mock_track = setupBasicTrack()
+        mock_soundcloud_api.return_value.resolve.return_value = mock_track
+        # URL to test
+        mock_track_url = 'https://m.soundcloud.com/mosscaofficial/wax-motif-taiki-nulight-w-scrufizzer-skank-n-flex-mossca-flipexclusive'
+        # Call the fetchTrack function
+        result = fetchTrack(mock_track_url)
+        # Assertions
+        if isinstance(result, Track):
+            self.assertEqual(result.artist, 'Mock Artist')
+            self.assertEqual(result.title, 'Mock Track Title')
+            mock_requests_get.assert_called_once_with(mock_track_url, allow_redirects=True)
+            mock_soundcloud_api.return_value.resolve.assert_called_once_with(
+                'https://soundcloud.com/mosscaofficial/wax-motif-taiki-nulight-w-scrufizzer-skank-n-flex-mossca-flipexclusive')
+        else:
+            self.fail("Expected Track object")
 
     @patch('soundcloud_utils.requests.get')
     @patch('soundcloud_utils.SoundcloudAPI')
@@ -101,7 +127,7 @@ class TestSoundcloudUtils(unittest.TestCase):
             fetchTrack(mock_track_url)
         self.assertEqual(str(e.exception),
                          "Unable to fetch Soundcloud Mobile URL")
-        mock_requests_get.assert_called_once_with(mock_track_url)
+        mock_requests_get.assert_called_once_with(mock_track_url, allow_redirects=True)
         mock_soundcloud_api.return_value.resolve.assert_not_called()
 
     @patch('soundcloud_utils.fetchTrack')
