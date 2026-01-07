@@ -1,5 +1,6 @@
 # test_soundcloud_utils.py
 import unittest
+from urllib.error import HTTPError
 from unittest.mock import MagicMock, patch
 
 from mockData.soundcloud_mock_scenarios import (
@@ -12,7 +13,13 @@ from mockData.soundcloud_mock_scenarios import (
 )
 from sclib import Track
 
-from soundcloud_utils import fetchTrack, getSoundcloudParts, split_tags
+from soundcloud_utils import (
+    YtDlpTrack,
+    fetchTrack,
+    fetchTrackWithYtDlp,
+    getSoundcloudParts,
+    split_tags,
+)
 
 
 class TestSoundcloudUtils(unittest.TestCase):
@@ -126,6 +133,115 @@ class TestSoundcloudUtils(unittest.TestCase):
         mock_requests_get.assert_called_once_with(mock_track_url,
                                                   allow_redirects=True)
         mock_soundcloud_api.return_value.resolve.assert_not_called()
+
+    def test_ytdlp_track_initialization(self):
+        mock_info = {
+            'title': 'Test Track',
+            'uploader': 'Test Artist',
+            'duration': 180,
+            'thumbnail': 'https://example.com/thumb.jpg',
+            'genre': 'Electronic',
+            'upload_date': '20250115',
+            'like_count': 1000,
+            'view_count': 50000,
+            'tags': ['house', 'electronic', 'dance'],
+            'uploader_url': 'https://soundcloud.com/testartist'
+        }
+        track = YtDlpTrack(mock_info)
+        self.assertEqual(track.title, 'Test Track')
+        self.assertEqual(track.artist, 'Test Artist')
+        self.assertEqual(track.duration, 180000)
+        self.assertEqual(track.artwork_url, 'https://example.com/thumb.jpg')
+        self.assertEqual(track.genre, 'Electronic')
+        self.assertEqual(track.created_at, '2025-01-15T00:00:00Z')
+        self.assertEqual(track.likes_count, 1000)
+        self.assertEqual(track.playback_count, 50000)
+        self.assertEqual(track.tag_list, 'house electronic dance')
+        self.assertEqual(track.user['username'], 'Test Artist')
+        self.assertEqual(track.user['permalink_url'], 'https://soundcloud.com/testartist')
+
+    def test_ytdlp_track_defaults(self):
+        track = YtDlpTrack({})
+        self.assertEqual(track.title, 'Unknown Title')
+        self.assertEqual(track.artist, 'Unknown Artist')
+        self.assertEqual(track.duration, 0)
+        self.assertIsNone(track.artwork_url)
+        self.assertIsNone(track.genre)
+        self.assertIsNone(track.created_at)
+        self.assertIsNone(track.likes_count)
+        self.assertIsNone(track.playback_count)
+        self.assertEqual(track.tag_list, '')
+        self.assertEqual(track.user['username'], 'Unknown')
+
+    @patch('soundcloud_utils.yt_dlp.YoutubeDL')
+    def test_fetchTrackWithYtDlp_success(self, mock_ytdl):
+        mock_info = {
+            'title': 'YtDlp Track',
+            'uploader': 'YtDlp Artist',
+            'duration': 200,
+            'thumbnail': 'https://example.com/thumb.jpg',
+        }
+        mock_ytdl.return_value.__enter__.return_value.extract_info.return_value = mock_info
+        result = fetchTrackWithYtDlp('https://soundcloud.com/artist/track')
+        self.assertIsInstance(result, YtDlpTrack)
+        self.assertEqual(result.title, 'YtDlp Track')
+        self.assertEqual(result.artist, 'YtDlp Artist')
+
+    @patch('soundcloud_utils.yt_dlp.YoutubeDL')
+    def test_fetchTrackWithYtDlp_returns_none_on_failure(self, mock_ytdl):
+        mock_ytdl.return_value.__enter__.return_value.extract_info.return_value = None
+        result = fetchTrackWithYtDlp('https://soundcloud.com/artist/track')
+        self.assertIsNone(result)
+
+    @patch('soundcloud_utils.fetchTrackWithYtDlp')
+    @patch('soundcloud_utils.SoundcloudAPI')
+    def test_fetchTrack_fallback_to_ytdlp_on_401(self, mock_soundcloud_api, mock_ytdlp_fallback):
+        mock_soundcloud_api.return_value.resolve.side_effect = HTTPError(
+            'https://soundcloud.com/test', 401, 'Unauthorized', {}, None)
+        mock_ytdlp_track = YtDlpTrack({
+            'title': 'Fallback Track',
+            'uploader': 'Fallback Artist',
+            'duration': 180,
+        })
+        mock_ytdlp_fallback.return_value = mock_ytdlp_track
+        result = fetchTrack('https://soundcloud.com/artist/track')
+        self.assertIsInstance(result, YtDlpTrack)
+        self.assertEqual(result.title, 'Fallback Track')
+        self.assertEqual(result.artist, 'Fallback Artist')
+        mock_ytdlp_fallback.assert_called_once_with('https://soundcloud.com/artist/track')
+
+    @patch('soundcloud_utils.fetchTrackWithYtDlp')
+    @patch('soundcloud_utils.SoundcloudAPI')
+    def test_fetchTrack_raises_on_non_401_http_error(self, mock_soundcloud_api, mock_ytdlp_fallback):
+        mock_soundcloud_api.return_value.resolve.side_effect = HTTPError(
+            'https://soundcloud.com/test', 404, 'Not Found', {}, None)
+        with self.assertRaises(HTTPError) as e:
+            fetchTrack('https://soundcloud.com/artist/track')
+        self.assertEqual(e.exception.code, 404)
+        mock_ytdlp_fallback.assert_not_called()
+
+    @patch('soundcloud_utils.fetchTrack')
+    def test_getSoundcloudParts_with_ytdlp_track(self, mock_fetch_track):
+        mock_track = YtDlpTrack({
+            'title': 'YtDlp Test Track',
+            'uploader': 'YtDlp Test Artist',
+            'duration': 240,
+            'thumbnail': 'https://example.com/thumb.jpg',
+            'genre': 'House',
+            'upload_date': '20250110',
+            'like_count': 500,
+            'view_count': 10000,
+            'tags': ['house', 'music'],
+            'uploader_url': 'https://soundcloud.com/ytdlptest'
+        })
+        mock_fetch_track.return_value = mock_track
+        result = getSoundcloudParts('https://soundcloud.com/ytdlptest/track')
+        self.assertEqual(result['embedPlatformType'], 'soundcloud')
+        self.assertEqual(result['embedColour'], 0xff5500)
+        self.assertIn('YtDlp Test Artist', result['title'])
+        self.assertEqual(result['Genre'], '`House`')
+        self.assertEqual(result['Likes'], ':orange_heart: 500')
+        self.assertEqual(result['Plays'], ':notes: 10,000')
 
     @patch('soundcloud_utils.fetchTrack')
     def test_getSoundcloudParts(self, mock_fetch_track):

@@ -1,6 +1,9 @@
 import re
+from typing import Union
+from urllib.error import HTTPError
 
 import requests
+import yt_dlp
 from sclib import Playlist, SoundcloudAPI, Track
 
 from general_utils import (
@@ -10,27 +13,71 @@ from general_utils import (
 )
 
 
+class YtDlpTrack:
+    def __init__(self, info):
+        self.title = info.get('title', 'Unknown Title')
+        self.artist = info.get('uploader', info.get('artist', 'Unknown Artist'))
+        self.duration = info.get('duration', 0) * 1000
+        self.artwork_url = info.get('thumbnail')
+        self.genre = info.get('genre')
+        self.created_at = None
+        upload_date = info.get('upload_date')
+        if upload_date and len(upload_date) == 8:
+            self.created_at = f"{upload_date[:4]}-{upload_date[4:6]}-{upload_date[6:]}T00:00:00Z"
+        self.likes_count = info.get('like_count')
+        self.playback_count = info.get('view_count')
+        self.purchase_url = None
+        self.purchase_title = None
+        self.downloadable = False
+        self.has_downloads_left = False
+        self.download_url = None
+        self.tag_list = ' '.join(info.get('tags', []))
+        self.publisher_metadata = None
+        self.user = {
+            'username': info.get('uploader', 'Unknown'),
+            'permalink_url': info.get('uploader_url', ''),
+            'avatar_url': info.get('thumbnail', '')
+        }
+
+
 def split_tags(tag_string):
-    # Regular expression to match tags with or without spaces
     pattern = r'"[^"]*"|\S+'
-    # Find all matches using the pattern
     matches = re.findall(pattern, tag_string)
-    # Remove quotes from tags that were enclosed in quotes
     tags = [tag.strip('"') for tag in matches]
     return tags
 
 
+def fetchTrackWithYtDlp(track_url):
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'extract_flat': False,
+        'skip_download': True,
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(track_url, download=False)
+        if info:
+            return YtDlpTrack(info)
+    return None
+
+
 def fetchTrack(track_url):
-    api = SoundcloudAPI()
     if track_url.startswith('https://on.soundcloud.com'):
         response = requests.get(track_url, allow_redirects=True)
         if response.status_code == 200:
-            # For on.soundcloud.com, use redirect location from history
             track_url = response.history[0].headers['location']
         else:
             raise Exception('Unable to fetch Soundcloud Mobile URL')
-    track = api.resolve(track_url)
-    return track
+    try:
+        api = SoundcloudAPI()
+        track = api.resolve(track_url)
+        return track
+    except HTTPError as e:
+        if e.code == 401:
+            fallback_track = fetchTrackWithYtDlp(track_url)
+            if fallback_track:
+                return fallback_track
+        raise
 
 
 def getSoundcloudParts(url: str):
@@ -41,7 +88,7 @@ def getSoundcloudParts(url: str):
 
     track = fetchTrack(remove_trailing_slash(url))
 
-    if isinstance(track, Track):
+    if isinstance(track, (Track, YtDlpTrack)):
         if checkTrackTitle(track.title):
             setTrackTitle(track)
         artist = getTrackArtist(track)
@@ -176,7 +223,7 @@ def checkTrackTitle(track_title):
     return '-' in track_title or '–' in track_title or '—' in track_title
 
 
-def setTrackTitle(track: Track):
+def setTrackTitle(track: Union[Track, 'YtDlpTrack']):
     trackNameRegex = r"(.+?)\s[-—–]\s(.*)"
     fullTitle = f'{track.artist}-{track.title}' if track.artist != track.user.get(
         'username') else track.title
@@ -186,7 +233,7 @@ def setTrackTitle(track: Track):
         track.artist = match.group(1)
 
 
-def getTrackArtist(track: Track):
+def getTrackArtist(track: Union[Track, 'YtDlpTrack']):
     user = track.user.get('username')
     if track.publisher_metadata:
         # metaComposer = track.publisher_metadata.get('writer_composer')
