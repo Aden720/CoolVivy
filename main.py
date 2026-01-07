@@ -369,8 +369,7 @@ async def fetch_embed_message(interaction: discord.Interaction,
             and str(interaction.user.id) != ownerUser):  # or (
         #testInstance == 'False' and str(interaction.user.id) == user2):
         return
-    await interaction.response.send_message(
-        content=f'Fetching details for {message.jump_url}', ephemeral=True)
+    await interaction.response.defer(ephemeral=True)
     try:
         if message.author.id == interaction.user.id:
             await fetchEmbed(
