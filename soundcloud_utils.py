@@ -1,5 +1,5 @@
 import re
-from typing import Union
+from typing import Any, Union
 from urllib.error import HTTPError
 
 import requests
@@ -48,7 +48,7 @@ def split_tags(tag_string):
 
 
 def fetchTrackWithYtDlp(track_url):
-    ydl_opts = {
+    ydl_opts: dict[str, Any] = {
         'quiet': True,
         'no_warnings': True,
         'extract_flat': False,
