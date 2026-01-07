@@ -75,11 +75,10 @@ def fetchTrack(track_url):
         api = SoundcloudAPI()
         track = api.resolve(track_url)
         return track
-    except HTTPError as e:
-        if e.code == 401:
-            fallback_track = fetchTrackWithYtDlp(track_url)
-            if fallback_track:
-                return fallback_track
+    except Exception as e:
+        fallback_track = fetchTrackWithYtDlp(track_url)
+        if fallback_track:
+            return fallback_track
         raise
 
 
