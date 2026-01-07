@@ -8,7 +8,7 @@ channel = "stable-23_05"
 
 [deployment]
 run = ["python", "main.py"]
-deploymentTarget = "gce"
+deploymentTarget = "vm"
 ignorePorts = true
 
 [env]
