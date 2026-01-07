@@ -54,10 +54,13 @@ def fetchTrackWithYtDlp(track_url):
         'extract_flat': False,
         'skip_download': True,
     }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(track_url, download=False)
-        if info:
-            return YtDlpTrack(info)
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(track_url, download=False)
+            if info and isinstance(info, dict):
+                return YtDlpTrack(info)
+    except Exception:
+        pass
     return None
 
 
