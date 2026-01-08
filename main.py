@@ -5,11 +5,6 @@ import os
 import re
 
 import discord
-
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s %(levelname)-8s %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
-logger = logging.getLogger(__name__)
 from discord.ext import commands
 
 from bandcamp_utils import getBandcampParts
@@ -19,6 +14,11 @@ from reactions import PaginatedSelect, fetch_animated_emotes
 from soundcloud_utils import getSoundcloudParts
 from spotify_utils import getSpotifyParts
 from youtube_utils import getYouTubeParts
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)-8s %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S')
+logger = logging.getLogger(__name__)
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -402,7 +402,6 @@ async def fetch_embed_message(interaction: discord.Interaction,
                     "[get track metadata] Sending followup with embed")
                 await interaction.followup.send(
                     content=interaction.user.mention, embed=trackEmbed)
-                await interaction.delete_original_response()
                 logger.info("[get track metadata] Successfully sent embed")
     except Exception as e:
         logger.error(f"[get track metadata] Error: {type(e).__name__}: {e}")
