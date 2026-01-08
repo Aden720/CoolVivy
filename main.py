@@ -1,9 +1,17 @@
 import contextlib
 import json
+import logging
 import os
 import re
 
 import discord
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 from discord.ext import commands
 
 from bandcamp_utils import getBandcampParts
@@ -359,27 +367,39 @@ async def delete_bot_message(interaction: discord.Interaction,
 @bot.tree.context_menu(name='get track metadata')
 async def fetch_embed_message(interaction: discord.Interaction,
                               message: discord.Message):
+    logger.info(f"[get track metadata] Started by user {interaction.user.id} for message {message.id}")
     if (testInstance == 'True'
             and str(interaction.user.id) != ownerUser):  # or (
         #testInstance == 'False' and str(interaction.user.id) == user2):
+        logger.debug("[get track metadata] Skipped - test instance restriction")
         return
+    logger.debug("[get track metadata] Deferring response")
     await interaction.response.defer(ephemeral=True)
     try:
         if message.author.id == interaction.user.id:
+            logger.debug("[get track metadata] User is message author - calling fetchEmbed")
             await fetchEmbed(
                 message, False,
                 isinstance(interaction.channel, discord.DMChannel), True)
+            logger.debug("[get track metadata] fetchEmbed completed for own message")
         else:
+            logger.debug("[get track metadata] User is not author - calling fetchEmbed as interaction")
             trackEmbed = await fetchEmbed(message,
                                           isInteraction=True,
                                           isContext=True)
+            logger.debug(f"[get track metadata] fetchEmbed returned: {trackEmbed is not None}")
             if trackEmbed:
+                logger.debug("[get track metadata] Sending followup with embed")
                 await interaction.followup.send(
                     content=interaction.user.mention, embed=trackEmbed)
+                logger.info("[get track metadata] Successfully sent embed")
     except Exception as e:
+        logger.error(f"[get track metadata] Error: {type(e).__name__}: {e}")
         await interaction.followup.send(content=str(e), ephemeral=True)
     finally:
+        logger.debug("[get track metadata] Cleaning up - deleting original interaction message")
         await deleteOriginalInteractionMessage(interaction)
+        logger.info("[get track metadata] Completed")
 
 
 @bot.tree.context_menu(name="remove react")
