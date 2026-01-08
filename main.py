@@ -1,3 +1,4 @@
+import contextlib
 import json
 import os
 import re
@@ -256,15 +257,8 @@ async def fetchEmbed(message,
 
 
 async def deleteOriginalInteractionMessage(interaction: discord.Interaction):
-    # Delete the interaction response first
-    try:
+    with contextlib.suppress(discord.HTTPException):
         await interaction.delete_original_response()
-    except discord.NotFound:
-        # Response was already deleted
-        pass
-    except discord.Forbidden:
-        # Bot doesn't have permission to delete
-        pass
 
 
 def getDescriptionParts(link: CategorizedLink):
