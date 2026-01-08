@@ -1,0 +1,81 @@
+await ctx_menu._invoke(interaction, value)
+2026-01-07 19:39:07.92
+7626aec8
+User
+raise CommandInvokeError(self, e) from e
+2026-01-07 19:39:07.92
+7626aec8
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.10/site-packages/discord/app_commands/commands.py", line 1324, in _invoke
+2026-01-07 19:39:07.92
+7626aec8
+User
+The above exception was the direct cause of the following exception:
+2026-01-07 19:39:07.92
+7626aec8
+User
+discord.errors.NotFound: 404 Not Found (error code: 10062): Unknown interaction
+2026-01-07 19:39:07.92
+7626aec8
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.10/site-packages/discord/interactions.py", line 858, in defer
+2026-01-07 19:39:07.92
+7626aec8
+User
+raise NotFound(response, data)
+2026-01-07 19:39:07.92
+7626aec8
+User
+await self._callback(interaction, arg)
+2026-01-07 19:39:07.92
+7626aec8
+User
+[2026-01-07 09:39:07] [ERROR ] discord.app_commands.tree: Ignoring exception in command 'get track metadata'
+2026-01-07 19:39:07.92
+7626aec8
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.10/site-packages/discord/app_commands/commands.py", line 1328, in _invoke
+2026-01-07 19:39:07.92
+7626aec8
+User
+File "/home/runner/workspace/main.py", line 372, in fetch_embed_message
+2026-01-07 19:39:07.92
+7626aec8
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.10/site-packages/discord/webhook/async_.py", line 224, in request
+2026-01-07 19:39:07.92
+7626aec8
+User
+response = await adapter.create_interaction_response(
+2026-01-07 19:39:07.92
+7626aec8
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.10/site-packages/discord/app_commands/tree.py", line 1239, in _call_context_menu
+2026-01-07 19:39:07.92
+7626aec8
+User
+Traceback (most recent call last):
+2026-01-07 19:39:07.92
+7626aec8
+User
+Traceback (most recent call last):
+2026-01-07 19:39:07.92
+7626aec8
+User
+await interaction.response.defer(ephemeral=True)
+2026-01-07 20:07:18.81
+7626aec8
+User
+HTTP Error 401: Unauthorized
+2026-01-07 20:15:39.70
+7626aec8
+User
+HTTP Error 401: Unauthorized
+2026-01-07 20:15:49.52
+7626aec8
+User
+HTTP Error 401: Unauthorized
+2026-01-07 20:20:23.58
+7626aec8
+User
+HTTP Error 401: Unauthorized
