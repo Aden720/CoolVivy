@@ -375,8 +375,11 @@ async def fetch_embed_message(interaction: discord.Interaction,
             "[get track metadata] Skipped - test instance restriction")
         return
     logger.debug("[get track metadata] Deferring response")
-    await interaction.response.send_message(
+    try:
+        await interaction.response.send_message(
         content=f'Fetching details for {message.jump_url}', ephemeral=True)
+    except Exception:
+        await interaction.response.defer()
     try:
         if message.author.id == interaction.user.id:
             logger.debug(
@@ -410,7 +413,7 @@ async def fetch_embed_message(interaction: discord.Interaction,
         logger.debug(
             "[get track metadata] Cleaning up - deleting original interaction message"
         )
-        # await deleteOriginalInteractionMessage(interaction)
+        await deleteOriginalInteractionMessage(interaction)
         logger.info("[get track metadata] Completed")
 
 
