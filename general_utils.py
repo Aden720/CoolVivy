@@ -66,7 +66,7 @@ def find_and_categorize_links(message_content: str,
 
     # Find all URLs in the filtered message
     urls = re.findall(r'https?://[^\s]+', filtered_content)
-    cleaned_links = (link.rstrip('.">)') for link in urls)
+    cleaned_links = (link.rstrip('.">)/\\') for link in urls)
 
     # Determine the platform for each URL and maintain order
     for url in cleaned_links:
