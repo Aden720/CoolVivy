@@ -369,10 +369,7 @@ async def fetch_embed_message(interaction: discord.Interaction,
             and str(interaction.user.id) != ownerUser):  # or (
         #testInstance == 'False' and str(interaction.user.id) == user2):
         return
-    try:
-        await interaction.response.defer(ephemeral=True)
-    except discord.NotFound:
-        return
+    await interaction.response.defer(ephemeral=True)
     try:
         if message.author.id == interaction.user.id:
             await fetchEmbed(
@@ -385,13 +382,8 @@ async def fetch_embed_message(interaction: discord.Interaction,
             if trackEmbed:
                 await interaction.followup.send(
                     content=interaction.user.mention, embed=trackEmbed)
-    except discord.NotFound:
-        pass
     except Exception as e:
-        try:
-            await interaction.followup.send(content=str(e), ephemeral=True)
-        except discord.NotFound:
-            pass
+        await interaction.followup.send(content=str(e), ephemeral=True)
     finally:
         await deleteOriginalInteractionMessage(interaction)
 
