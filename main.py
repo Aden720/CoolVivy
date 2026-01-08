@@ -399,7 +399,7 @@ async def fetch_embed_message(interaction: discord.Interaction,
             if trackEmbed:
                 logger.debug(
                     "[get track metadata] Sending followup with embed")
-                await interaction.followup.send(
+                await interaction.edit_original_response(
                     content=interaction.user.mention, embed=trackEmbed)
                 logger.info("[get track metadata] Successfully sent embed")
     except Exception as e:
