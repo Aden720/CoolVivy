@@ -4,13 +4,22 @@ from urllib.error import HTTPError
 
 import requests
 import yt_dlp
-from sclib import Playlist, SoundcloudAPI, Track
+from sclib import Playlist, SoundcloudAPI as _SoundcloudAPI, Track
 
 from general_utils import (
     formatMillisecondsToDurationString,
     formatTimeToDisplay,
     remove_trailing_slash,
 )
+
+class SoundcloudAPI(_SoundcloudAPI):
+    def get_credentials(self):
+        resp = requests.get('https://soundcloud.com')
+        pattern = re.compile(r'"apiClient"[\s\S]*?"id"\s*:\s*"([^"]+)"')
+        match = pattern.search(resp.text)
+        if match:
+            self.client_id = match.group(1)
+        return None
 
 
 class YtDlpTrack:
