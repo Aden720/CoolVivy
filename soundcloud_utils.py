@@ -4,13 +4,15 @@ from urllib.error import HTTPError
 
 import requests
 import yt_dlp
-from sclib import Playlist, SoundcloudAPI as _SoundcloudAPI, Track
+from sclib import Playlist, Track
+from sclib import SoundcloudAPI as _SoundcloudAPI
 
 from general_utils import (
     formatMillisecondsToDurationString,
     formatTimeToDisplay,
     remove_trailing_slash,
 )
+
 
 class SoundcloudAPI(_SoundcloudAPI):
     def get_credentials(self):

@@ -26,9 +26,10 @@ and then copy the token for your bot and added it as a secret with the key of `B
 - `SPOTIFY_CLIENT_SECRET`: This is the client secret for the Spotify API, used together with the client ID for secure authentication.
 
 #### Used in youtube_utils.py
-- `YOUTUBE_CLIENT_ID`: This is the client ID of your Google Cloud Console project client.
-- `YOUTUBE_CLIENT_SECRET`: This is the client secret for the YoutubeData API. Follow the instructions at https://ytmusicapi.readthedocs.io/en/stable/setup/oauth.html for more details.
-- `YOUTUBE_API_KEY`: This is set up in the Google Cloud Console credentials (same as above but select 'create API Key'). See instructions at https://developers.google.com/youtube/v3/docs#calling-the-api for more details.
+- [no longer used] ~~YOUTUBE_CLIENT_ID: This is the client ID of your Google Cloud Console project client.~~
+- [no longer used] ~~YOUTUBE_CLIENT_SECRET: This is the client secret for the YoutubeData API. Follow the instructions at https://ytmusicapi.readthedocs.io/en/stable/setup/oauth.html for more details.~~
+- `YTMUSIC_BROWSER_JSON_B64`: Base64 encoded headers from a youtube music browser session. Follow the instructions at https://ytmusicapi.readthedocs.io/en/stable/setup/browser.html for more details.
+- `YOUTUBE_API_KEY`: This is set up in the Google Cloud Console credentials (select 'create API Key'). See instructions at https://developers.google.com/youtube/v3/docs#calling-the-api for more details.
 
 ## FAQ
 

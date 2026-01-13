@@ -1,5 +1,8 @@
+import base64
+import json
 import os
 import re
+import tempfile
 
 from dotmap import DotMap
 from googleapiclient.discovery import build
@@ -13,8 +16,21 @@ from general_utils import (
 
 types = DotMap(track=1, album=2, playlist=3)
 
-youtubeClientId = os.getenv("YOUTUBE_CLIENT_ID", 'default_value')
-youtubeClientSecret = os.getenv("YOUTUBE_CLIENT_SECRET", 'default_value')
+# youtubeClientId = os.getenv("YOUTUBE_CLIENT_ID", 'default_value')
+# youtubeClientSecret = os.getenv("YOUTUBE_CLIENT_SECRET", 'default_value')
+b64 = os.getenv("YTMUSIC_BROWSER_JSON_B64")
+if not b64:
+    raise RuntimeError("YTMUSIC_BROWSER_JSON_B64 is not set")
+raw = base64.b64decode(b64)
+data = json.loads(raw)
+
+# ytmusicapi expects a file path; write a secure temp file at runtime
+with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as tf:
+    json.dump(data, tf)
+    tf.flush()
+    temp_path = tf.name
+
+ytmusic = YTMusic(temp_path)
 
 # YouTube Data API configuration
 DEVELOPER_KEY = os.getenv("YOUTUBE_API_KEY")
@@ -24,10 +40,10 @@ youtube_api = build("youtube", "v3",
 
 def fetchTrack(track_url):
     track, trackType = None, None
-    ytmusic = YTMusic('oauth.json',
-                      oauth_credentials=OAuthCredentials(
-                          client_id=youtubeClientId,
-                          client_secret=youtubeClientSecret))
+    # ytmusic = YTMusic('oauth.json',
+    #                   oauth_credentials=OAuthCredentials(
+    #                       client_id=youtubeClientId,
+    #                       client_secret=youtubeClientSecret))
     videoId = re.search(r'(?:v=|\/)([0-9A-Za-z_-]{11}).*', track_url)
     if videoId is not None:
         videoId = videoId.group(1)
