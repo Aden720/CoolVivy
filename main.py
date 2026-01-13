@@ -74,7 +74,7 @@ async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
 
     message = reaction.message
     if (message.author.id == bot.user.id and user in message.mentions
-            and message.reference):
+            and message.reference and len(message.embeds) == 0):
         await message.delete()
     else:
         # Check if the bot has reacted to this message
@@ -377,7 +377,7 @@ async def fetch_embed_message(interaction: discord.Interaction,
     logger.debug("[get track metadata] Deferring response")
     try:
         await interaction.response.send_message(
-        content=f'Fetching details for {message.jump_url}', ephemeral=True)
+            content=f'Fetching details for {message.jump_url}', ephemeral=True)
     except Exception:
         await interaction.response.defer()
     try:
