@@ -1,13 +1,13 @@
-.PHONY: test coverage coverage-html
+.PHONY: test run-coverage run-coverage-html
 
 test:
-	python -m unittest discover -s tests
+	python -W ignore::FutureWarning -m unittest discover -s tests
 
-coverage:
-	coverage run -m unittest discover -s tests
+run-coverage:
+	coverage run -W ignore::FutureWarning -m unittest discover -s tests
 	coverage report
 
-coverage-html:
-	coverage run -m unittest discover -s tests
+run-coverage-html:
+	coverage run -W ignore::FutureWarning -m unittest discover -s tests
 	coverage html
 	@echo "Coverage report generated in htmlcov/index.html"
