@@ -85,6 +85,7 @@ def find_and_categorize_links(
             categorized_links.append((url, link_types.youtube))
         elif spotify_pattern.match(url):
             continue
+            # TODO: re-enable spotify
             # categorized_links.append((url, link_types.spotify))
         elif bandcamp_pattern.match(url):
             categorized_links.append((url, link_types.bandcamp))

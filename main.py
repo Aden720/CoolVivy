@@ -15,10 +15,14 @@ from soundcloud_utils import getSoundcloudParts
 from spotify_utils import getSpotifyParts
 from youtube_utils import getYouTubeParts
 
-_log_level = logging.DEBUG if os.getenv('LOG_LEVEL', '').upper() == 'DEBUG' else logging.WARNING
-logging.basicConfig(level=_log_level,
-                    format='%(asctime)s %(levelname)-8s %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
+_log_level = (
+    logging.DEBUG if os.getenv("LOG_LEVEL", "").upper() == "DEBUG" else logging.WARNING
+)
+logging.basicConfig(
+    level=_log_level,
+    format="%(asctime)s %(levelname)-8s %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 logger = logging.getLogger(__name__)
 
 intents = discord.Intents.default()
@@ -39,13 +43,13 @@ else:
 
 @bot.event
 async def on_ready():
-    print(f'We have logged in as {bot.user}')
+    print(f"We have logged in as {bot.user}")
     # Sync commands to make sure they are registered
     try:
         synced = await bot.tree.sync()
-        print(f'Synced {len(synced)} command(s)')
+        print(f"Synced {len(synced)} command(s)")
     except Exception as e:
-        print(f'Failed to sync commands: {e}')
+        print(f"Failed to sync commands: {e}")
 
 
 @bot.event
@@ -56,11 +60,13 @@ async def on_guild_join(guild):
     else:
         # Use the first channel the bot has permissions to send messages in
         to_send = discord.utils.find(
-            lambda x: x.permissions_for(guild.me).send_messages,
-            guild.text_channels)
+            lambda x: x.permissions_for(guild.me).send_messages, guild.text_channels
+        )
     # Message content
-    join_message = f"Hello {guild.name}!\nThanks for inviting me [❤︎](https://i.imgur.com/fFvOiry.png).\n"\
+    join_message = (
+        f"Hello {guild.name}!\nThanks for inviting me [❤︎](https://i.imgur.com/fFvOiry.png).\n"
         "Use `/help` for the basic instructions."
+    )
     # Send the message
     if to_send:
         await to_send.send(join_message)
@@ -74,8 +80,12 @@ async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
         return
 
     message = reaction.message
-    if (message.author.id == bot.user.id and user in message.mentions
-            and message.reference and len(message.embeds) == 0):
+    if (
+        message.author.id == bot.user.id
+        and user in message.mentions
+        and message.reference
+        and len(message.embeds) == 0
+    ):
         await message.delete()
     else:
         # Check if the bot has reacted to this message
@@ -90,22 +100,25 @@ async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
 
 @bot.event
 async def on_message(message):
-    if message.author.bot is True \
-        or (testInstance == "True" and str(message.author.id) != ownerUser):# or \
-        #(testInstance == 'False' and str(message.author.id) == ownerUser):
+    if message.author.bot is True or (
+        testInstance == "True" and str(message.author.id) != ownerUser
+    ):  # or \
+        # (testInstance == 'False' and str(message.author.id) == ownerUser):
         return
     elif bot.user and (str(bot.user.id) in message.content):
-        if 'hello' in message.content.lower():
-            await message.channel.send('Hello!')
+        if "hello" in message.content.lower():
+            await message.channel.send("Hello!")
         else:
             await message.channel.send(
-                f'Ask <@{ownerUser}> for help.'
-                if ownerUser else 'Use **/help** for help.')
+                f"Ask <@{ownerUser}> for help."
+                if ownerUser
+                else "Use **/help** for help."
+            )
     elif message.guild and str(message.guild.id) in server_whitelist:
         try:
             await fetchEmbed(message, False)
         except Exception as e:
-            print(f'Error: {e}')
+            print(f"Error: {e}")
     else:
         referencedUser = await getReferencedUser(message)
         if referencedUser:
@@ -115,8 +128,11 @@ async def on_message(message):
 # If the message is a reply to the bot's message,
 # get the replied message and fetch the original user
 async def getReferencedUser(message):
-    if (message.reference and message.reference.resolved
-            and message.reference.resolved.author.bot):
+    if (
+        message.reference
+        and message.reference.resolved
+        and message.reference.resolved.author.bot
+    ):
         referencedUserId = getUserIdFromFooter(message.reference.resolved)
         if referencedUserId and referencedUserId != message.author.id:
             referencedUser = await message.guild.fetch_member(referencedUserId)
@@ -134,12 +150,16 @@ async def fetchWebhook(message):
         await message.author.send(
             "I do not have permission to manage webhooks!\n"
             "Ask the server owners to give me the permission to manage webhooks"
-            " so I can send less cluttered messages to the channel.")
+            " so I can send less cluttered messages to the channel."
+        )
         return None
     # Create a webhook
     webhook = None
-    channel = message.channel.parent if hasattr(message.channel,
-                                                'parent') else message.channel
+    channel = (
+        message.channel.parent
+        if hasattr(message.channel, "parent")
+        else message.channel
+    )
     webhooks = await channel.webhooks()
     if len(webhooks) > 0:
         for hook in webhooks:
@@ -148,15 +168,12 @@ async def fetchWebhook(message):
                 break
 
     if webhook is None:
-        webhook = await channel.create_webhook(name='CoolVivy embed')
+        webhook = await channel.create_webhook(name="CoolVivy embed")
 
     return webhook
 
 
-async def fetchEmbed(message,
-                     isInteraction=False,
-                     isDM=False,
-                     isContext=False):
+async def fetchEmbed(message, isInteraction=False, isDM=False, isContext=False):
     webhook = None
     referencedUser = None
     embeds = []
@@ -171,49 +188,54 @@ async def fetchEmbed(message,
     if isContext and len(allMusicUrls) == 0:
         raise Exception(
             "This message doesn't seem to contain a supported URL.\nCurrently only "
-            "Bandcamp, SoundCloud, Spotify and YouTube links are supported.")
+            "Bandcamp, SoundCloud, Spotify and YouTube links are supported."
+        )
 
     for link in allMusicUrls:
-        #get all embed fields
+        # get all embed fields
         fieldParts = getDescriptionParts(link)
         if not fieldParts:
-            raise Exception('No data found')
+            raise Exception("No data found")
 
-        #create a new embed
-        embedVar = discord.Embed(title=fieldParts.get('title'),
-                                 description=fieldParts.get('description'),
-                                 color=fieldParts.get('embedColour', 0x00dcff),
-                                 url=remove_trailing_slash(link[0]))
+        # create a new embed
+        embedVar = discord.Embed(
+            title=fieldParts.get("title"),
+            description=fieldParts.get("description"),
+            color=fieldParts.get("embedColour", 0x00DCFF),
+            url=remove_trailing_slash(link[0]),
+        )
 
-        #add platform link if applicable
-        setAuthorLink(embedVar, fieldParts.get('embedPlatformType'))
+        # add platform link if applicable
+        setAuthorLink(embedVar, fieldParts.get("embedPlatformType"))
 
-        #thumbnail
-        thumbnailUrl = fieldParts.get('thumbnailUrl')
+        # thumbnail
+        thumbnailUrl = fieldParts.get("thumbnailUrl")
         if thumbnailUrl:
             embedVar.set_thumbnail(url=thumbnailUrl)
 
-        #populate embed fields
+        # populate embed fields
         for key, value in fieldParts.items():
             if key not in [
-                    'description', 'title', 'thumbnailUrl',
-                    'embedPlatformType', 'embedColour'
+                "description",
+                "title",
+                "thumbnailUrl",
+                "embedPlatformType",
+                "embedColour",
             ]:
-                inline = key not in ['Tags', 'Description', 'Tracks', 'Videos']
+                inline = key not in ["Tags", "Description", "Tracks", "Videos"]
                 embedVar.add_field(name=key, value=value, inline=inline)
 
-        #remove embed from original message
-        if not isInteraction and fieldParts.get(
-                'embedPlatformType') == 'bandcamp':
+        # remove embed from original message
+        if not isInteraction and fieldParts.get("embedPlatformType") == "bandcamp":
             await message.edit(suppress=True)
 
-        #react to message
+        # react to message
         if isInteraction:
             emoji_id = os.getenv("EMOJI_ID")
-            emoji = bot.get_emoji(int(emoji_id)) if emoji_id else '🔗'
+            emoji = bot.get_emoji(int(emoji_id)) if emoji_id else "🔗"
             await message.add_reaction(emoji)
 
-        #send embed
+        # send embed
         if isInteraction:
             return embedVar
         else:
@@ -229,26 +251,34 @@ async def fetchEmbed(message,
     if canUseWebhook and len(embeds) > 0:
         # replace message content if the message is a reply
         if message.reference:
-            jump_url = (message.reference.resolved.jump_url
-                        if message.reference.resolved else
-                        message.reference.jump_url)
+            jump_url = (
+                message.reference.resolved.jump_url
+                if message.reference.resolved
+                else message.reference.jump_url
+            )
             # try to mention the non-bot user
-            if (not referencedUser and message.reference.resolved
-                    and not message.reference.resolved.author.bot):
+            if (
+                not referencedUser
+                and message.reference.resolved
+                and not message.reference.resolved.author.bot
+            ):
                 referencedUser = message.reference.resolved.author
             message.content = (
-                f'{referencedUser.mention if referencedUser else ""} {jump_url}\n'
-                f'{message.content}')
+                f"{referencedUser.mention if referencedUser else ''} {jump_url}\n"
+                f"{message.content}"
+            )
         embeds[-1].set_footer(
-            text='Powered by CoolVivy',
-            icon_url=
-            f'{message.channel.guild.me.avatar.url}#{message.author.id}')
-        if hasattr(message.channel, 'parent'):
-            await webhook.send(content=message.content,
-                               embeds=embeds,
-                               username=message.author.display_name,
-                               avatar_url=message.author.avatar.url,
-                               thread=message.channel)
+            text="Powered by CoolVivy",
+            icon_url=f"{message.channel.guild.me.avatar.url}#{message.author.id}",
+        )
+        if hasattr(message.channel, "parent"):
+            await webhook.send(
+                content=message.content,
+                embeds=embeds,
+                username=message.author.display_name,
+                avatar_url=message.author.avatar.url,
+                thread=message.channel,
+            )
         else:
             await webhook.send(
                 content=message.content,
@@ -257,7 +287,7 @@ async def fetchEmbed(message,
                 avatar_url=message.author.avatar.url,
             )
         sentReplyMessage = True
-        #remove original message
+        # remove original message
         await message.delete()
     if not sentReplyMessage and referencedUser:
         await message.reply(referencedUser.mention, mention_author=False)
@@ -277,44 +307,43 @@ def getDescriptionParts(link: CategorizedLink):
         return getYouTubeParts(linkUrl)
     elif linkType == link_types.spotify:
         return getSpotifyParts(linkUrl)
-    else:  #Bandcamp
-        if re.match('https?://bandcamp.com.+', linkUrl):
+    else:  # Bandcamp
+        if re.match("https?://bandcamp.com.+", linkUrl):
             return None
         return getBandcampParts(linkUrl)
 
 
 def setAuthorLink(embedMessage, embedType):
-    if embedType == 'soundcloud':
+    if embedType == "soundcloud":
         embedMessage.set_author(
-            name='SoundCloud',
-            url='https://soundcloud.com/',
-            icon_url='https://soundcloud.com/pwa-round-icon-192x192.png')
-    elif embedType == 'youtube':
-        embedMessage.set_author(
-            name='YouTube',
-            url='https://www.youtube.com/',
-            icon_url=
-            'https://www.youtube.com/s/desktop/0c61234c/img/favicon_144x144.png'
+            name="SoundCloud",
+            url="https://soundcloud.com/",
+            icon_url="https://soundcloud.com/pwa-round-icon-192x192.png",
         )
-    elif embedType == 'youtubemusic':
+    elif embedType == "youtube":
         embedMessage.set_author(
-            name='YouTube Music',
-            url='https://music.youtube.com/',
-            icon_url=
-            'https://www.gstatic.com/youtube/media/ytm/images/applauncher/music_icon_144x144.png'
+            name="YouTube",
+            url="https://www.youtube.com/",
+            icon_url="https://www.youtube.com/s/desktop/0c61234c/img/favicon_144x144.png",
         )
-    elif embedType == 'spotify':
+    elif embedType == "youtubemusic":
         embedMessage.set_author(
-            name='Spotify',
-            url='https://open.spotify.com/',
-            icon_url=
-            'https://open.spotifycdn.com/cdn/images/icons/Spotify_256.17e41e58.png'
+            name="YouTube Music",
+            url="https://music.youtube.com/",
+            icon_url="https://www.gstatic.com/youtube/media/ytm/images/applauncher/music_icon_144x144.png",
+        )
+    elif embedType == "spotify":
+        embedMessage.set_author(
+            name="Spotify",
+            url="https://open.spotify.com/",
+            icon_url="https://open.spotifycdn.com/cdn/images/icons/Spotify_256.17e41e58.png",
         )
     else:
         embedMessage.set_author(
-            name='Bandcamp',
-            url='https://bandcamp.com/',
-            icon_url='https://s4.bcbits.com/img/favicon/favicon-32x32.png')
+            name="Bandcamp",
+            url="https://bandcamp.com/",
+            icon_url="https://s4.bcbits.com/img/favicon/favicon-32x32.png",
+        )
 
 
 def getUserIdFromFooter(message):
@@ -329,17 +358,19 @@ def getUserIdFromFooter(message):
     return None
 
 
-#Allow user to delete a message related to them or the bot, for cleanup
-@bot.tree.context_menu(name='delete message')
-async def delete_bot_message(interaction: discord.Interaction,
-                             message: discord.Message):
+# Allow user to delete a message related to them or the bot, for cleanup
+@bot.tree.context_menu(name="delete message")
+async def delete_bot_message(
+    interaction: discord.Interaction, message: discord.Message
+):
     # if (testInstance == 'True' and str(interaction.user.id) != user2):  # or (
     #     #testInstance == 'False' and str(interaction.user.id) == user2):
     #     return
     try:
         canDelete = False
-        if (bot.user and message.author.id == bot.user.id) or \
-           (message.author.id == interaction.user.id):
+        if (bot.user and message.author.id == bot.user.id) or (
+            message.author.id == interaction.user.id
+        ):
             canDelete = True
         elif message.author.bot is True:
             userId = getUserIdFromFooter(message)
@@ -350,35 +381,36 @@ async def delete_bot_message(interaction: discord.Interaction,
             await message.delete()
             # await interaction.response.send_message(content='Attempting to delete...',
             #     ephemeral=True)
-            await interaction.response.send_message(content='Message deleted',
-                                                    ephemeral=True)
+            await interaction.response.send_message(
+                content="Message deleted", ephemeral=True
+            )
         else:
             await interaction.response.send_message(
-                content=
-                '''This message is not from me or a reformatted message from you.
-                I can only delete messages from me or posted by you.''',
-                ephemeral=True)
+                content="""This message is not from me or a reformatted message from you.
+                I can only delete messages from me or posted by you.""",
+                ephemeral=True,
+            )
     except Exception as e:
         await interaction.response.send_message(content=str(e), ephemeral=True)
 
 
 # Define a context menu for getting embed metadata
-@bot.tree.context_menu(name='get track metadata')
-async def fetch_embed_message(interaction: discord.Interaction,
-                              message: discord.Message):
+@bot.tree.context_menu(name="get track metadata")
+async def fetch_embed_message(
+    interaction: discord.Interaction, message: discord.Message
+):
     logger.info(
         f"[get track metadata] Started by user {interaction.user.id} for message {message.id}"
     )
-    if (testInstance == 'True'
-            and str(interaction.user.id) != ownerUser):  # or (
-        #testInstance == 'False' and str(interaction.user.id) == user2):
-        logger.debug(
-            "[get track metadata] Skipped - test instance restriction")
+    if testInstance == "True" and str(interaction.user.id) != ownerUser:  # or (
+        # testInstance == 'False' and str(interaction.user.id) == user2):
+        logger.debug("[get track metadata] Skipped - test instance restriction")
         return
     logger.debug("[get track metadata] Deferring response")
     try:
         await interaction.response.send_message(
-            content=f'Fetching details for {message.jump_url}', ephemeral=True)
+            content=f"Fetching details for {message.jump_url}", ephemeral=True
+        )
     except Exception:
         await interaction.response.defer()
     try:
@@ -387,25 +419,22 @@ async def fetch_embed_message(interaction: discord.Interaction,
                 "[get track metadata] User is message author - calling fetchEmbed"
             )
             await fetchEmbed(
-                message, False,
-                isinstance(interaction.channel, discord.DMChannel), True)
-            logger.debug(
-                "[get track metadata] fetchEmbed completed for own message")
+                message, False, isinstance(interaction.channel, discord.DMChannel), True
+            )
+            logger.debug("[get track metadata] fetchEmbed completed for own message")
         else:
             logger.debug(
                 "[get track metadata] User is not author - calling fetchEmbed as interaction"
             )
-            trackEmbed = await fetchEmbed(message,
-                                          isInteraction=True,
-                                          isContext=True)
+            trackEmbed = await fetchEmbed(message, isInteraction=True, isContext=True)
             logger.debug(
                 f"[get track metadata] fetchEmbed returned: {trackEmbed is not None}"
             )
             if trackEmbed:
-                logger.debug(
-                    "[get track metadata] Sending followup with embed")
+                logger.debug("[get track metadata] Sending followup with embed")
                 await interaction.followup.send(
-                    content=interaction.user.mention, embed=trackEmbed)
+                    content=interaction.user.mention, embed=trackEmbed
+                )
                 logger.info("[get track metadata] Successfully sent embed")
     except Exception as e:
         logger.error(f"[get track metadata] Error: {type(e).__name__}: {e}")
@@ -419,13 +448,15 @@ async def fetch_embed_message(interaction: discord.Interaction,
 
 
 @bot.tree.context_menu(name="remove react")
-async def remove_reactions_command(interaction: discord.Interaction,
-                                   message: discord.Message):
+async def remove_reactions_command(
+    interaction: discord.Interaction, message: discord.Message
+):
     if not bot.user:
         return
     if not message.reactions:
         await interaction.response.send_message(
-            "This message has no reactions.", ephemeral=True)
+            "This message has no reactions.", ephemeral=True
+        )
         return
 
     # Get all reactions by the bot
@@ -439,22 +470,27 @@ async def remove_reactions_command(interaction: discord.Interaction,
 
     if not bot_reactions:
         await interaction.response.send_message(
-            "No bot reactions found on this message.", ephemeral=True)
+            "No bot reactions found on this message.", ephemeral=True
+        )
         return
 
     # Create select options for each bot reaction
     options = [
-        discord.SelectOption(label=f"Remove {str(reaction.emoji.name)}",
-                             value=str(reaction.emoji),
-                             emoji=reaction.emoji)
+        discord.SelectOption(
+            label=f"Remove {str(reaction.emoji.name)}",
+            value=str(reaction.emoji),
+            emoji=reaction.emoji,
+        )
         for reaction in bot_reactions
     ]
 
     # Create select menu
-    select = discord.ui.Select(placeholder="Select reactions to remove...",
-                               min_values=1,
-                               max_values=len(options),
-                               options=options)
+    select = discord.ui.Select(
+        placeholder="Select reactions to remove...",
+        min_values=1,
+        max_values=len(options),
+        options=options,
+    )
 
     # Create view for the select menu
     view = discord.ui.View()
@@ -465,35 +501,35 @@ async def remove_reactions_command(interaction: discord.Interaction,
         for emoji in select.values:
             await message.remove_reaction(emoji, bot.user)
         await interaction.response.edit_message(
-            content=f"Removed {len(select.values)} reaction(s)", view=None)
+            content=f"Removed {len(select.values)} reaction(s)", view=None
+        )
 
     select.callback = select_callback
     view.add_item(select)
 
-    await interaction.response.send_message("Select the reactions to remove:",
-                                            view=view,
-                                            ephemeral=True)
+    await interaction.response.send_message(
+        "Select the reactions to remove:", view=view, ephemeral=True
+    )
 
 
 @bot.tree.context_menu(name="quick react (gif)")
-async def quick_react_command(interaction: discord.Interaction,
-                              message: discord.Message):
-    if (testInstance == 'True' and str(interaction.user.id) != ownerUser):
+async def quick_react_command(
+    interaction: discord.Interaction, message: discord.Message
+):
+    if testInstance == "True" and str(interaction.user.id) != ownerUser:
         return
 
-    #grab all the animated emojis in the server
+    # grab all the animated emojis in the server
     if interaction.guild is not None:
         emotes = await fetch_animated_emotes(interaction.guild)
-        existing_reactions = {
-            str(reaction.emoji)
-            for reaction in message.reactions
-        }
+        existing_reactions = {str(reaction.emoji) for reaction in message.reactions}
         remaining_slots = 20 - len(existing_reactions)
 
         if remaining_slots <= 0:
             await interaction.response.send_message(
                 "This message already has the maximum number of reactions (20).",
-                ephemeral=True)
+                ephemeral=True,
+            )
             return
 
         # Filter out emotes that are already reacted
@@ -503,13 +539,14 @@ async def quick_react_command(interaction: discord.Interaction,
 
         if not available_emotes:
             await interaction.response.send_message(
-                "No new emotes available to add.", ephemeral=True)
+                "No new emotes available to add.", ephemeral=True
+            )
             return
 
         options = [
-            discord.SelectOption(label=f"{emote.name}",
-                                 emoji=emote,
-                                 value=str(emote.id))
+            discord.SelectOption(
+                label=f"{emote.name}", emoji=emote, value=str(emote.id)
+            )
             for emote in available_emotes
         ]
 
@@ -520,9 +557,8 @@ async def quick_react_command(interaction: discord.Interaction,
         view.originalMessage = message
 
         await interaction.response.send_message(
-            f"Select emojis ({slots} slots remaining):",
-            view=view,
-            ephemeral=True)
+            f"Select emojis ({slots} slots remaining):", view=view, ephemeral=True
+        )
 
 
 @bot.tree.command(name="help", description="Show help information")
@@ -530,7 +566,7 @@ async def help_command(interaction: discord.Interaction):
     help_text = """I provide information about track links and albums.
 
 __**How to use**__
-On any track link from Soundcloud, Spotify, Bandcamp or YouTube:
+On any track link from Soundcloud, Spotify (temporarily disabled), Bandcamp or YouTube:
 1. Right click/hold a message
 1. Select **Apps**
 1. Select **get track metadata**.
