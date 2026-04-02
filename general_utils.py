@@ -50,7 +50,7 @@ def find_and_categorize_links(
         r"https?://(?:www\.|on\.|m\.)?soundcloud\.com/[^\s]+"
     )
     youtube_pattern = re.compile(
-        r"https?://(?:www\.|music\.)?(?:youtube\.com|youtu\.be)/[^\s]+"
+        r"https?://(?:www\.|music\.|m\.)?(?:youtube\.com|youtu\.be)/[^\s]+"
     )
     spotify_pattern = re.compile(r"https?://(?:open\.)?spotify\.com/[^\s]+")
     bandcamp_pattern = re.compile(r"https?://[A-Za-z0-9_-]+\.bandcamp\.com/[^\s]+")
@@ -82,6 +82,8 @@ def find_and_categorize_links(
                 url = url.replace("www.", "")
             categorized_links.append((url, link_types.soundcloud))
         elif youtube_pattern.match(url):
+            if url.startswith("https://m.youtube.com"):
+                url = url.replace("m.", "www.", 1)
             categorized_links.append((url, link_types.youtube))
         elif spotify_pattern.match(url):
             continue

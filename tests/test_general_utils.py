@@ -118,6 +118,17 @@ class TestGeneralUtils(unittest.TestCase):
             'https://soundcloud.com/mosscaofficial/wax-motif-taiki-nulight-w-scrufizzer-skank-n-flex-mossca-flipexclusive',
             link_types.soundcloud)])
 
+    def test_find_and_categorize_links_mobile_youtube(self):
+        message_content = (
+            "Check out this mobile YouTube link: "
+            "https://m.youtube.com/watch?v=MHQriMdDynk"
+        )
+
+        categorized_links = find_and_categorize_links(message_content, True)
+        self.assertEqual(categorized_links, [(
+            'https://www.youtube.com/watch?v=MHQriMdDynk',
+            link_types.youtube)])
+
     def test_find_and_categorize_links_www_soundcloud(self):
         message_content = ("Check out this www link: "
                            "https://www.soundcloud.com/artist/track-name")
