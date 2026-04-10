@@ -21,9 +21,9 @@ and then copy the token for your bot and added it as a secret with the key of `B
     - e.g. '["serverID","16568721763","58635398573"]'
 
 #### Initialized in spotify_utils.py
-- `SPOTIFY_CLIENT_ID`: This is the client ID for the Spotify API. It's used to authenticate requests made to the Spotify service, enabling the bot to interact with Spotify's features.
+- [no longer used] ~~SPOTIFY_CLIENT_ID: This is the client ID for the Spotify API. It's used to authenticate requests made to the Spotify service, enabling the bot to interact with Spotify's features.~~
 
-- `SPOTIFY_CLIENT_SECRET`: This is the client secret for the Spotify API, used together with the client ID for secure authentication.
+- [no longer used] ~~SPOTIFY_CLIENT_SECRET: This is the client secret for the Spotify API, used together with the client ID for secure authentication.~~
 
 #### Used in youtube_utils.py
 - [no longer used] ~~YOUTUBE_CLIENT_ID: This is the client ID of your Google Cloud Console project client.~~
