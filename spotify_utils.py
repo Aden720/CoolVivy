@@ -1,253 +1,203 @@
 import logging
-import os
 import re
 from typing import Optional
 
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
+from spotapi.album import PublicAlbum
+from spotapi.public import Public
 
 from general_utils import formatMillisecondsToDurationString, formatTimeToDisplay
-from object_types.spotify_types import (
-    SpotifyAlbum,
-    SpotifyPlaylist,
-    SpotifyPlaylistTracks,
-)
 
 logger = logging.getLogger(__name__)
 
-spotifyClientId = os.getenv("SPOTIFY_CLIENT_ID")
-spotifyClientSecret = os.getenv("SPOTIFY_CLIENT_SECRET")
+
+def _spotify_url(uri: str) -> str:
+    parts = uri.split(':')
+    if len(parts) == 3:
+        return f'https://open.spotify.com/{parts[1]}/{parts[2]}'
+    return ''
 
 
-def getSpotifyParts(url: str):
-    spotifyParts = {'embedPlatformType': 'spotify', 'embedColour': 0x1db954}
-
-    try:
-        #fetches the data from the spotify url
-        sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
-            client_id=spotifyClientId, client_secret=spotifyClientSecret))
-
-        if '/track/' in url and 'open.spotify.com' in url:
-            track = sp.track(url)
-            if not track:
-                raise Exception('Spotify track data not found')
-
-            #aliases
-            title = track['name']
-            artists = track['artists']
-            album = track['album']
-
-            #duration
-            spotifyParts['Duration'] = (formatMillisecondsToDurationString(
-                track["duration_ms"]))
-
-            #Released on
-            spotifyParts['Released'] = getReleaseDateString(album)
-
-            #thumbnail
-            if len(album['images']) > 0:
-                spotifyParts['thumbnailUrl'] = album['images'][0]['url']
-
-            #artist
-            artistString = getFormattedArtistString(artists)
-            titleArtists = getFormattedTitleArtistString(artists, title)
-            if len(artists) > 1:
-                spotifyParts['Artists'] = artistString
-            else:
-                spotifyParts['Artist'] = artistString
-            # spotifyParts['Type'] = 'Track'
-
-            #album
-            if album.get('total_tracks') > 1:
-                spotifyParts['Album'] = (f'[{album["name"]}]({album["external_urls"]["spotify"]})')
-
-            #title
-            title = reformatTitle(title)
-            spotifyParts['title'] = (f'{titleArtists} - {title}'
-                                     if titleArtists else title)
-        elif '/album/' in url and 'open.spotify.com' in url:
-            data = sp.album(url)
-            if not data:
-                raise Exception('Spotify album data not found')
-            album: SpotifyAlbum = data
-            #aliases
-            title = album['name']
-            artists = album['artists']
-            tracks = album['tracks']['items']
-            totalTracks = album['total_tracks']
-
-            artistString = getFormattedArtistString(artists)
-            titleArtists = getFormattedTitleArtistString(artists, title)
-
-            trackStrings = []
-            trackSummaryCharLength = 0
-            totalDuration = 0
-            maxDisplayableTracksReached = False
-            for track in tracks:
-                totalDuration += track['duration_ms']
-                if not maxDisplayableTracksReached:
-                    trackTitle = reformatTitle(track['name'])
-                    trackArtists = getFormattedTitleArtistString(
-                        track['artists'], trackTitle)
-                    trackString = (
-                        f'{track["track_number"]}. ' +
-                        (f'[{trackArtists} - {trackTitle}]' if trackArtists and
-                         trackArtists != titleArtists else f'[{trackTitle}]') +
-                        f'({track["external_urls"]["spotify"]})' +
-                        f' {formatMillisecondsToDurationString(track["duration_ms"])}'
-                    )
-                    trackStringLength = len(trackString) + 1
-                    if trackSummaryCharLength + trackStringLength <= 1000:
-                        trackStrings.append(trackString)
-                        trackSummaryCharLength += trackStringLength
-                    else:
-                        maxDisplayableTracksReached = True
-
-            spotifyParts['Duration'] = (
-                formatMillisecondsToDurationString(totalDuration))
-
-            #Artist
-            if len(artists) > 1:
-                spotifyParts['Artists'] = artistString
-            elif artists[0]['name'] == 'Various Artists':
-                spotifyParts['Artists'] = 'Various Artists'
-            else:
-                spotifyParts['Artist'] = artistString
-
-            #Label
-            if album.get('label'):
-                spotifyParts['Label'] = album['label']
-
-            #thumbnail
-            if len(album['images']) > 0:
-                spotifyParts['thumbnailUrl'] = album['images'][0]['url']
-
-            #Description
-            if totalTracks > 1:
-                spotifyParts['description'] = f'{album["total_tracks"]} track album'
-
-            else:
-                spotifyParts['Duration'] = (formatMillisecondsToDurationString(
-                    tracks[0]["duration_ms"]))
-
-            #Released on
-            spotifyParts['Released'] = getReleaseDateString(album)
-
-            if totalTracks > 1:
-                spotifyParts['Tracks'] = '\n'.join(trackStrings)
-                if len(trackStrings) != totalTracks:
-                    spotifyParts[
-                        'Tracks'] += f'\n...and {totalTracks - len(trackStrings)} more'
-
-            #title
-            spotifyParts['title'] = (
-                f'{titleArtists} - {title}' if titleArtists
-                and titleArtists != 'Various Artists' else title)
-
-        elif '/playlist/' in url and 'open.spotify.com' in url:
-            data = sp.playlist(url)
-            if not data:
-                raise Exception('Spotify playlist data not found')
-            playlist: SpotifyPlaylist = data
-
-            #aliases
-            tracks = playlist['tracks']['items']
-            totalTracks = playlist['tracks']['total']
-
-            #title
-            spotifyParts['title'] = playlist['name']
-
-            #read in paginated track data
-            trackStrings = []
-            trackSummaryCharLength = 0
-            totalDuration = 0
-            maxDisplayableTracksReached = False
-            for trackEntry in tracks:
-                track = trackEntry['track']
-                totalDuration += track['duration_ms']
-                if not maxDisplayableTracksReached:
-                    trackTitle = reformatTitle(track['name'])
-                    trackArtists = getFormattedTitleArtistString(
-                        track['artists'], trackTitle)
-                    trackString = (
-                        '1. ' + (f'[{trackArtists} - {trackTitle}]'
-                                 if trackArtists else f'[{trackTitle}]') +
-                        f'({track["external_urls"]["spotify"]})' +
-                        f' `{formatMillisecondsToDurationString(track["duration_ms"])}`'
-                    )
-                    trackStringLength = len(trackString) + 1
-                    if trackSummaryCharLength + trackStringLength <= 1000:
-                        trackStrings.append(trackString)
-                        trackSummaryCharLength += trackStringLength
-                    else:
-                        maxDisplayableTracksReached = True
-
-            current_track_page: Optional[SpotifyPlaylistTracks] = playlist[
-                'tracks']
-            while current_track_page and current_track_page['next']:
-                current_track_page = sp.next(current_track_page)
-                if current_track_page:
-                    for trackEntry in current_track_page['items']:
-                        totalDuration += trackEntry['track']['duration_ms']
-
-            #duration
-            spotifyParts['Duration'] = (
-                formatMillisecondsToDurationString(totalDuration))
-
-            #creator/owner
-            spotifyParts['Created by'] = (
-                f'[{playlist["owner"]["display_name"]}]({playlist["owner"]["external_urls"]["spotify"]})'
-            )
-            spotifyParts['Saves'] = f'`{playlist["followers"]["total"]}`'
-
-            #thumbnail
-            if len(playlist['images']) > 0:
-                spotifyParts['thumbnailUrl'] = playlist['images'][0]['url']
-
-            #description
-            if playlist.get('description'):
-                spotifyParts['Description'] = playlist['description']
-            spotifyParts['description'] = (f'Playlist ({totalTracks} songs)')
-
-            #tracks
-            spotifyParts['Tracks'] = '\n'.join(trackStrings)
-            if len(trackStrings) != totalTracks:
-                spotifyParts['Tracks'] += (
-                    f'\n...and {totalTracks - len(trackStrings)} more')
-
-    except Exception as e:
-        logger.error(f"Error occurred while fetching Spotify details: {e}")
-        #fallback method from embed
-
-    return spotifyParts
+def _extract_id(url: str, kind: str) -> Optional[str]:
+    m = re.search(rf'/{kind}/([A-Za-z0-9]+)', url)
+    return m.group(1) if m else None
 
 
-def getReleaseDateString(album):
-    releaseDate = album['release_date']
-    releaseDateFormat = album['release_date_precision']
-    if releaseDateFormat == 'day':
-        releaseDateString = formatTimeToDisplay(releaseDate, '%Y-%m-%d')
-    elif releaseDateFormat == 'month':
-        releaseDateString = formatTimeToDisplay(releaseDate, '%Y-%m', '%B %Y')
+def _cover_url(cover_art: dict) -> str:
+    sources = cover_art.get('sources', [])
+    if not sources:
+        return ''
+    return max(sources, key=lambda s: s.get('height', 0)).get('url', '')
+
+
+def _format_date(date_obj: dict) -> str:
+    precision = date_obj.get('precision', 'YEAR')
+    iso = date_obj.get('isoString', '')
+    if precision == 'DAY':
+        return formatTimeToDisplay(iso[:10], '%Y-%m-%d')
+    elif precision == 'MONTH':
+        return formatTimeToDisplay(iso[:7], '%Y-%m', '%B %Y')
     else:
-        releaseDateString = releaseDate
-    return releaseDateString
+        return str(date_obj.get('year', iso[:4]))
 
 
-def getFormattedArtistString(artists):
-    return ', '.join([
-        f'[{artist["name"]}]({artist["external_urls"]["spotify"]})'
-        for artist in artists
-    ])
+def _track_artists(track_union: dict) -> list:
+    first = track_union.get('firstArtist', {}).get('items', [])
+    other = track_union.get('otherArtists', {}).get('items', [])
+    return first + other
 
 
-def getFormattedTitleArtistString(artists, title):
+def _artist_link(artist: dict) -> str:
+    name = artist.get('profile', {}).get('name', '')
+    url = _spotify_url(artist.get('uri', ''))
+    return f'[{name}]({url})' if url else name
+
+
+def _format_artist_string(artists: list) -> str:
+    return ', '.join(_artist_link(a) for a in artists)
+
+
+def _title_artist_names(artists: list, title: str) -> str:
     return ', '.join(
-        [artist['name'] for artist in artists if artist['name'] not in title])
+        a.get('profile', {}).get('name', '')
+        for a in artists
+        if a.get('profile', {}).get('name', '') not in title
+    )
 
 
-def reformatTitle(title):
-    remixRegex = r"(.+?)\s[-–]\s(.*?(Remix|Mix|Edit).*)"
-    if re.match(remixRegex, title):
-        title = re.sub(remixRegex, r'\1 (\2)', title)
+def reformatTitle(title: str) -> str:
+    remix_regex = r"(.+?)\s[-–]\s(.*?(Remix|Mix|Edit).*)"
+    if re.match(remix_regex, title):
+        title = re.sub(remix_regex, r'\1 (\2)', title)
     return title
+
+
+def getSpotifyParts(url: str) -> dict:
+    parts = {'embedPlatformType': 'spotify', 'embedColour': 0x1db954}
+    try:
+        if '/track/' in url and 'open.spotify.com' in url:
+            track_id = _extract_id(url, 'track')
+            if not track_id:
+                raise ValueError('Could not extract track ID')
+            _build_track_parts(parts, track_id)
+        elif '/album/' in url and 'open.spotify.com' in url:
+            album_id = _extract_id(url, 'album')
+            if not album_id:
+                raise ValueError('Could not extract album ID')
+            _build_album_parts(parts, album_id)
+    except Exception as e:
+        logger.error('Error fetching Spotify details: %s', e)
+    return parts
+
+
+def _build_track_parts(parts: dict, track_id: str) -> None:
+    info = Public.song_info(track_id)
+    if not info:
+        raise ValueError('No data returned')
+    track = info['data']['trackUnion']
+
+    title = track['name']
+    artists = _track_artists(track)
+    album = track['albumOfTrack']
+
+    parts['Duration'] = formatMillisecondsToDurationString(
+        track['duration']['totalMilliseconds'])
+
+    parts['Released'] = _format_date(album['date'])
+
+    cover = _cover_url(album.get('coverArt', {}))
+    if cover:
+        parts['thumbnailUrl'] = cover
+
+    artist_str = _format_artist_string(artists)
+    title_artists = _title_artist_names(artists, title)
+
+    if len(artists) > 1:
+        parts['Artists'] = artist_str
+    else:
+        parts['Artist'] = artist_str
+
+    total_tracks = album.get('tracks', {}).get('totalCount', 0)
+    if total_tracks > 1:
+        album_url = _spotify_url(album.get('uri', ''))
+        parts['Album'] = f'[{album["name"]}]({album_url})'
+
+    title = reformatTitle(title)
+    parts['title'] = f'{title_artists} - {title}' if title_artists else title
+
+
+def _build_album_parts(parts: dict, album_id: str) -> None:
+    info = PublicAlbum(album_id).get_album_info()
+    if not info:
+        raise ValueError('No data returned')
+    album = info['data']['albumUnion']
+
+    title = album['name']
+    artists = album.get('artists', {}).get('items', [])
+    track_items = album.get('tracksV2', {}).get('items', [])
+    total_tracks = album.get('tracksV2', {}).get('totalCount', 0)
+
+    artist_str = _format_artist_string(artists)
+    title_artists = _title_artist_names(artists, title)
+
+    track_strings = []
+    track_char_len = 0
+    total_duration = 0
+    max_reached = False
+
+    for item in track_items:
+        t = item['track']
+        total_duration += t.get('duration', {}).get('totalMilliseconds', 0)
+        if not max_reached:
+            track_title = reformatTitle(t.get('name', ''))
+            track_artists_list = t.get('artists', {}).get('items', [])
+            track_artist_names = ', '.join(
+                a['profile']['name'] for a in track_artists_list
+                if a['profile']['name'] not in title_artists
+            )
+            track_url = _spotify_url(t.get('uri', ''))
+            display = (f'[{track_artist_names} - {track_title}]'
+                       if track_artist_names and track_artist_names != title_artists
+                       else f'[{track_title}]')
+            track_str = (
+                f'{t["trackNumber"]}. {display}({track_url})'
+                f' {formatMillisecondsToDurationString(t.get("duration", {}).get("totalMilliseconds", 0))}'
+            )
+            if track_char_len + len(track_str) + 1 <= 1000:
+                track_strings.append(track_str)
+                track_char_len += len(track_str) + 1
+            else:
+                max_reached = True
+
+    if total_tracks > 1:
+        parts['Duration'] = formatMillisecondsToDurationString(total_duration)
+    else:
+        single_ms = track_items[0]['track'].get('duration', {}).get('totalMilliseconds', 0) if track_items else 0
+        parts['Duration'] = formatMillisecondsToDurationString(single_ms)
+
+    parts['Released'] = _format_date(album['date'])
+
+    cover = _cover_url(album.get('coverArt', {}))
+    if cover:
+        parts['thumbnailUrl'] = cover
+
+    if len(artists) > 1:
+        parts['Artists'] = artist_str
+    elif artists and artists[0]['profile']['name'] == 'Various Artists':
+        parts['Artists'] = 'Various Artists'
+    else:
+        parts['Artist'] = artist_str
+
+    if album.get('label'):
+        parts['Label'] = album['label']
+
+    if total_tracks > 1:
+        parts['description'] = f'{total_tracks} track album'
+        parts['Tracks'] = '\n'.join(track_strings)
+        if len(track_strings) != total_tracks:
+            parts['Tracks'] += f'\n...and {total_tracks - len(track_strings)} more'
+
+    parts['title'] = (
+        f'{title_artists} - {title}'
+        if title_artists and title_artists != 'Various Artists'
+        else title
+    )
