@@ -19,6 +19,10 @@ google-api-python-client = "^2.170.0"
 coverage = "^7.11.0"
 packaging = "^25.0"
 yt-dlp = "^2025.12.8"
+spotapi = "^1.2.7"
+tls-client = "^1.0.1"
+pymongo = "^4.16.0"
+websockets = "^16.0"
 
 [tool.pyright]
 # https://github.com/microsoft/pyright/blob/main/docs/configuration.md
